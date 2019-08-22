@@ -1,18 +1,3 @@
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @noflow
- * @preventMunge
- * @preserve-invariant-messages
- */
-
-'use strict';
-
-if (__DEV__) {
-  (function() {
 "use strict";
 
 var React = require("react");
@@ -192,20 +177,11 @@ function useInputResponder(props) {
   return React.unstable_useResponder(InputResponder, props);
 }
 
-var Input = /*#__PURE__*/ Object.freeze({
+var Input = Object.freeze({
   InputResponder: InputResponder,
   useInputResponder: useInputResponder
 });
 
-function getCjsExportFromNamespace(n) {
-  return (n && n["default"]) || n;
-}
-
-var require$$0 = getCjsExportFromNamespace(Input);
-
-var input = require$$0;
+var input = Input;
 
 module.exports = input;
-
-  })();
-}

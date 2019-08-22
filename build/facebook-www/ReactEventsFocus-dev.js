@@ -1,18 +1,3 @@
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @noflow
- * @preventMunge
- * @preserve-invariant-messages
- */
-
-'use strict';
-
-if (__DEV__) {
-  (function() {
 "use strict";
 
 var React = require("react");
@@ -393,22 +378,13 @@ function useFocusWithinResponder(props) {
   return React.unstable_useResponder(FocusWithinResponder, props);
 }
 
-var Focus = /*#__PURE__*/ Object.freeze({
+var Focus = Object.freeze({
   FocusResponder: FocusResponder,
   useFocusResponder: useFocusResponder,
   FocusWithinResponder: FocusWithinResponder,
   useFocusWithinResponder: useFocusWithinResponder
 });
 
-function getCjsExportFromNamespace(n) {
-  return (n && n["default"]) || n;
-}
-
-var require$$0 = getCjsExportFromNamespace(Focus);
-
-var focus = require$$0;
+var focus = Focus;
 
 module.exports = focus;
-
-  })();
-}

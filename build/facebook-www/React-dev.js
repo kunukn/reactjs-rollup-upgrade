@@ -1,22 +1,9 @@
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @noflow
- * @preventMunge
- * @preserve-invariant-messages
- */
-
-'use strict';
-
-if (__DEV__) {
-  (function() {
 "use strict";
 
 var assign = require("object-assign");
 var checkPropTypes = require("prop-types/checkPropTypes");
+
+// TODO: this is special because it gets imported during build.
 
 var ReactVersion = "16.8.6";
 
@@ -32,6 +19,8 @@ var REACT_STRICT_MODE_TYPE = hasSymbol
 var REACT_PROFILER_TYPE = hasSymbol ? Symbol.for("react.profiler") : 0xead2;
 var REACT_PROVIDER_TYPE = hasSymbol ? Symbol.for("react.provider") : 0xeacd;
 var REACT_CONTEXT_TYPE = hasSymbol ? Symbol.for("react.context") : 0xeace; // TODO: We don't use AsyncMode or ConcurrentMode anymore. They were temporary
+// (unstable) APIs that have been removed. Can we remove the symbols?
+
 var REACT_CONCURRENT_MODE_TYPE = hasSymbol
   ? Symbol.for("react.concurrent_mode")
   : 0xeacf;
@@ -69,10 +58,25 @@ function getIteratorFn(maybeIterable) {
 // Do not require this module directly! Use normal `invariant` calls with
 // template literal strings. The messages will be converted to ReactError during
 // build, and in production they will be minified.
+
+// Do not require this module directly! Use normal `invariant` calls with
+// template literal strings. The messages will be converted to ReactError during
+// build, and in production they will be minified.
 function ReactError(error) {
   error.name = "Invariant Violation";
   return error;
 }
+
+/**
+ * Use invariant() to assert state which your program assumes to be true.
+ *
+ * Provide sprintf-style format (only %s is supported) and arguments
+ * to provide information about what broke and what you were
+ * expecting.
+ *
+ * The invariant message will be stripped in production, but the invariant
+ * will remain to ensure logic does not differ in production.
+ */
 
 var lowPriorityWarning = require("lowPriorityWarning");
 
@@ -356,7 +360,7 @@ var ReactCurrentBatchConfig = {
 var ReactCurrentOwner = require("ReactCurrentOwner");
 
 var BEFORE_SLASH_RE = /^(.*)[\\\/]/;
-function describeComponentFrame(name, source, ownerName) {
+var describeComponentFrame = function(name, source, ownerName) {
   var sourceInfo = "";
 
   if (source) {
@@ -386,9 +390,10 @@ function describeComponentFrame(name, source, ownerName) {
   }
 
   return "\n    in " + (name || "Unknown") + sourceInfo;
-}
+};
 
 var Resolved = 1;
+
 function refineResolvedLazyComponent(lazyComponent) {
   return lazyComponent._status === Resolved ? lazyComponent._result : null;
 }
@@ -580,7 +585,8 @@ var RESERVED_PROPS = {
   __self: true,
   __source: true
 };
-var specialPropKeyWarningShown, specialPropRefWarningShown;
+var specialPropKeyWarningShown;
+var specialPropRefWarningShown;
 
 function hasValidRef(config) {
   {
@@ -727,6 +733,13 @@ var ReactElement = function(type, key, ref, self, source, owner, props) {
 
   return element;
 };
+/**
+ * https://github.com/reactjs/rfcs/pull/107
+ * @param {*} type
+ * @param {object} props
+ * @param {string} key
+ */
+
 /**
  * https://github.com/reactjs/rfcs/pull/107
  * @param {*} type
@@ -892,6 +905,11 @@ function createElement(type, config, children) {
     props
   );
 }
+/**
+ * Return a function that produces ReactElements of a given type.
+ * See https://reactjs.org/docs/react-api.html#createfactory
+ */
+
 function cloneAndReplaceKey(oldElement, newKey) {
   var newElement = ReactElement(
     oldElement.type,
@@ -2304,6 +2322,26 @@ var hasBadMapPolyfill;
   }
 }
 
+function createFundamentalComponent(impl) {
+  // We use responder as a Map key later on. When we have a bad
+  // polyfill, then we can't use it as a key as the polyfill tries
+  // to add a property to the object.
+  if (true && !hasBadMapPolyfill) {
+    Object.freeze(impl);
+  }
+
+  var fundamantalComponent = {
+    $$typeof: REACT_FUNDAMENTAL_TYPE,
+    impl: impl
+  };
+
+  {
+    Object.freeze(fundamantalComponent);
+  }
+
+  return fundamantalComponent;
+}
+
 function createEventResponder(displayName, responderConfig) {
   var getInitialState = responderConfig.getInitialState,
     onEvent = responderConfig.onEvent,
@@ -2326,7 +2364,7 @@ function createEventResponder(displayName, responderConfig) {
   // polyfill, then we can't use it as a key as the polyfill tries
   // to add a property to the object.
 
-  if (!hasBadMapPolyfill) {
+  if (true && !hasBadMapPolyfill) {
     Object.freeze(eventResponder);
   }
 
@@ -2334,22 +2372,29 @@ function createEventResponder(displayName, responderConfig) {
 }
 
 // Re-export dynamic flags from the www version.
-var _require = require("ReactFeatureFlags"),
-  debugRenderPhaseSideEffects = _require.debugRenderPhaseSideEffects,
-  debugRenderPhaseSideEffectsForStrictMode =
-    _require.debugRenderPhaseSideEffectsForStrictMode,
-  replayFailedUnitOfWorkWithInvokeGuardedCallback =
-    _require.replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  warnAboutDeprecatedLifecycles = _require.warnAboutDeprecatedLifecycles,
-  disableInputAttributeSyncing = _require.disableInputAttributeSyncing,
-  warnAboutShorthandPropertyCollision =
-    _require.warnAboutShorthandPropertyCollision,
-  warnAboutDeprecatedSetNativeProps =
-    _require.warnAboutDeprecatedSetNativeProps,
-  enableUserBlockingEvents = _require.enableUserBlockingEvents,
-  disableLegacyContext = _require.disableLegacyContext,
-  disableSchedulerTimeoutBasedOnReactExpirationTime =
-    _require.disableSchedulerTimeoutBasedOnReactExpirationTime; // In www, we have experimental support for gathering data
+var _require = require("ReactFeatureFlags");
+var debugRenderPhaseSideEffects = _require.debugRenderPhaseSideEffects;
+var debugRenderPhaseSideEffectsForStrictMode =
+  _require.debugRenderPhaseSideEffectsForStrictMode;
+var replayFailedUnitOfWorkWithInvokeGuardedCallback =
+  _require.replayFailedUnitOfWorkWithInvokeGuardedCallback;
+var warnAboutDeprecatedLifecycles = _require.warnAboutDeprecatedLifecycles;
+var disableInputAttributeSyncing = _require.disableInputAttributeSyncing;
+var warnAboutShorthandPropertyCollision =
+  _require.warnAboutShorthandPropertyCollision;
+var warnAboutDeprecatedSetNativeProps =
+  _require.warnAboutDeprecatedSetNativeProps;
+var enableUserBlockingEvents = _require.enableUserBlockingEvents;
+var disableLegacyContext = _require.disableLegacyContext;
+var disableSchedulerTimeoutBasedOnReactExpirationTime =
+  _require.disableSchedulerTimeoutBasedOnReactExpirationTime; // In www, we have experimental support for gathering data
+
+// The flag is intentionally updated in a timeout.
+var enableFlareAPI = true;
+var enableFundamentalAPI = false;
+var enableJSXTransformAPI = true;
+
+// Flow magic to verify the exports of this file match the original version.
 
 var React = {
   Children: {
@@ -2390,15 +2435,19 @@ var React = {
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactSharedInternals
 };
 
-{
+if (enableFlareAPI) {
   React.unstable_useResponder = useResponder;
   React.unstable_createResponder = createEventResponder;
 }
+
+if (enableFundamentalAPI) {
+  React.unstable_createFundamental = createFundamentalComponent;
+} // Note: some APIs are added with feature flags.
 // Make sure that stable builds for open source
 // don't modify the React object to avoid deopts.
 // Also let's not expose their names in stable builds.
 
-{
+if (enableJSXTransformAPI) {
   {
     React.jsxDEV = jsxWithValidation;
     React.jsx = jsxWithValidationDynamic;
@@ -2406,22 +2455,15 @@ var React = {
   }
 }
 
-var React$1 = /*#__PURE__*/ Object.freeze({
+var React$2 = Object.freeze({
   default: React
 });
 
-function getCjsExportFromNamespace(n) {
-  return (n && n["default"]) || n;
-}
-
-var React$2 = getCjsExportFromNamespace(React$1);
+var React$3 = (React$2 && React) || React$2;
 
 // TODO: decide on the top-level export form.
 // This is hacky but makes it work with both Rollup and Jest.
 
-var react = React$2.default || React$2;
+var react = React$3.default || React$3;
 
 module.exports = react;
-
-  })();
-}

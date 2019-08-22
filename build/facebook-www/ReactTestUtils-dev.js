@@ -1,18 +1,3 @@
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @noflow
- * @preventMunge
- * @preserve-invariant-messages
- */
-
-'use strict';
-
-if (__DEV__) {
-  (function() {
 "use strict";
 
 var React = require("react");
@@ -22,10 +7,25 @@ var Scheduler = require("scheduler");
 // Do not require this module directly! Use normal `invariant` calls with
 // template literal strings. The messages will be converted to ReactError during
 // build, and in production they will be minified.
+
+// Do not require this module directly! Use normal `invariant` calls with
+// template literal strings. The messages will be converted to ReactError during
+// build, and in production they will be minified.
 function ReactError(error) {
   error.name = "Invariant Violation";
   return error;
 }
+
+/**
+ * Use invariant() to assert state which your program assumes to be true.
+ *
+ * Provide sprintf-style format (only %s is supported) and arguments
+ * to provide information about what broke and what you were
+ * expecting.
+ *
+ * The invariant message will be stripped in production, but the invariant
+ * will remain to ensure logic does not differ in production.
+ */
 
 var warningWithoutStack = require("warning");
 
@@ -38,6 +38,13 @@ var warningWithoutStack = require("warning");
  * Note that this module is currently shared and assumed to be stateless.
  * If this becomes an actual Map, that will break.
  */
+
+/**
+ * This API should be called `delete` but we'd have to make sure to always
+ * transform these to strings for IE support. When this transform is fully
+ * supported we can rename it.
+ */
+
 function get(key) {
   return key._reactInternalFiber;
 }
@@ -59,10 +66,22 @@ if (!ReactSharedInternals.hasOwnProperty("ReactCurrentBatchConfig")) {
   };
 }
 
+// The Symbol used to tag the ReactElement-like types. If there is no native Symbol
+// nor polyfill, then a plain number is used for performance.
+
+// TODO: We don't use AsyncMode or ConcurrentMode anymore. They were temporary
+// (unstable) APIs that have been removed. Can we remove the symbols?
+
+{
+}
+
 var FunctionComponent = 0;
 var ClassComponent = 1;
+// Before we know whether it is function or class
 
 var HostRoot = 3; // Root of a host tree. Could be nested inside another node.
+
+// A subtree. Could be an entry point to a different renderer.
 
 var HostComponent = 5;
 var HostText = 6;
@@ -71,28 +90,37 @@ var HostText = 6;
 var NoEffect =
   /*              */
   0;
+// You can change the rest (and add more).
 
 var Placement =
   /*             */
   2;
 
+// Passive & Update & Callback & Ref & Snapshot
+
+// Union of all host effects
+
 // Re-export dynamic flags from the www version.
-var _require = require("ReactFeatureFlags"),
-  debugRenderPhaseSideEffects = _require.debugRenderPhaseSideEffects,
-  debugRenderPhaseSideEffectsForStrictMode =
-    _require.debugRenderPhaseSideEffectsForStrictMode,
-  replayFailedUnitOfWorkWithInvokeGuardedCallback =
-    _require.replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  warnAboutDeprecatedLifecycles = _require.warnAboutDeprecatedLifecycles,
-  disableInputAttributeSyncing = _require.disableInputAttributeSyncing,
-  warnAboutShorthandPropertyCollision =
-    _require.warnAboutShorthandPropertyCollision,
-  warnAboutDeprecatedSetNativeProps =
-    _require.warnAboutDeprecatedSetNativeProps,
-  enableUserBlockingEvents = _require.enableUserBlockingEvents,
-  disableLegacyContext = _require.disableLegacyContext,
-  disableSchedulerTimeoutBasedOnReactExpirationTime =
-    _require.disableSchedulerTimeoutBasedOnReactExpirationTime; // In www, we have experimental support for gathering data
+var _require = require("ReactFeatureFlags");
+var debugRenderPhaseSideEffects = _require.debugRenderPhaseSideEffects;
+var debugRenderPhaseSideEffectsForStrictMode =
+  _require.debugRenderPhaseSideEffectsForStrictMode;
+var replayFailedUnitOfWorkWithInvokeGuardedCallback =
+  _require.replayFailedUnitOfWorkWithInvokeGuardedCallback;
+var warnAboutDeprecatedLifecycles = _require.warnAboutDeprecatedLifecycles;
+var disableInputAttributeSyncing = _require.disableInputAttributeSyncing;
+var warnAboutShorthandPropertyCollision =
+  _require.warnAboutShorthandPropertyCollision;
+var warnAboutDeprecatedSetNativeProps =
+  _require.warnAboutDeprecatedSetNativeProps;
+var enableUserBlockingEvents = _require.enableUserBlockingEvents;
+var disableLegacyContext = _require.disableLegacyContext;
+var disableSchedulerTimeoutBasedOnReactExpirationTime =
+  _require.disableSchedulerTimeoutBasedOnReactExpirationTime; // In www, we have experimental support for gathering data
+
+// The flag is intentionally updated in a timeout.
+
+// Flow magic to verify the exports of this file match the original version.
 
 var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 var MOUNTING = 1;
@@ -333,6 +361,7 @@ function findCurrentFiberUsingSlowPath(fiber) {
   return alternate;
 }
 
+/* eslint valid-typeof: 0 */
 var EVENT_POOL_SIZE = 10;
 /**
  * @interface Event
@@ -611,16 +640,19 @@ function getPooledWarningPropertyDefinition(propName, getVal) {
   }
 
   function warn(action, result) {
-    warningWithoutStack(
-      false,
-      "This synthetic event is reused for performance reasons. If you're seeing this, " +
-        "you're %s `%s` on a released/nullified synthetic event. %s. " +
-        "If you must keep the original synthetic event around, use event.persist(). " +
-        "See https://fb.me/react-event-pooling for more information.",
-      action,
-      propName,
-      result
-    );
+    var warningCondition = false;
+    !warningCondition
+      ? warningWithoutStack(
+          false,
+          "This synthetic event is reused for performance reasons. If you're seeing this, " +
+            "you're %s `%s` on a released/nullified synthetic event. %s. " +
+            "If you must keep the original synthetic event around, use event.persist(). " +
+            "See https://fb.me/react-event-pooling for more information.",
+          action,
+          propName,
+          result
+        )
+      : void 0;
   }
 }
 
@@ -811,6 +843,7 @@ var TOP_CONTEXT_MENU = unsafeCastStringToDOMTopLevelType("contextmenu");
 var TOP_COPY = unsafeCastStringToDOMTopLevelType("copy");
 var TOP_CUT = unsafeCastStringToDOMTopLevelType("cut");
 var TOP_DOUBLE_CLICK = unsafeCastStringToDOMTopLevelType("dblclick");
+
 var TOP_DRAG = unsafeCastStringToDOMTopLevelType("drag");
 var TOP_DRAG_END = unsafeCastStringToDOMTopLevelType("dragend");
 var TOP_DRAG_ENTER = unsafeCastStringToDOMTopLevelType("dragenter");
@@ -825,7 +858,9 @@ var TOP_ENCRYPTED = unsafeCastStringToDOMTopLevelType("encrypted");
 var TOP_ENDED = unsafeCastStringToDOMTopLevelType("ended");
 var TOP_ERROR = unsafeCastStringToDOMTopLevelType("error");
 var TOP_FOCUS = unsafeCastStringToDOMTopLevelType("focus");
+
 var TOP_INPUT = unsafeCastStringToDOMTopLevelType("input");
+
 var TOP_KEY_DOWN = unsafeCastStringToDOMTopLevelType("keydown");
 var TOP_KEY_PRESS = unsafeCastStringToDOMTopLevelType("keypress");
 var TOP_KEY_UP = unsafeCastStringToDOMTopLevelType("keyup");
@@ -833,6 +868,7 @@ var TOP_LOAD = unsafeCastStringToDOMTopLevelType("load");
 var TOP_LOAD_START = unsafeCastStringToDOMTopLevelType("loadstart");
 var TOP_LOADED_DATA = unsafeCastStringToDOMTopLevelType("loadeddata");
 var TOP_LOADED_METADATA = unsafeCastStringToDOMTopLevelType("loadedmetadata");
+
 var TOP_MOUSE_DOWN = unsafeCastStringToDOMTopLevelType("mousedown");
 var TOP_MOUSE_MOVE = unsafeCastStringToDOMTopLevelType("mousemove");
 var TOP_MOUSE_OUT = unsafeCastStringToDOMTopLevelType("mouseout");
@@ -842,13 +878,16 @@ var TOP_PASTE = unsafeCastStringToDOMTopLevelType("paste");
 var TOP_PAUSE = unsafeCastStringToDOMTopLevelType("pause");
 var TOP_PLAY = unsafeCastStringToDOMTopLevelType("play");
 var TOP_PLAYING = unsafeCastStringToDOMTopLevelType("playing");
+
 var TOP_PROGRESS = unsafeCastStringToDOMTopLevelType("progress");
 var TOP_RATE_CHANGE = unsafeCastStringToDOMTopLevelType("ratechange");
+
 var TOP_SCROLL = unsafeCastStringToDOMTopLevelType("scroll");
 var TOP_SEEKED = unsafeCastStringToDOMTopLevelType("seeked");
 var TOP_SEEKING = unsafeCastStringToDOMTopLevelType("seeking");
 var TOP_SELECTION_CHANGE = unsafeCastStringToDOMTopLevelType("selectionchange");
 var TOP_STALLED = unsafeCastStringToDOMTopLevelType("stalled");
+
 var TOP_SUSPEND = unsafeCastStringToDOMTopLevelType("suspend");
 var TOP_TEXT_INPUT = unsafeCastStringToDOMTopLevelType("textInput");
 var TOP_TIME_UPDATE = unsafeCastStringToDOMTopLevelType("timeupdate");
@@ -863,6 +902,8 @@ var TOP_TRANSITION_END = unsafeCastStringToDOMTopLevelType(
 var TOP_VOLUME_CHANGE = unsafeCastStringToDOMTopLevelType("volumechange");
 var TOP_WAITING = unsafeCastStringToDOMTopLevelType("waiting");
 var TOP_WHEEL = unsafeCastStringToDOMTopLevelType("wheel"); // List of events that need to be individually attached to media elements.
+// Note that events in this list will *not* be listened to at the top level
+// unless they're explicitly whitelisted in `ReactBrowserEventEmitter.listenTo`.
 
 var PLUGIN_EVENT_SYSTEM = 1;
 
@@ -907,23 +948,21 @@ var enqueueTask$1 = enqueueTask;
 
 // ReactDOM.js, and ReactTestUtils.js:
 
-var _ReactDOM$__SECRET_IN =
-    ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events,
-  /* eslint-disable no-unused-vars */
-  getInstanceFromNode = _ReactDOM$__SECRET_IN[0],
-  getNodeFromInstance = _ReactDOM$__SECRET_IN[1],
-  getFiberCurrentPropsFromNode = _ReactDOM$__SECRET_IN[2],
-  injectEventPluginsByName = _ReactDOM$__SECRET_IN[3],
-  eventNameDispatchConfigs = _ReactDOM$__SECRET_IN[4],
-  accumulateTwoPhaseDispatches = _ReactDOM$__SECRET_IN[5],
-  accumulateDirectDispatches = _ReactDOM$__SECRET_IN[6],
-  enqueueStateRestore = _ReactDOM$__SECRET_IN[7],
-  restoreStateIfNeeded = _ReactDOM$__SECRET_IN[8],
-  dispatchEvent = _ReactDOM$__SECRET_IN[9],
-  runEventsInBatch = _ReactDOM$__SECRET_IN[10],
-  /* eslint-enable no-unused-vars */
-  flushPassiveEffects = _ReactDOM$__SECRET_IN[11],
-  IsThisRendererActing = _ReactDOM$__SECRET_IN[12];
+var _ReactDOM$__SECRET_IN$1 =
+  ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
+var getInstanceFromNode$1 = _ReactDOM$__SECRET_IN$1[0];
+var getNodeFromInstance$1 = _ReactDOM$__SECRET_IN$1[1];
+var getFiberCurrentPropsFromNode$1 = _ReactDOM$__SECRET_IN$1[2];
+var injectEventPluginsByName$1 = _ReactDOM$__SECRET_IN$1[3];
+var eventNameDispatchConfigs$1 = _ReactDOM$__SECRET_IN$1[4];
+var accumulateTwoPhaseDispatches$1 = _ReactDOM$__SECRET_IN$1[5];
+var accumulateDirectDispatches$1 = _ReactDOM$__SECRET_IN$1[6];
+var enqueueStateRestore$1 = _ReactDOM$__SECRET_IN$1[7];
+var restoreStateIfNeeded$1 = _ReactDOM$__SECRET_IN$1[8];
+var dispatchEvent$1 = _ReactDOM$__SECRET_IN$1[9];
+var runEventsInBatch$1 = _ReactDOM$__SECRET_IN$1[10];
+var flushPassiveEffects$1 = _ReactDOM$__SECRET_IN$1[11];
+var IsThisRendererActing$1 = _ReactDOM$__SECRET_IN$1[12];
 var batchedUpdates = ReactDOM.unstable_batchedUpdates;
 var IsSomeRendererActing = ReactSharedInternals.IsSomeRendererActing; // this implementation should be exactly the same in
 // ReactTestUtilsAct.js, ReactTestRendererAct.js, createReactNoop.js
@@ -936,7 +975,7 @@ var flushWork =
   function() {
     var didFlushWork = false;
 
-    while (flushPassiveEffects()) {
+    while (flushPassiveEffects$1()) {
       didFlushWork = true;
     }
 
@@ -960,21 +999,20 @@ function flushWorkAndMicroTasks(onDone) {
 // so we can tell if any async act() calls try to run in parallel.
 
 var actingUpdatesScopeDepth = 0;
-
 function act(callback) {
   var previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
   var previousIsSomeRendererActing;
   var previousIsThisRendererActing;
   actingUpdatesScopeDepth++;
   previousIsSomeRendererActing = IsSomeRendererActing.current;
-  previousIsThisRendererActing = IsThisRendererActing.current;
+  previousIsThisRendererActing = IsThisRendererActing$1.current;
   IsSomeRendererActing.current = true;
-  IsThisRendererActing.current = true;
+  IsThisRendererActing$1.current = true;
 
   function onDone() {
     actingUpdatesScopeDepth--;
     IsSomeRendererActing.current = previousIsSomeRendererActing;
-    IsThisRendererActing.current = previousIsThisRendererActing;
+    IsThisRendererActing$1.current = previousIsThisRendererActing;
 
     {
       if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
@@ -1106,24 +1144,21 @@ function act(callback) {
 var findDOMNode = ReactDOM.findDOMNode; // Keep in sync with ReactDOMUnstableNativeDependencies.js
 // ReactDOM.js, and ReactTestUtilsAct.js:
 
-var _ReactDOM$__SECRET_IN$1 =
-    ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events,
-  getInstanceFromNode$1 = _ReactDOM$__SECRET_IN$1[0],
-  /* eslint-disable no-unused-vars */
-  getNodeFromInstance$1 = _ReactDOM$__SECRET_IN$1[1],
-  getFiberCurrentPropsFromNode$1 = _ReactDOM$__SECRET_IN$1[2],
-  injectEventPluginsByName$1 = _ReactDOM$__SECRET_IN$1[3],
-  /* eslint-enable no-unused-vars */
-  eventNameDispatchConfigs$1 = _ReactDOM$__SECRET_IN$1[4],
-  accumulateTwoPhaseDispatches$1 = _ReactDOM$__SECRET_IN$1[5],
-  accumulateDirectDispatches$1 = _ReactDOM$__SECRET_IN$1[6],
-  enqueueStateRestore$1 = _ReactDOM$__SECRET_IN$1[7],
-  restoreStateIfNeeded$1 = _ReactDOM$__SECRET_IN$1[8],
-  dispatchEvent$1 = _ReactDOM$__SECRET_IN$1[9],
-  runEventsInBatch$1 = _ReactDOM$__SECRET_IN$1[10],
-  /* eslint-disable no-unused-vars */
-  flushPassiveEffects$1 = _ReactDOM$__SECRET_IN$1[11],
-  IsThisRendererActing$1 = _ReactDOM$__SECRET_IN$1[12];
+var _ReactDOM$__SECRET_IN =
+  ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
+var getInstanceFromNode = _ReactDOM$__SECRET_IN[0];
+var getNodeFromInstance = _ReactDOM$__SECRET_IN[1];
+var getFiberCurrentPropsFromNode = _ReactDOM$__SECRET_IN[2];
+var injectEventPluginsByName = _ReactDOM$__SECRET_IN[3];
+var eventNameDispatchConfigs = _ReactDOM$__SECRET_IN[4];
+var accumulateTwoPhaseDispatches = _ReactDOM$__SECRET_IN[5];
+var accumulateDirectDispatches = _ReactDOM$__SECRET_IN[6];
+var enqueueStateRestore = _ReactDOM$__SECRET_IN[7];
+var restoreStateIfNeeded = _ReactDOM$__SECRET_IN[8];
+var dispatchEvent = _ReactDOM$__SECRET_IN[9];
+var runEventsInBatch = _ReactDOM$__SECRET_IN[10];
+var flushPassiveEffects = _ReactDOM$__SECRET_IN[11];
+var IsThisRendererActing = _ReactDOM$__SECRET_IN[12];
 
 function Event(suffix) {}
 
@@ -1142,7 +1177,7 @@ var hasWarnedAboutDeprecatedMockComponent = false;
 
 function simulateNativeEventOnNode(topLevelType, node, fakeNativeEvent) {
   fakeNativeEvent.target = node;
-  dispatchEvent$1(topLevelType, PLUGIN_EVENT_SYSTEM, fakeNativeEvent);
+  dispatchEvent(topLevelType, PLUGIN_EVENT_SYSTEM, fakeNativeEvent);
 }
 /**
  * Simulates a top level event being dispatched from a raw event that occurred
@@ -1538,13 +1573,13 @@ function makeSimulator(eventType) {
       }
     })();
 
-    var dispatchConfig = eventNameDispatchConfigs$1[eventType];
+    var dispatchConfig = eventNameDispatchConfigs[eventType];
     var fakeNativeEvent = new Event();
     fakeNativeEvent.target = domNode;
     fakeNativeEvent.type = eventType.toLowerCase(); // We don't use SyntheticEvent.getPooled in order to not have to worry about
     // properly destroying any properties assigned from `eventData` upon release
 
-    var targetInst = getInstanceFromNode$1(domNode);
+    var targetInst = getInstanceFromNode(domNode);
     var event = new SyntheticEvent(
       dispatchConfig,
       targetInst,
@@ -1557,18 +1592,18 @@ function makeSimulator(eventType) {
     Object.assign(event, eventData);
 
     if (dispatchConfig.phasedRegistrationNames) {
-      accumulateTwoPhaseDispatches$1(event);
+      accumulateTwoPhaseDispatches(event);
     } else {
-      accumulateDirectDispatches$1(event);
+      accumulateDirectDispatches(event);
     }
 
     ReactDOM.unstable_batchedUpdates(function() {
       // Normally extractEvent enqueues a state restore, but we'll just always
       // do that since we're by-passing it here.
-      enqueueStateRestore$1(domNode);
-      runEventsInBatch$1(event);
+      enqueueStateRestore(domNode);
+      runEventsInBatch(event);
     });
-    restoreStateIfNeeded$1();
+    restoreStateIfNeeded();
   };
 }
 
@@ -1576,7 +1611,7 @@ function buildSimulators() {
   ReactTestUtils.Simulate = {};
   var eventType;
 
-  for (eventType in eventNameDispatchConfigs$1) {
+  for (eventType in eventNameDispatchConfigs) {
     /**
      * @param {!Element|ReactDOMComponent} domComponentOrNode
      * @param {?object} eventData Fake event data to use in SyntheticEvent.
@@ -1708,22 +1743,15 @@ function makeNativeSimulator(eventType, topLevelType) {
   );
 });
 
-var ReactTestUtils$1 = /*#__PURE__*/ Object.freeze({
+var ReactTestUtils$2 = Object.freeze({
   default: ReactTestUtils
 });
 
-function getCjsExportFromNamespace(n) {
-  return (n && n["default"]) || n;
-}
-
-var ReactTestUtils$2 = getCjsExportFromNamespace(ReactTestUtils$1);
+var ReactTestUtils$3 = (ReactTestUtils$2 && ReactTestUtils) || ReactTestUtils$2;
 
 // TODO: decide on the top-level export form.
 // This is hacky but makes it work with both Rollup and Jest.
 
-var testUtils = ReactTestUtils$2.default || ReactTestUtils$2;
+var testUtils = ReactTestUtils$3.default || ReactTestUtils$3;
 
 module.exports = testUtils;
-
-  })();
-}

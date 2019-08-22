@@ -1,18 +1,3 @@
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @noflow
- * @preventMunge
- * @preserve-invariant-messages
- */
-
-'use strict';
-
-if (__DEV__) {
-  (function() {
 "use strict";
 
 var React = require("react");
@@ -22,24 +7,6 @@ var checkPropTypes = require("prop-types/checkPropTypes");
 // Do not require this module directly! Use normal `invariant` calls with
 // template literal strings. The messages will be converted to ReactError during
 // build, and in production they will be minified.
-function ReactErrorProd(error) {
-  var code = error.message;
-  var url = "https://reactjs.org/docs/error-decoder.html?invariant=" + code;
-
-  for (var i = 1; i < arguments.length; i++) {
-    url += "&args[]=" + encodeURIComponent(arguments[i]);
-  }
-
-  error.message =
-    "Minified React error #" +
-    code +
-    "; visit " +
-    url +
-    " for the full message or " +
-    "use the non-minified dev environment for full errors and additional " +
-    "helpful warnings. ";
-  return error;
-}
 
 // Do not require this module directly! Use normal `invariant` calls with
 // template literal strings. The messages will be converted to ReactError during
@@ -50,7 +17,7 @@ function ReactError(error) {
 }
 
 var BEFORE_SLASH_RE = /^(.*)[\\\/]/;
-function describeComponentFrame(name, source, ownerName) {
+var describeComponentFrame = function(name, source, ownerName) {
   var sourceInfo = "";
 
   if (source) {
@@ -80,13 +47,14 @@ function describeComponentFrame(name, source, ownerName) {
   }
 
   return "\n    in " + (name || "Unknown") + sourceInfo;
-}
+};
 
 var warningWithoutStack = require("warning");
 
 // The Symbol used to tag the ReactElement-like types. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
 var hasSymbol = typeof Symbol === "function" && Symbol.for;
+
 var REACT_PORTAL_TYPE = hasSymbol ? Symbol.for("react.portal") : 0xeaca;
 var REACT_FRAGMENT_TYPE = hasSymbol ? Symbol.for("react.fragment") : 0xeacb;
 var REACT_STRICT_MODE_TYPE = hasSymbol
@@ -95,6 +63,8 @@ var REACT_STRICT_MODE_TYPE = hasSymbol
 var REACT_PROFILER_TYPE = hasSymbol ? Symbol.for("react.profiler") : 0xead2;
 var REACT_PROVIDER_TYPE = hasSymbol ? Symbol.for("react.provider") : 0xeacd;
 var REACT_CONTEXT_TYPE = hasSymbol ? Symbol.for("react.context") : 0xeace; // TODO: We don't use AsyncMode or ConcurrentMode anymore. They were temporary
+// (unstable) APIs that have been removed. Can we remove the symbols?
+
 var REACT_FORWARD_REF_TYPE = hasSymbol
   ? Symbol.for("react.forward_ref")
   : 0xead0;
@@ -160,6 +130,7 @@ var warning = warningWithoutStack;
 var warning$1 = warning;
 
 var Resolved = 1;
+
 function refineResolvedLazyComponent(lazyComponent) {
   return lazyComponent._status === Resolved ? lazyComponent._result : null;
 }
@@ -295,6 +266,17 @@ function shallowEqual(objA, objB) {
 
   return true;
 }
+
+/**
+ * Use invariant() to assert state which your program assumes to be true.
+ *
+ * Provide sprintf-style format (only %s is supported) and arguments
+ * to provide information about what broke and what you were
+ * expecting.
+ *
+ * The invariant message will be stripped in production, but the invariant
+ * will remain to ensure logic does not differ in production.
+ */
 
 var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 var RE_RENDER_LIMIT = 25;
@@ -943,18 +925,13 @@ var ReactShallowRenderer =
               if (elementType.$$typeof === reactIs.ForwardRef) {
                 (function() {
                   if (!(typeof elementType.render === "function")) {
-                    if (true) {
+                    {
                       throw ReactError(
                         Error(
                           "forwardRef requires a render function but was given " +
                             typeof elementType.render +
                             "."
                         )
-                      );
-                    } else {
-                      throw ReactErrorProd(
-                        Error(322),
-                        typeof elementType.render
                       );
                     }
                   }
@@ -1192,22 +1169,16 @@ function getMaskedContext(contextTypes, unmaskedContext) {
   return context;
 }
 
-var ReactShallowRenderer$1 = /*#__PURE__*/ Object.freeze({
+var ReactShallowRenderer$2 = Object.freeze({
   default: ReactShallowRenderer
 });
 
-function getCjsExportFromNamespace(n) {
-  return (n && n["default"]) || n;
-}
-
-var ReactShallowRenderer$2 = getCjsExportFromNamespace(ReactShallowRenderer$1);
+var ReactShallowRenderer$3 =
+  (ReactShallowRenderer$2 && ReactShallowRenderer) || ReactShallowRenderer$2;
 
 // TODO: decide on the top-level export form.
 // This is hacky but makes it work with both Rollup and Jest.
 
-var shallow = ReactShallowRenderer$2.default || ReactShallowRenderer$2;
+var shallow = ReactShallowRenderer$3.default || ReactShallowRenderer$3;
 
 module.exports = shallow;
-
-  })();
-}

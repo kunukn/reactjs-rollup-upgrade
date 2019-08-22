@@ -1,30 +1,15 @@
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @noflow
- * @preventMunge
- * @preserve-invariant-messages
- */
-
-'use strict';
-
-if (__DEV__) {
-  (function() {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 
-var _require = require("SchedulerFeatureFlags"),
-  enableIsInputPending = _require.enableIsInputPending,
-  enableSchedulerDebugging = _require.enableSchedulerDebugging,
-  requestIdleCallbackBeforeFirstFrame =
-    _require.requestIdleCallbackBeforeFirstFrame,
-  requestTimerEventBeforeFirstFrame =
-    _require.requestTimerEventBeforeFirstFrame,
-  enableMessageLoopImplementation = _require.enableMessageLoopImplementation;
+var _require = require("SchedulerFeatureFlags");
+var enableIsInputPending = _require.enableIsInputPending;
+var enableSchedulerDebugging = _require.enableSchedulerDebugging;
+var requestIdleCallbackBeforeFirstFrame =
+  _require.requestIdleCallbackBeforeFirstFrame;
+var requestTimerEventBeforeFirstFrame =
+  _require.requestTimerEventBeforeFirstFrame;
+var enableMessageLoopImplementation = _require.enableMessageLoopImplementation;
 
 var currentTime = 0;
 var scheduledCallback = null;
@@ -39,6 +24,7 @@ var shouldYieldForPaint = false;
 function requestHostCallback(callback) {
   scheduledCallback = callback;
 }
+
 function requestHostTimeout(callback, ms) {
   scheduledTimeout = callback;
   timeoutTime = currentTime + ms;
@@ -67,6 +53,7 @@ function getCurrentTime() {
 function forceFrameRate() {
   // No-op
 }
+// Should only be used via an assertion helper that inspects the yielded values.
 
 function unstable_flushNumberOfYields(count) {
   if (isFlushing) {
@@ -305,7 +292,6 @@ function compare(a, b) {
 }
 
 /* eslint-disable no-var */
-
 var ImmediatePriority = 1;
 var UserBlockingPriority = 2;
 var NormalPriority = 3;
@@ -650,32 +636,29 @@ function unstable_shouldYield() {
 
 var unstable_requestPaint = requestPaint;
 
-exports.unstable_IdlePriority = IdlePriority;
-exports.unstable_ImmediatePriority = ImmediatePriority;
-exports.unstable_LowPriority = LowPriority;
-exports.unstable_NormalPriority = NormalPriority;
-exports.unstable_UserBlockingPriority = UserBlockingPriority;
-exports.unstable_advanceTime = unstable_advanceTime;
-exports.unstable_cancelCallback = unstable_cancelCallback;
-exports.unstable_clearYields = unstable_clearYields;
-exports.unstable_continueExecution = unstable_continueExecution;
-exports.unstable_flushAll = unstable_flushAll;
 exports.unstable_flushAllWithoutAsserting = unstable_flushAllWithoutAsserting;
-exports.unstable_flushExpired = unstable_flushExpired;
 exports.unstable_flushNumberOfYields = unstable_flushNumberOfYields;
+exports.unstable_flushExpired = unstable_flushExpired;
+exports.unstable_clearYields = unstable_clearYields;
 exports.unstable_flushUntilNextPaint = unstable_flushUntilNextPaint;
-exports.unstable_forceFrameRate = forceFrameRate;
-exports.unstable_getCurrentPriorityLevel = unstable_getCurrentPriorityLevel;
-exports.unstable_getFirstCallbackNode = unstable_getFirstCallbackNode;
-exports.unstable_next = unstable_next;
-exports.unstable_now = getCurrentTime;
-exports.unstable_pauseExecution = unstable_pauseExecution;
-exports.unstable_requestPaint = unstable_requestPaint;
-exports.unstable_runWithPriority = unstable_runWithPriority;
-exports.unstable_scheduleCallback = unstable_scheduleCallback;
-exports.unstable_shouldYield = unstable_shouldYield;
-exports.unstable_wrapCallback = unstable_wrapCallback;
+exports.unstable_flushAll = unstable_flushAll;
 exports.unstable_yieldValue = unstable_yieldValue;
-
-  })();
-}
+exports.unstable_advanceTime = unstable_advanceTime;
+exports.unstable_ImmediatePriority = ImmediatePriority;
+exports.unstable_UserBlockingPriority = UserBlockingPriority;
+exports.unstable_NormalPriority = NormalPriority;
+exports.unstable_IdlePriority = IdlePriority;
+exports.unstable_LowPriority = LowPriority;
+exports.unstable_runWithPriority = unstable_runWithPriority;
+exports.unstable_next = unstable_next;
+exports.unstable_scheduleCallback = unstable_scheduleCallback;
+exports.unstable_cancelCallback = unstable_cancelCallback;
+exports.unstable_wrapCallback = unstable_wrapCallback;
+exports.unstable_getCurrentPriorityLevel = unstable_getCurrentPriorityLevel;
+exports.unstable_shouldYield = unstable_shouldYield;
+exports.unstable_requestPaint = unstable_requestPaint;
+exports.unstable_continueExecution = unstable_continueExecution;
+exports.unstable_pauseExecution = unstable_pauseExecution;
+exports.unstable_getFirstCallbackNode = unstable_getFirstCallbackNode;
+exports.unstable_now = getCurrentTime;
+exports.unstable_forceFrameRate = forceFrameRate;

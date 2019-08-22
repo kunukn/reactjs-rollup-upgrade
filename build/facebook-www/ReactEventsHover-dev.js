@@ -1,18 +1,3 @@
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @noflow
- * @preventMunge
- * @preserve-invariant-messages
- */
-
-'use strict';
-
-if (__DEV__) {
-  (function() {
 "use strict";
 
 var React = require("react");
@@ -287,20 +272,11 @@ function useHoverResponder(props) {
   return React.unstable_useResponder(HoverResponder, props);
 }
 
-var Hover = /*#__PURE__*/ Object.freeze({
+var Hover = Object.freeze({
   HoverResponder: HoverResponder,
   useHoverResponder: useHoverResponder
 });
 
-function getCjsExportFromNamespace(n) {
-  return (n && n["default"]) || n;
-}
-
-var require$$0 = getCjsExportFromNamespace(Hover);
-
-var hover = require$$0;
+var hover = Hover;
 
 module.exports = hover;
-
-  })();
-}

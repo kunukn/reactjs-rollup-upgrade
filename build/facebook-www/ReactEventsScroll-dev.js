@@ -1,18 +1,3 @@
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @noflow
- * @preventMunge
- * @preserve-invariant-messages
- */
-
-'use strict';
-
-if (__DEV__) {
-  (function() {
 "use strict";
 
 var React = require("react");
@@ -264,20 +249,11 @@ function useScrollResponder(props) {
   return React.unstable_useResponder(ScrollResponder, props);
 }
 
-var Scroll = /*#__PURE__*/ Object.freeze({
+var Scroll = Object.freeze({
   ScrollResponder: ScrollResponder,
   useScrollResponder: useScrollResponder
 });
 
-function getCjsExportFromNamespace(n) {
-  return (n && n["default"]) || n;
-}
-
-var require$$0 = getCjsExportFromNamespace(Scroll);
-
-var scroll = require$$0;
+var scroll = Scroll;
 
 module.exports = scroll;
-
-  })();
-}

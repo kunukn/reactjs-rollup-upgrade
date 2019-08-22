@@ -1,30 +1,15 @@
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @noflow
- * @preventMunge
- * @preserve-invariant-messages
- */
-
-'use strict';
-
-if (__DEV__) {
-  (function() {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 
-var _require = require("SchedulerFeatureFlags"),
-  enableIsInputPending = _require.enableIsInputPending,
-  enableSchedulerDebugging = _require.enableSchedulerDebugging,
-  requestIdleCallbackBeforeFirstFrame =
-    _require.requestIdleCallbackBeforeFirstFrame,
-  requestTimerEventBeforeFirstFrame =
-    _require.requestTimerEventBeforeFirstFrame,
-  enableMessageLoopImplementation = _require.enableMessageLoopImplementation;
+var _require = require("SchedulerFeatureFlags");
+var enableIsInputPending = _require.enableIsInputPending;
+var enableSchedulerDebugging = _require.enableSchedulerDebugging;
+var requestIdleCallbackBeforeFirstFrame =
+  _require.requestIdleCallbackBeforeFirstFrame;
+var requestTimerEventBeforeFirstFrame =
+  _require.requestTimerEventBeforeFirstFrame;
+var enableMessageLoopImplementation = _require.enableMessageLoopImplementation;
 
 // works by scheduling a requestAnimationFrame, storing the time for the start
 // of the frame, then scheduling a postMessage which gets scheduled after paint.
@@ -34,6 +19,7 @@ var _require = require("SchedulerFeatureFlags"),
 // The frame rate is dynamically adjusted.
 
 var requestHostCallback;
+
 var requestHostTimeout;
 var cancelHostTimeout;
 var shouldYieldToHost;
@@ -524,7 +510,6 @@ function compare(a, b) {
 }
 
 /* eslint-disable no-var */
-
 var ImmediatePriority = 1;
 var UserBlockingPriority = 2;
 var NormalPriority = 3;
@@ -869,22 +854,19 @@ function unstable_shouldYield() {
 
 var unstable_requestPaint = requestPaint;
 
-exports.unstable_IdlePriority = IdlePriority;
 exports.unstable_ImmediatePriority = ImmediatePriority;
-exports.unstable_LowPriority = LowPriority;
-exports.unstable_NormalPriority = NormalPriority;
 exports.unstable_UserBlockingPriority = UserBlockingPriority;
-exports.unstable_cancelCallback = unstable_cancelCallback;
-exports.unstable_continueExecution = unstable_continueExecution;
-exports.unstable_getCurrentPriorityLevel = unstable_getCurrentPriorityLevel;
-exports.unstable_getFirstCallbackNode = unstable_getFirstCallbackNode;
-exports.unstable_next = unstable_next;
-exports.unstable_pauseExecution = unstable_pauseExecution;
-exports.unstable_requestPaint = unstable_requestPaint;
+exports.unstable_NormalPriority = NormalPriority;
+exports.unstable_IdlePriority = IdlePriority;
+exports.unstable_LowPriority = LowPriority;
 exports.unstable_runWithPriority = unstable_runWithPriority;
+exports.unstable_next = unstable_next;
 exports.unstable_scheduleCallback = unstable_scheduleCallback;
-exports.unstable_shouldYield = unstable_shouldYield;
+exports.unstable_cancelCallback = unstable_cancelCallback;
 exports.unstable_wrapCallback = unstable_wrapCallback;
-
-  })();
-}
+exports.unstable_getCurrentPriorityLevel = unstable_getCurrentPriorityLevel;
+exports.unstable_shouldYield = unstable_shouldYield;
+exports.unstable_requestPaint = unstable_requestPaint;
+exports.unstable_continueExecution = unstable_continueExecution;
+exports.unstable_pauseExecution = unstable_pauseExecution;
+exports.unstable_getFirstCallbackNode = unstable_getFirstCallbackNode;

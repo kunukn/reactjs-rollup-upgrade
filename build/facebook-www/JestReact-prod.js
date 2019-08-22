@@ -1,115 +1,177 @@
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @noflow
- * @preventMunge
- * @preserve-invariant-messages
- */
-
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: !0 });
+
+Object.defineProperty(exports, "__esModule", { value: true });
+
+// Do not require this module directly! Use normal `invariant` calls with
+// template literal strings. The messages will be converted to ReactError during
+// build, and in production they will be minified.
 function ReactErrorProd(error) {
-  for (
-    var code = error.message,
-      url = "https://reactjs.org/docs/error-decoder.html?invariant=" + code,
-      i = 1;
-    i < arguments.length;
-    i++
-  )
+  var code = error.message;
+  var url = "https://reactjs.org/docs/error-decoder.html?invariant=" + code;
+
+  for (var i = 1; i < arguments.length; i++) {
     url += "&args[]=" + encodeURIComponent(arguments[i]);
+  }
+
   error.message =
     "Minified React error #" +
     code +
     "; visit " +
     url +
-    " for the full message or use the non-minified dev environment for full errors and additional helpful warnings. ";
+    " for the full message or " +
+    "use the non-minified dev environment for full errors and additional " +
+    "helpful warnings. ";
   return error;
 }
-var hasSymbol = "function" === typeof Symbol && Symbol.for,
-  REACT_ELEMENT_TYPE = hasSymbol ? Symbol.for("react.element") : 60103,
-  REACT_FRAGMENT_TYPE = hasSymbol ? Symbol.for("react.fragment") : 60107;
+
+// Do not require this module directly! Use normal `invariant` calls with
+// template literal strings. The messages will be converted to ReactError during
+// build, and in production they will be minified.
+
+// The Symbol used to tag the ReactElement-like types. If there is no native Symbol
+// nor polyfill, then a plain number is used for performance.
+var hasSymbol = typeof Symbol === "function" && Symbol.for;
+var REACT_ELEMENT_TYPE = hasSymbol ? Symbol.for("react.element") : 0xeac7;
+
+var REACT_FRAGMENT_TYPE = hasSymbol ? Symbol.for("react.fragment") : 0xeacb;
+
+// TODO: We don't use AsyncMode or ConcurrentMode anymore. They were temporary
+// (unstable) APIs that have been removed. Can we remove the symbols?
+
+/**
+ * Use invariant() to assert state which your program assumes to be true.
+ *
+ * Provide sprintf-style format (only %s is supported) and arguments
+ * to provide information about what broke and what you were
+ * expecting.
+ *
+ * The invariant message will be stripped in production, but the invariant
+ * will remain to ensure logic does not differ in production.
+ */
+
 function captureAssertion(fn) {
+  // Trick to use a Jest matcher inside another Jest matcher. `fn` contains an
+  // assertion; if it throws, we capture the error and return it, so the stack
+  // trace presented to the user points to the original assertion in the
+  // test file.
   try {
     fn();
   } catch (error) {
     return {
-      pass: !1,
+      pass: false,
       message: function() {
         return error.message;
       }
     };
   }
-  return { pass: !0 };
-}
-function jsonChildToJSXChild(jsonChild) {
-  if (null === jsonChild || "string" === typeof jsonChild) return jsonChild;
-  var jsxChildren = jsonChildrenToJSXChildren(jsonChild.children);
+
   return {
-    $$typeof: REACT_ELEMENT_TYPE,
-    type: jsonChild.type,
-    key: null,
-    ref: null,
-    props:
-      null === jsxChildren
-        ? jsonChild.props
-        : Object.assign({}, jsonChild.props, { children: jsxChildren }),
-    _owner: null,
-    _store: void 0
+    pass: true
   };
 }
-function jsonChildrenToJSXChildren(jsonChildren) {
-  if (null !== jsonChildren) {
-    if (1 === jsonChildren.length) return jsonChildToJSXChild(jsonChildren[0]);
-    if (1 < jsonChildren.length) {
-      for (
-        var jsxChildren = [],
-          allJSXChildrenAreStrings = !0,
-          jsxChildrenString = "",
-          i = 0;
-        i < jsonChildren.length;
-        i++
-      ) {
-        var jsxChild = jsonChildToJSXChild(jsonChildren[i]);
-        jsxChildren.push(jsxChild);
-        allJSXChildrenAreStrings &&
-          ("string" === typeof jsxChild
-            ? (jsxChildrenString += jsxChild)
-            : null !== jsxChild && (allJSXChildrenAreStrings = !1));
+
+function assertYieldsWereCleared(root) {
+  var Scheduler = root._Scheduler;
+  var actualYields = Scheduler.unstable_clearYields();
+
+  (function() {
+    if (!(actualYields.length === 0)) {
+      {
+        throw ReactErrorProd(Error(296));
       }
-      return allJSXChildrenAreStrings ? jsxChildrenString : jsxChildren;
     }
-  }
-  return null;
+  })();
 }
-exports.unstable_toMatchRenderedOutput = function(root, expectedJSX) {
-  if (0 !== root._Scheduler.unstable_clearYields().length)
-    throw ReactErrorProd(Error(296));
-  root = root.toJSON();
-  if (null === root || "string" === typeof root) var actualJSX = root;
-  else
-    Array.isArray(root)
-      ? 0 === root.length
-        ? (actualJSX = null)
-        : 1 === root.length
-          ? (actualJSX = jsonChildToJSXChild(root[0]))
-          : ((root = jsonChildrenToJSXChildren(root)),
-            (actualJSX =
-              null === root || "string" === typeof root
-                ? root
-                : {
-                    $$typeof: REACT_ELEMENT_TYPE,
-                    type: REACT_FRAGMENT_TYPE,
-                    key: null,
-                    ref: null,
-                    props: { children: root },
-                    _owner: null,
-                    _store: void 0
-                  }))
-      : (actualJSX = jsonChildToJSXChild(root));
+
+function unstable_toMatchRenderedOutput(root, expectedJSX) {
+  assertYieldsWereCleared(root);
+  var actualJSON = root.toJSON();
+  var actualJSX;
+
+  if (actualJSON === null || typeof actualJSON === "string") {
+    actualJSX = actualJSON;
+  } else if (Array.isArray(actualJSON)) {
+    if (actualJSON.length === 0) {
+      actualJSX = null;
+    } else if (actualJSON.length === 1) {
+      actualJSX = jsonChildToJSXChild(actualJSON[0]);
+    } else {
+      var actualJSXChildren = jsonChildrenToJSXChildren(actualJSON);
+
+      if (actualJSXChildren === null || typeof actualJSXChildren === "string") {
+        actualJSX = actualJSXChildren;
+      } else {
+        actualJSX = {
+          $$typeof: REACT_ELEMENT_TYPE,
+          type: REACT_FRAGMENT_TYPE,
+          key: null,
+          ref: null,
+          props: {
+            children: actualJSXChildren
+          },
+          _owner: null,
+          _store: undefined
+        };
+      }
+    }
+  } else {
+    actualJSX = jsonChildToJSXChild(actualJSON);
+  }
+
   return captureAssertion(function() {
     expect(actualJSX).toEqual(expectedJSX);
   });
-};
+}
+
+function jsonChildToJSXChild(jsonChild) {
+  if (jsonChild === null || typeof jsonChild === "string") {
+    return jsonChild;
+  } else {
+    var jsxChildren = jsonChildrenToJSXChildren(jsonChild.children);
+    return {
+      $$typeof: REACT_ELEMENT_TYPE,
+      type: jsonChild.type,
+      key: null,
+      ref: null,
+      props:
+        jsxChildren === null
+          ? jsonChild.props
+          : Object.assign({}, jsonChild.props, {
+              children: jsxChildren
+            }),
+      _owner: null,
+      _store: undefined
+    };
+  }
+}
+
+function jsonChildrenToJSXChildren(jsonChildren) {
+  if (jsonChildren !== null) {
+    if (jsonChildren.length === 1) {
+      return jsonChildToJSXChild(jsonChildren[0]);
+    } else if (jsonChildren.length > 1) {
+      var jsxChildren = [];
+      var allJSXChildrenAreStrings = true;
+      var jsxChildrenString = "";
+
+      for (var i = 0; i < jsonChildren.length; i++) {
+        var jsxChild = jsonChildToJSXChild(jsonChildren[i]);
+        jsxChildren.push(jsxChild);
+
+        if (allJSXChildrenAreStrings) {
+          if (typeof jsxChild === "string") {
+            jsxChildrenString += jsxChild;
+          } else if (jsxChild !== null) {
+            allJSXChildrenAreStrings = false;
+          }
+        }
+      }
+
+      return allJSXChildrenAreStrings ? jsxChildrenString : jsxChildren;
+    }
+  }
+
+  return null;
+}
+
+exports.unstable_toMatchRenderedOutput = unstable_toMatchRenderedOutput;

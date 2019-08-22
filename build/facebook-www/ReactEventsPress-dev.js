@@ -1,18 +1,3 @@
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @noflow
- * @preventMunge
- * @preserve-invariant-messages
- */
-
-'use strict';
-
-if (__DEV__) {
-  (function() {
 "use strict";
 
 var React = require("react");
@@ -773,20 +758,11 @@ function usePressResponder(props) {
   return React.unstable_useResponder(PressResponder, props);
 }
 
-var Press = /*#__PURE__*/ Object.freeze({
+var Press = Object.freeze({
   PressResponder: PressResponder,
   usePressResponder: usePressResponder
 });
 
-function getCjsExportFromNamespace(n) {
-  return (n && n["default"]) || n;
-}
-
-var require$$0 = getCjsExportFromNamespace(Press);
-
-var press = require$$0;
+var press = Press;
 
 module.exports = press;
-
-  })();
-}

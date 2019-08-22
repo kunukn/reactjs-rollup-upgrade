@@ -1,18 +1,3 @@
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @noflow
- * @preventMunge
- * @preserve-invariant-messages
- */
-
-'use strict';
-
-if (__DEV__) {
-  (function() {
 "use strict";
 
 var React = require("react");
@@ -89,20 +74,11 @@ function useContextMenuResponder(props) {
   return React.unstable_useResponder(ContextMenuResponder, props);
 }
 
-var ContextMenu = /*#__PURE__*/ Object.freeze({
+var ContextMenu = Object.freeze({
   ContextMenuResponder: ContextMenuResponder,
   useContextMenuResponder: useContextMenuResponder
 });
 
-function getCjsExportFromNamespace(n) {
-  return (n && n["default"]) || n;
-}
-
-var require$$0 = getCjsExportFromNamespace(ContextMenu);
-
-var contextMenu = require$$0;
+var contextMenu = ContextMenu;
 
 module.exports = contextMenu;
-
-  })();
-}

@@ -1,39 +1,30 @@
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @noflow
- * @preventMunge
- * @preserve-invariant-messages
- */
-
-'use strict';
-
-if (__DEV__) {
-  (function() {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 
 // Re-export dynamic flags from the www version.
-var _require = require("ReactFeatureFlags"),
-  debugRenderPhaseSideEffects = _require.debugRenderPhaseSideEffects,
-  debugRenderPhaseSideEffectsForStrictMode =
-    _require.debugRenderPhaseSideEffectsForStrictMode,
-  replayFailedUnitOfWorkWithInvokeGuardedCallback =
-    _require.replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  warnAboutDeprecatedLifecycles = _require.warnAboutDeprecatedLifecycles,
-  disableInputAttributeSyncing = _require.disableInputAttributeSyncing,
-  warnAboutShorthandPropertyCollision =
-    _require.warnAboutShorthandPropertyCollision,
-  warnAboutDeprecatedSetNativeProps =
-    _require.warnAboutDeprecatedSetNativeProps,
-  enableUserBlockingEvents = _require.enableUserBlockingEvents,
-  disableLegacyContext = _require.disableLegacyContext,
-  disableSchedulerTimeoutBasedOnReactExpirationTime =
-    _require.disableSchedulerTimeoutBasedOnReactExpirationTime; // In www, we have experimental support for gathering data
+var _require = require("ReactFeatureFlags");
+var debugRenderPhaseSideEffects = _require.debugRenderPhaseSideEffects;
+var debugRenderPhaseSideEffectsForStrictMode =
+  _require.debugRenderPhaseSideEffectsForStrictMode;
+var replayFailedUnitOfWorkWithInvokeGuardedCallback =
+  _require.replayFailedUnitOfWorkWithInvokeGuardedCallback;
+var warnAboutDeprecatedLifecycles = _require.warnAboutDeprecatedLifecycles;
+var disableInputAttributeSyncing = _require.disableInputAttributeSyncing;
+var warnAboutShorthandPropertyCollision =
+  _require.warnAboutShorthandPropertyCollision;
+var warnAboutDeprecatedSetNativeProps =
+  _require.warnAboutDeprecatedSetNativeProps;
+var enableUserBlockingEvents = _require.enableUserBlockingEvents;
+var disableLegacyContext = _require.disableLegacyContext;
+var disableSchedulerTimeoutBasedOnReactExpirationTime =
+  _require.disableSchedulerTimeoutBasedOnReactExpirationTime; // In www, we have experimental support for gathering data
+
+var enableSchedulerTracing = true;
+
+// The flag is intentionally updated in a timeout.
+
+// Flow magic to verify the exports of this file match the original version.
 
 var DEFAULT_THREAD_ID = 0; // Counters used to generate unique IDs.
 
@@ -47,7 +38,7 @@ exports.__interactionsRef = null; // Listener(s) to notify when interactions beg
 
 exports.__subscriberRef = null;
 
-{
+if (enableSchedulerTracing) {
   exports.__interactionsRef = {
     current: new Set()
   };
@@ -55,7 +46,12 @@ exports.__subscriberRef = null;
     current: null
   };
 }
+
 function unstable_clear(callback) {
+  if (!enableSchedulerTracing) {
+    return callback();
+  }
+
   var prevInteractions = exports.__interactionsRef.current;
   exports.__interactionsRef.current = new Set();
 
@@ -66,7 +62,9 @@ function unstable_clear(callback) {
   }
 }
 function unstable_getCurrent() {
-  {
+  if (!enableSchedulerTracing) {
+    return null;
+  } else {
     return exports.__interactionsRef.current;
   }
 }
@@ -78,6 +76,10 @@ function unstable_trace(name, timestamp, callback) {
     arguments.length > 3 && arguments[3] !== undefined
       ? arguments[3]
       : DEFAULT_THREAD_ID;
+
+  if (!enableSchedulerTracing) {
+    return callback();
+  }
 
   var interaction = {
     __count: 1,
@@ -133,6 +135,10 @@ function unstable_wrap(callback) {
     arguments.length > 1 && arguments[1] !== undefined
       ? arguments[1]
       : DEFAULT_THREAD_ID;
+
+  if (!enableSchedulerTracing) {
+    return callback;
+  }
 
   var wrappedInteractions = exports.__interactionsRef.current;
   var subscriber = exports.__subscriberRef.current;
@@ -218,12 +224,12 @@ function unstable_wrap(callback) {
 
 var subscribers = null;
 
-{
+if (enableSchedulerTracing) {
   subscribers = new Set();
 }
 
 function unstable_subscribe(subscriber) {
-  {
+  if (enableSchedulerTracing) {
     subscribers.add(subscriber);
 
     if (subscribers.size === 1) {
@@ -239,7 +245,7 @@ function unstable_subscribe(subscriber) {
   }
 }
 function unstable_unsubscribe(subscriber) {
-  {
+  if (enableSchedulerTracing) {
     subscribers.delete(subscriber);
 
     if (subscribers.size === 0) {
@@ -365,10 +371,7 @@ function onWorkCanceled(interactions, threadID) {
 exports.unstable_clear = unstable_clear;
 exports.unstable_getCurrent = unstable_getCurrent;
 exports.unstable_getThreadID = unstable_getThreadID;
-exports.unstable_subscribe = unstable_subscribe;
 exports.unstable_trace = unstable_trace;
-exports.unstable_unsubscribe = unstable_unsubscribe;
 exports.unstable_wrap = unstable_wrap;
-
-  })();
-}
+exports.unstable_subscribe = unstable_subscribe;
+exports.unstable_unsubscribe = unstable_unsubscribe;

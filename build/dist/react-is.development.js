@@ -1,45 +1,66 @@
-/** @license React vundefined
- * react-is.development.js
- *
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-'use strict';
-
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-  typeof define === 'function' && define.amd ? define(['exports'], factory) :
-  (global = global || self, factory(global.ReactIs = {}));
-}(this, function (exports) { 'use strict';
+(function(global, factory) {
+  typeof exports === "object" && typeof module !== "undefined"
+    ? factory(exports)
+    : typeof define === "function" && define.amd
+      ? define(["exports"], factory)
+      : factory((global.ReactIs = {}));
+})(this, function(exports) {
+  "use strict";
 
   // The Symbol used to tag the ReactElement-like types. If there is no native Symbol
   // nor polyfill, then a plain number is used for performance.
-  var hasSymbol = typeof Symbol === 'function' && Symbol.for;
-  var REACT_ELEMENT_TYPE = hasSymbol ? Symbol.for('react.element') : 0xeac7;
-  var REACT_PORTAL_TYPE = hasSymbol ? Symbol.for('react.portal') : 0xeaca;
-  var REACT_FRAGMENT_TYPE = hasSymbol ? Symbol.for('react.fragment') : 0xeacb;
-  var REACT_STRICT_MODE_TYPE = hasSymbol ? Symbol.for('react.strict_mode') : 0xeacc;
-  var REACT_PROFILER_TYPE = hasSymbol ? Symbol.for('react.profiler') : 0xead2;
-  var REACT_PROVIDER_TYPE = hasSymbol ? Symbol.for('react.provider') : 0xeacd;
-  var REACT_CONTEXT_TYPE = hasSymbol ? Symbol.for('react.context') : 0xeace; // TODO: We don't use AsyncMode or ConcurrentMode anymore. They were temporary
+  var hasSymbol = typeof Symbol === "function" && Symbol.for;
+  var REACT_ELEMENT_TYPE = hasSymbol ? Symbol.for("react.element") : 0xeac7;
+  var REACT_PORTAL_TYPE = hasSymbol ? Symbol.for("react.portal") : 0xeaca;
+  var REACT_FRAGMENT_TYPE = hasSymbol ? Symbol.for("react.fragment") : 0xeacb;
+  var REACT_STRICT_MODE_TYPE = hasSymbol
+    ? Symbol.for("react.strict_mode")
+    : 0xeacc;
+  var REACT_PROFILER_TYPE = hasSymbol ? Symbol.for("react.profiler") : 0xead2;
+  var REACT_PROVIDER_TYPE = hasSymbol ? Symbol.for("react.provider") : 0xeacd;
+  var REACT_CONTEXT_TYPE = hasSymbol ? Symbol.for("react.context") : 0xeace; // TODO: We don't use AsyncMode or ConcurrentMode anymore. They were temporary
   // (unstable) APIs that have been removed. Can we remove the symbols?
 
-  var REACT_ASYNC_MODE_TYPE = hasSymbol ? Symbol.for('react.async_mode') : 0xeacf;
-  var REACT_CONCURRENT_MODE_TYPE = hasSymbol ? Symbol.for('react.concurrent_mode') : 0xeacf;
-  var REACT_FORWARD_REF_TYPE = hasSymbol ? Symbol.for('react.forward_ref') : 0xead0;
-  var REACT_SUSPENSE_TYPE = hasSymbol ? Symbol.for('react.suspense') : 0xead1;
-  var REACT_SUSPENSE_LIST_TYPE = hasSymbol ? Symbol.for('react.suspense_list') : 0xead8;
-  var REACT_MEMO_TYPE = hasSymbol ? Symbol.for('react.memo') : 0xead3;
-  var REACT_LAZY_TYPE = hasSymbol ? Symbol.for('react.lazy') : 0xead4;
-  var REACT_FUNDAMENTAL_TYPE = hasSymbol ? Symbol.for('react.fundamental') : 0xead5;
-  var REACT_RESPONDER_TYPE = hasSymbol ? Symbol.for('react.responder') : 0xead6;
+  var REACT_ASYNC_MODE_TYPE = hasSymbol
+    ? Symbol.for("react.async_mode")
+    : 0xeacf;
+  var REACT_CONCURRENT_MODE_TYPE = hasSymbol
+    ? Symbol.for("react.concurrent_mode")
+    : 0xeacf;
+  var REACT_FORWARD_REF_TYPE = hasSymbol
+    ? Symbol.for("react.forward_ref")
+    : 0xead0;
+  var REACT_SUSPENSE_TYPE = hasSymbol ? Symbol.for("react.suspense") : 0xead1;
+  var REACT_SUSPENSE_LIST_TYPE = hasSymbol
+    ? Symbol.for("react.suspense_list")
+    : 0xead8;
+  var REACT_MEMO_TYPE = hasSymbol ? Symbol.for("react.memo") : 0xead3;
+  var REACT_LAZY_TYPE = hasSymbol ? Symbol.for("react.lazy") : 0xead4;
+  var REACT_FUNDAMENTAL_TYPE = hasSymbol
+    ? Symbol.for("react.fundamental")
+    : 0xead5;
+  var REACT_RESPONDER_TYPE = hasSymbol ? Symbol.for("react.responder") : 0xead6;
 
   function isValidElementType(type) {
-    return typeof type === 'string' || typeof type === 'function' || // Note: its typeof might be other than 'symbol' or 'number' if it's a polyfill.
-    type === REACT_FRAGMENT_TYPE || type === REACT_CONCURRENT_MODE_TYPE || type === REACT_PROFILER_TYPE || type === REACT_STRICT_MODE_TYPE || type === REACT_SUSPENSE_TYPE || type === REACT_SUSPENSE_LIST_TYPE || typeof type === 'object' && type !== null && (type.$$typeof === REACT_LAZY_TYPE || type.$$typeof === REACT_MEMO_TYPE || type.$$typeof === REACT_PROVIDER_TYPE || type.$$typeof === REACT_CONTEXT_TYPE || type.$$typeof === REACT_FORWARD_REF_TYPE || type.$$typeof === REACT_FUNDAMENTAL_TYPE || type.$$typeof === REACT_RESPONDER_TYPE);
+    return (
+      typeof type === "string" ||
+      typeof type === "function" || // Note: its typeof might be other than 'symbol' or 'number' if it's a polyfill.
+      type === REACT_FRAGMENT_TYPE ||
+      type === REACT_CONCURRENT_MODE_TYPE ||
+      type === REACT_PROFILER_TYPE ||
+      type === REACT_STRICT_MODE_TYPE ||
+      type === REACT_SUSPENSE_TYPE ||
+      type === REACT_SUSPENSE_LIST_TYPE ||
+      (typeof type === "object" &&
+        type !== null &&
+        (type.$$typeof === REACT_LAZY_TYPE ||
+          type.$$typeof === REACT_MEMO_TYPE ||
+          type.$$typeof === REACT_PROVIDER_TYPE ||
+          type.$$typeof === REACT_CONTEXT_TYPE ||
+          type.$$typeof === REACT_FORWARD_REF_TYPE ||
+          type.$$typeof === REACT_FUNDAMENTAL_TYPE ||
+          type.$$typeof === REACT_RESPONDER_TYPE))
+    );
   }
 
   /**
@@ -55,20 +76,28 @@
    * paths. Removing the logging code for production environments will keep the
    * same logic and follow the same code paths.
    */
-  var lowPriorityWarning = function () {};
+  var lowPriorityWarning = function() {};
 
   {
-    var printWarning = function (format) {
-      for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+    var printWarning = function(format) {
+      for (
+        var _len = arguments.length,
+          args = new Array(_len > 1 ? _len - 1 : 0),
+          _key = 1;
+        _key < _len;
+        _key++
+      ) {
         args[_key - 1] = arguments[_key];
       }
 
       var argIndex = 0;
-      var message = 'Warning: ' + format.replace(/%s/g, function () {
-        return args[argIndex++];
-      });
+      var message =
+        "Warning: " +
+        format.replace(/%s/g, function() {
+          return args[argIndex++];
+        });
 
-      if (typeof console !== 'undefined') {
+      if (typeof console !== "undefined") {
         console.warn(message);
       }
 
@@ -80,13 +109,22 @@
       } catch (x) {}
     };
 
-    lowPriorityWarning = function (condition, format) {
+    lowPriorityWarning = function(condition, format) {
       if (format === undefined) {
-        throw new Error('`lowPriorityWarning(condition, format, ...args)` requires a warning ' + 'message argument');
+        throw new Error(
+          "`lowPriorityWarning(condition, format, ...args)` requires a warning " +
+            "message argument"
+        );
       }
 
       if (!condition) {
-        for (var _len2 = arguments.length, args = new Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
+        for (
+          var _len2 = arguments.length,
+            args = new Array(_len2 > 2 ? _len2 - 2 : 0),
+            _key2 = 2;
+          _key2 < _len2;
+          _key2++
+        ) {
           args[_key2 - 2] = arguments[_key2];
         }
 
@@ -98,7 +136,7 @@
   var lowPriorityWarning$1 = lowPriorityWarning;
 
   function typeOf(object) {
-    if (typeof object === 'object' && object !== null) {
+    if (typeof object === "object" && object !== null) {
       var $$typeof = object.$$typeof;
 
       switch ($$typeof) {
@@ -126,7 +164,6 @@
                 default:
                   return $$typeof;
               }
-
           }
 
         case REACT_LAZY_TYPE:
@@ -158,7 +195,12 @@
     {
       if (!hasWarnedAboutDeprecatedIsAsyncMode) {
         hasWarnedAboutDeprecatedIsAsyncMode = true;
-        lowPriorityWarning$1(false, 'The ReactIs.isAsyncMode() alias has been deprecated, ' + 'and will be removed in React 17+. Update your code to use ' + 'ReactIs.isConcurrentMode() instead. It has the exact same API.');
+        lowPriorityWarning$1(
+          false,
+          "The ReactIs.isAsyncMode() alias has been deprecated, " +
+            "and will be removed in React 17+. Update your code to use " +
+            "ReactIs.isConcurrentMode() instead. It has the exact same API."
+        );
       }
     }
 
@@ -174,7 +216,11 @@
     return typeOf(object) === REACT_PROVIDER_TYPE;
   }
   function isElement(object) {
-    return typeof object === 'object' && object !== null && object.$$typeof === REACT_ELEMENT_TYPE;
+    return (
+      typeof object === "object" &&
+      object !== null &&
+      object.$$typeof === REACT_ELEMENT_TYPE
+    );
   }
   function isForwardRef(object) {
     return typeOf(object) === REACT_FORWARD_REF_TYPE;
@@ -201,6 +247,7 @@
     return typeOf(object) === REACT_SUSPENSE_TYPE;
   }
 
+  exports.typeOf = typeOf;
   exports.AsyncMode = AsyncMode;
   exports.ConcurrentMode = ConcurrentMode;
   exports.ContextConsumer = ContextConsumer;
@@ -214,6 +261,7 @@
   exports.Profiler = Profiler;
   exports.StrictMode = StrictMode;
   exports.Suspense = Suspense;
+  exports.isValidElementType = isValidElementType;
   exports.isAsyncMode = isAsyncMode;
   exports.isConcurrentMode = isConcurrentMode;
   exports.isContextConsumer = isContextConsumer;
@@ -227,9 +275,6 @@
   exports.isProfiler = isProfiler;
   exports.isStrictMode = isStrictMode;
   exports.isSuspense = isSuspense;
-  exports.isValidElementType = isValidElementType;
-  exports.typeOf = typeOf;
 
-  Object.defineProperty(exports, '__esModule', { value: true });
-
-}));
+  Object.defineProperty(exports, "__esModule", { value: true });
+});

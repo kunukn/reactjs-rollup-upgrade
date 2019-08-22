@@ -1,21 +1,7 @@
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @noflow
- * @preventMunge
- * @preserve-invariant-messages
- */
-
-'use strict';
-
-if (__DEV__) {
-  (function() {
 "use strict";
 
 /* eslint-disable no-for-of-loops/no-for-of-loops */
+
 /**
  * Catch all identifiers that begin with "use" followed by an uppercase Latin
  * character to exclude identifiers like "user".
@@ -2496,19 +2482,10 @@ var rules = {
   "exhaustive-deps": ExhaustiveDeps
 };
 
-var src = /*#__PURE__*/ Object.freeze({
+var src = Object.freeze({
   rules: rules
 });
 
-function getCjsExportFromNamespace(n) {
-  return (n && n["default"]) || n;
-}
-
-var require$$0 = getCjsExportFromNamespace(src);
-
-var eslintPluginReactHooks = require$$0;
+var eslintPluginReactHooks = src;
 
 module.exports = eslintPluginReactHooks;
-
-  })();
-}

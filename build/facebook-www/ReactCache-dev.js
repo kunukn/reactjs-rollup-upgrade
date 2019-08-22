@@ -1,18 +1,3 @@
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @noflow
- * @preventMunge
- * @preserve-invariant-messages
- */
-
-'use strict';
-
-if (__DEV__) {
-  (function() {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -24,8 +9,8 @@ var warningWithoutStack = require("warning");
 
 // use dynamic dispatch for CommonJS interop named imports.
 
-var scheduleCallback = Scheduler.unstable_scheduleCallback,
-  IdlePriority = Scheduler.unstable_IdlePriority;
+var scheduleCallback = Scheduler.unstable_scheduleCallback;
+var IdlePriority = Scheduler.unstable_IdlePriority;
 function createLRU(limit) {
   var LIMIT = limit; // Circular, doubly-linked list
 
@@ -127,6 +112,9 @@ function createLRU(limit) {
         entry.next = resolvedFirst;
         first = entry;
       }
+    } else {
+      // Cannot access a deleted entry
+      // TODO: Error? Warning?
     }
 
     scheduleCleanUp();
@@ -295,6 +283,3 @@ function unstable_setGlobalCacheLimit(limit) {
 
 exports.unstable_createResource = unstable_createResource;
 exports.unstable_setGlobalCacheLimit = unstable_setGlobalCacheLimit;
-
-  })();
-}

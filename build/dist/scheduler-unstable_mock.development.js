@@ -1,19 +1,11 @@
-/** @license React vundefined
- * scheduler-unstable_mock.development.js
- *
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-'use strict';
-
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-  typeof define === 'function' && define.amd ? define(['exports'], factory) :
-  (global = global || self, factory(global.SchedulerMock = {}));
-}(this, function (exports) { 'use strict';
+(function(global, factory) {
+  typeof exports === "object" && typeof module !== "undefined"
+    ? factory(exports)
+    : typeof define === "function" && define.amd
+      ? define(["exports"], factory)
+      : factory((global.SchedulerMock = {}));
+})(this, function(exports) {
+  "use strict";
 
   var enableSchedulerDebugging = false;
 
@@ -30,6 +22,7 @@
   function requestHostCallback(callback) {
     scheduledCallback = callback;
   }
+
   function requestHostTimeout(callback, ms) {
     scheduledTimeout = callback;
     timeoutTime = currentTime + ms;
@@ -39,7 +32,12 @@
     timeoutTime = -1;
   }
   function shouldYieldToHost() {
-    if (expectedNumberOfYields !== -1 && yieldedValues !== null && yieldedValues.length >= expectedNumberOfYields || shouldYieldForPaint && needsPaint) {
+    if (
+      (expectedNumberOfYields !== -1 &&
+        yieldedValues !== null &&
+        yieldedValues.length >= expectedNumberOfYields) ||
+      (shouldYieldForPaint && needsPaint)
+    ) {
       // We yielded at least as many values as expected. Stop flushing.
       didStop = true;
       return true;
@@ -50,12 +48,14 @@
   function getCurrentTime() {
     return currentTime;
   }
-  function forceFrameRate() {// No-op
+  function forceFrameRate() {
+    // No-op
   }
+  // Should only be used via an assertion helper that inspects the yielded values.
 
   function unstable_flushNumberOfYields(count) {
     if (isFlushing) {
-      throw new Error('Already flushing work.');
+      throw new Error("Already flushing work.");
     }
 
     if (scheduledCallback !== null) {
@@ -82,7 +82,7 @@
   }
   function unstable_flushUntilNextPaint() {
     if (isFlushing) {
-      throw new Error('Already flushing work.');
+      throw new Error("Already flushing work.");
     }
 
     if (scheduledCallback !== null) {
@@ -110,7 +110,7 @@
   }
   function unstable_flushExpired() {
     if (isFlushing) {
-      throw new Error('Already flushing work.');
+      throw new Error("Already flushing work.");
     }
 
     if (scheduledCallback !== null) {
@@ -130,7 +130,7 @@
   function unstable_flushAllWithoutAsserting() {
     // Returns false if no work was flushed.
     if (isFlushing) {
-      throw new Error('Already flushing work.');
+      throw new Error("Already flushing work.");
     }
 
     if (scheduledCallback !== null) {
@@ -167,13 +167,20 @@
   }
   function unstable_flushAll() {
     if (yieldedValues !== null) {
-      throw new Error('Log is not empty. Assert on the log of yielded values before ' + 'flushing additional work.');
+      throw new Error(
+        "Log is not empty. Assert on the log of yielded values before " +
+          "flushing additional work."
+      );
     }
 
     unstable_flushAllWithoutAsserting();
 
     if (yieldedValues !== null) {
-      throw new Error('While flushing work, something yielded a value. Use an ' + 'assertion helper to assert on the log of yielded values, e.g. ' + 'expect(Scheduler).toFlushAndYield([...])');
+      throw new Error(
+        "While flushing work, something yielded a value. Use an " +
+          "assertion helper to assert on the log of yielded values, e.g. " +
+          "expect(Scheduler).toFlushAndYield([...])"
+      );
     }
   }
   function unstable_yieldValue(value) {
@@ -283,7 +290,6 @@
   }
 
   /* eslint-disable no-var */
-
   var ImmediatePriority = 1;
   var UserBlockingPriority = 2;
   var NormalPriority = 3;
@@ -319,7 +325,9 @@
     currentPriorityLevel = task.priorityLevel;
     var didUserCallbackTimeout = task.expirationTime <= currentTime;
     var continuationCallback = callback(didUserCallbackTimeout);
-    return typeof continuationCallback === 'function' ? continuationCallback : null;
+    return typeof continuationCallback === "function"
+      ? continuationCallback
+      : null;
   }
 
   function advanceTimers(currentTime) {
@@ -380,8 +388,14 @@
       advanceTimers(currentTime);
       currentTask = peek(taskQueue);
 
-      while (currentTask !== null && !(enableSchedulerDebugging && isSchedulerPaused)) {
-        if (currentTask.expirationTime > currentTime && (!hasTimeRemaining || shouldYieldToHost())) {
+      while (
+        currentTask !== null &&
+        !(enableSchedulerDebugging && isSchedulerPaused)
+      ) {
+        if (
+          currentTask.expirationTime > currentTime &&
+          (!hasTimeRemaining || shouldYieldToHost())
+        ) {
           // This currentTask hasn't expired, and we've reached the deadline.
           break;
         }
@@ -408,7 +422,6 @@
 
         currentTask = peek(taskQueue);
       } // Return whether there's additional work
-
 
       if (currentTask !== null) {
         return true;
@@ -480,7 +493,7 @@
 
   function unstable_wrapCallback(callback) {
     var parentPriorityLevel = currentPriorityLevel;
-    return function () {
+    return function() {
       // This is a fork of runWithPriority, inlined for performance.
       var previousPriorityLevel = currentPriorityLevel;
       currentPriorityLevel = parentPriorityLevel;
@@ -518,16 +531,19 @@
     var startTime;
     var timeout;
 
-    if (typeof options === 'object' && options !== null) {
+    if (typeof options === "object" && options !== null) {
       var delay = options.delay;
 
-      if (typeof delay === 'number' && delay > 0) {
+      if (typeof delay === "number" && delay > 0) {
         startTime = currentTime + delay;
       } else {
         startTime = currentTime;
       }
 
-      timeout = typeof options.timeout === 'number' ? options.timeout : timeoutForPriorityLevel(priorityLevel);
+      timeout =
+        typeof options.timeout === "number"
+          ? options.timeout
+          : timeoutForPriorityLevel(priorityLevel);
     } else {
       timeout = timeoutForPriorityLevel(priorityLevel);
       startTime = currentTime;
@@ -556,7 +572,6 @@
         } else {
           isHostTimeoutScheduled = true;
         } // Schedule a timeout.
-
 
         requestHostTimeout(handleTimeout, startTime - currentTime);
       }
@@ -606,38 +621,45 @@
     var currentTime = getCurrentTime();
     advanceTimers(currentTime);
     var firstTask = peek(taskQueue);
-    return firstTask !== currentTask && currentTask !== null && firstTask !== null && firstTask.callback !== null && firstTask.startTime <= currentTime && firstTask.expirationTime < currentTask.expirationTime || shouldYieldToHost();
+    return (
+      (firstTask !== currentTask &&
+        currentTask !== null &&
+        firstTask !== null &&
+        firstTask.callback !== null &&
+        firstTask.startTime <= currentTime &&
+        firstTask.expirationTime < currentTask.expirationTime) ||
+      shouldYieldToHost()
+    );
   }
 
   var unstable_requestPaint = requestPaint;
 
-  exports.unstable_IdlePriority = IdlePriority;
-  exports.unstable_ImmediatePriority = ImmediatePriority;
-  exports.unstable_LowPriority = LowPriority;
-  exports.unstable_NormalPriority = NormalPriority;
-  exports.unstable_UserBlockingPriority = UserBlockingPriority;
-  exports.unstable_advanceTime = unstable_advanceTime;
-  exports.unstable_cancelCallback = unstable_cancelCallback;
-  exports.unstable_clearYields = unstable_clearYields;
-  exports.unstable_continueExecution = unstable_continueExecution;
-  exports.unstable_flushAll = unstable_flushAll;
   exports.unstable_flushAllWithoutAsserting = unstable_flushAllWithoutAsserting;
-  exports.unstable_flushExpired = unstable_flushExpired;
   exports.unstable_flushNumberOfYields = unstable_flushNumberOfYields;
+  exports.unstable_flushExpired = unstable_flushExpired;
+  exports.unstable_clearYields = unstable_clearYields;
   exports.unstable_flushUntilNextPaint = unstable_flushUntilNextPaint;
-  exports.unstable_forceFrameRate = forceFrameRate;
-  exports.unstable_getCurrentPriorityLevel = unstable_getCurrentPriorityLevel;
-  exports.unstable_getFirstCallbackNode = unstable_getFirstCallbackNode;
-  exports.unstable_next = unstable_next;
-  exports.unstable_now = getCurrentTime;
-  exports.unstable_pauseExecution = unstable_pauseExecution;
-  exports.unstable_requestPaint = unstable_requestPaint;
-  exports.unstable_runWithPriority = unstable_runWithPriority;
-  exports.unstable_scheduleCallback = unstable_scheduleCallback;
-  exports.unstable_shouldYield = unstable_shouldYield;
-  exports.unstable_wrapCallback = unstable_wrapCallback;
+  exports.unstable_flushAll = unstable_flushAll;
   exports.unstable_yieldValue = unstable_yieldValue;
+  exports.unstable_advanceTime = unstable_advanceTime;
+  exports.unstable_ImmediatePriority = ImmediatePriority;
+  exports.unstable_UserBlockingPriority = UserBlockingPriority;
+  exports.unstable_NormalPriority = NormalPriority;
+  exports.unstable_IdlePriority = IdlePriority;
+  exports.unstable_LowPriority = LowPriority;
+  exports.unstable_runWithPriority = unstable_runWithPriority;
+  exports.unstable_next = unstable_next;
+  exports.unstable_scheduleCallback = unstable_scheduleCallback;
+  exports.unstable_cancelCallback = unstable_cancelCallback;
+  exports.unstable_wrapCallback = unstable_wrapCallback;
+  exports.unstable_getCurrentPriorityLevel = unstable_getCurrentPriorityLevel;
+  exports.unstable_shouldYield = unstable_shouldYield;
+  exports.unstable_requestPaint = unstable_requestPaint;
+  exports.unstable_continueExecution = unstable_continueExecution;
+  exports.unstable_pauseExecution = unstable_pauseExecution;
+  exports.unstable_getFirstCallbackNode = unstable_getFirstCallbackNode;
+  exports.unstable_now = getCurrentTime;
+  exports.unstable_forceFrameRate = forceFrameRate;
 
-  Object.defineProperty(exports, '__esModule', { value: true });
-
-}));
+  Object.defineProperty(exports, "__esModule", { value: true });
+});

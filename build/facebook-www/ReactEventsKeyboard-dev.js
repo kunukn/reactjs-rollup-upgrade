@@ -1,18 +1,3 @@
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @noflow
- * @preventMunge
- * @preserve-invariant-messages
- */
-
-'use strict';
-
-if (__DEV__) {
-  (function() {
 "use strict";
 
 var React = require("react");
@@ -180,20 +165,11 @@ function useKeyboardResponder(props) {
   return React.unstable_useResponder(KeyboardResponder, props);
 }
 
-var Keyboard = /*#__PURE__*/ Object.freeze({
+var Keyboard = Object.freeze({
   KeyboardResponder: KeyboardResponder,
   useKeyboardResponder: useKeyboardResponder
 });
 
-function getCjsExportFromNamespace(n) {
-  return (n && n["default"]) || n;
-}
-
-var require$$0 = getCjsExportFromNamespace(Keyboard);
-
-var keyboard = require$$0;
+var keyboard = Keyboard;
 
 module.exports = keyboard;
-
-  })();
-}
