@@ -9,97 +9,118 @@
 
 'use strict';
 
-(function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('react')) :
-	typeof define === 'function' && define.amd ? define(['react'], factory) :
-	(global.ReactEventsScroll = factory(global.React));
-}(this, (function (React) { 'use strict';
+(function(global, factory) {
+  typeof exports === "object" && typeof module !== "undefined"
+    ? (module.exports = factory(require("react")))
+    : typeof define === "function" && define.amd
+      ? define(["react"], factory)
+      : (global.ReactEventsScroll = factory(global.React));
+})(this, function(React) {
+  "use strict";
 
-var UserBlockingEvent = 1;
+  var UserBlockingEvent = 1;
 
-var hasPointerEvents = typeof window !== 'undefined' && window.PointerEvent !== undefined;
-var targetEventTypes = hasPointerEvents ? ['scroll', 'pointerdown', 'keyup', 'wheel'] : ['scroll', 'mousedown', 'touchstart', 'keyup', 'wheel'];
-var rootEventTypes = hasPointerEvents ? ['pointercancel', 'pointerup'] : ['touchcancel', 'touchend'];
+  var hasPointerEvents =
+    typeof window !== "undefined" && window.PointerEvent !== undefined;
+  var targetEventTypes = hasPointerEvents
+    ? ["scroll", "pointerdown", "keyup", "wheel"]
+    : ["scroll", "mousedown", "touchstart", "keyup", "wheel"];
+  var rootEventTypes = hasPointerEvents
+    ? ["pointercancel", "pointerup"]
+    : ["touchcancel", "touchend"];
 
-function isFunction(obj) {
-  return typeof obj === 'function';
-}
-
-function createScrollEvent(event, context, type, target, pointerType, direction) {
-  var clientX = null;
-  var clientY = null;
-  var pageX = null;
-  var pageY = null;
-  var screenX = null;
-  var screenY = null;
-
-  if (event) {
-    var nativeEvent = event.nativeEvent;
-    clientX = nativeEvent.clientX;
-    clientY = nativeEvent.clientY;
-    pageX = nativeEvent.pageX;
-    pageY = nativeEvent.pageY;
-    screenX = nativeEvent.screenX;
-    screenY = nativeEvent.screenY;
+  function isFunction(obj) {
+    return typeof obj === "function";
   }
 
-  return {
-    target: target,
-    type: type,
-    pointerType: pointerType,
-    direction: direction,
-    timeStamp: context.getTimeStamp(),
-    clientX: clientX,
-    clientY: clientY,
-    pageX: pageX,
-    pageY: pageY,
-    screenX: screenX,
-    screenY: screenY,
-    x: clientX,
-    y: clientY
-  };
-}
+  function createScrollEvent(
+    event,
+    context,
+    type,
+    target,
+    pointerType,
+    direction
+  ) {
+    var clientX = null;
+    var clientY = null;
+    var pageX = null;
+    var pageY = null;
+    var screenX = null;
+    var screenY = null;
 
-function dispatchEvent(event, listener, context, state, name, eventPriority) {
-  var target = state.scrollTarget;
-  var pointerType = state.pointerType;
-  var direction = state.direction;
-  var syntheticEvent = createScrollEvent(event, context, name, target, pointerType, direction);
-  context.dispatchEvent(syntheticEvent, listener, eventPriority);
-}
+    if (event) {
+      var nativeEvent = event.nativeEvent;
+      clientX = nativeEvent.clientX;
+      clientY = nativeEvent.clientY;
+      pageX = nativeEvent.pageX;
+      pageY = nativeEvent.pageY;
+      screenX = nativeEvent.screenX;
+      screenY = nativeEvent.screenY;
+    }
 
-var scrollResponderImpl = {
-  targetEventTypes: targetEventTypes,
-  getInitialState: function () {
     return {
-      direction: '',
-      isTouching: false,
-      pointerType: '',
-      prevScrollTop: 0,
-      prevScrollLeft: 0,
-      scrollTarget: null
+      target: target,
+      type: type,
+      pointerType: pointerType,
+      direction: direction,
+      timeStamp: context.getTimeStamp(),
+      clientX: clientX,
+      clientY: clientY,
+      pageX: pageX,
+      pageY: pageY,
+      screenX: screenX,
+      screenY: screenY,
+      x: clientX,
+      y: clientY
     };
-  },
-  onEvent: function (event, context, props, state) {
-    var pointerType = event.pointerType,
+  }
+
+  function dispatchEvent(event, listener, context, state, name, eventPriority) {
+    var target = state.scrollTarget;
+    var pointerType = state.pointerType;
+    var direction = state.direction;
+    var syntheticEvent = createScrollEvent(
+      event,
+      context,
+      name,
+      target,
+      pointerType,
+      direction
+    );
+    context.dispatchEvent(syntheticEvent, listener, eventPriority);
+  }
+
+  var scrollResponderImpl = {
+    targetEventTypes: targetEventTypes,
+    getInitialState: function() {
+      return {
+        direction: "",
+        isTouching: false,
+        pointerType: "",
+        prevScrollTop: 0,
+        prevScrollLeft: 0,
+        scrollTarget: null
+      };
+    },
+    onEvent: function(event, context, props, state) {
+      var pointerType = event.pointerType,
         target = event.target,
         type = event.type;
 
-    if (props.disabled) {
-      if (state.isTouching) {
-        state.isTouching = false;
-        state.scrollTarget = null;
-        state.isDragging = false;
-        state.direction = '';
-        context.removeRootEventTypes(rootEventTypes);
+      if (props.disabled) {
+        if (state.isTouching) {
+          state.isTouching = false;
+          state.scrollTarget = null;
+          state.isDragging = false;
+          state.direction = "";
+          context.removeRootEventTypes(rootEventTypes);
+        }
+
+        return;
       }
 
-      return;
-    }
-
-    switch (type) {
-      case 'scroll':
-        {
+      switch (type) {
+        case "scroll": {
           var prevScrollTarget = state.scrollTarget;
           var scrollLeft = 0;
           var scrollTop = 0; // Check if target is the document
@@ -119,19 +140,19 @@ var scrollResponderImpl = {
           if (prevScrollTarget !== null) {
             if (scrollTop === state.scrollTop) {
               if (scrollLeft > state.scrollLeft) {
-                state.direction = 'right';
+                state.direction = "right";
               } else {
-                state.direction = 'left';
+                state.direction = "left";
               }
             } else {
               if (scrollTop > state.scrollTop) {
-                state.direction = 'down';
+                state.direction = "down";
               } else {
-                state.direction = 'up';
+                state.direction = "up";
               }
             }
           } else {
-            state.direction = '';
+            state.direction = "";
           }
 
           state.scrollTarget = target;
@@ -143,37 +164,48 @@ var scrollResponderImpl = {
             var onScrollDragStart = props.onScrollDragStart;
 
             if (isFunction(onScrollDragStart)) {
-              dispatchEvent(event, onScrollDragStart, context, state, 'scrolldragstart', UserBlockingEvent);
+              dispatchEvent(
+                event,
+                onScrollDragStart,
+                context,
+                state,
+                "scrolldragstart",
+                UserBlockingEvent
+              );
             }
           }
 
           var onScroll = props.onScroll;
 
           if (isFunction(onScroll)) {
-            dispatchEvent(event, onScroll, context, state, 'scroll', UserBlockingEvent);
+            dispatchEvent(
+              event,
+              onScroll,
+              context,
+              state,
+              "scroll",
+              UserBlockingEvent
+            );
           }
 
           break;
         }
 
-      case 'keyup':
-        {
+        case "keyup": {
           state.pointerType = pointerType;
           break;
         }
 
-      case 'mousedown':
-      case 'wheel':
-        {
-          state.pointerType = 'mouse';
+        case "mousedown":
+        case "wheel": {
+          state.pointerType = "mouse";
           break;
         }
 
-      case 'pointerdown':
-        {
+        case "pointerdown": {
           state.pointerType = pointerType;
 
-          if (pointerType === 'touch' && !state.isTouching) {
+          if (pointerType === "touch" && !state.isTouching) {
             state.isTouching = true;
             context.addRootEventTypes(rootEventTypes);
           }
@@ -181,56 +213,64 @@ var scrollResponderImpl = {
           break;
         }
 
-      case 'touchstart':
-        {
+        case "touchstart": {
           if (!state.isTouching) {
             state.isTouching = true;
-            state.pointerType = 'touch';
+            state.pointerType = "touch";
             context.addRootEventTypes(rootEventTypes);
           }
         }
-    }
-  },
-  onRootEvent: function (event, context, props, state) {
-    var type = event.type;
+      }
+    },
+    onRootEvent: function(event, context, props, state) {
+      var type = event.type;
 
-    switch (type) {
-      case 'pointercancel':
-      case 'pointerup':
-      case 'touchcancel':
-      case 'touchend':
-        {
+      switch (type) {
+        case "pointercancel":
+        case "pointerup":
+        case "touchcancel":
+        case "touchend": {
           if (state.isTouching) {
             var onScrollDragEnd = props.onScrollDragEnd;
 
             if (state.isDragging && isFunction(onScrollDragEnd)) {
-              dispatchEvent(event, onScrollDragEnd, context, state, 'scrolldragend', UserBlockingEvent);
+              dispatchEvent(
+                event,
+                onScrollDragEnd,
+                context,
+                state,
+                "scrolldragend",
+                UserBlockingEvent
+              );
             }
 
             state.isTouching = false;
             state.isDragging = false;
             state.scrollTarget = null;
-            state.pointerType = '';
+            state.pointerType = "";
             context.removeRootEventTypes(rootEventTypes);
           }
         }
+      }
+    },
+    onUnmount: function(context, props, state) {
+      // TODO
     }
-  },
-  onUnmount: function (context, props, state) {// TODO
+  };
+  var ScrollResponder = React.unstable_createResponder(
+    "Scroll",
+    scrollResponderImpl
+  );
+  function useScrollResponder(props) {
+    return React.unstable_useResponder(ScrollResponder, props);
   }
-};
-var ScrollResponder = React.unstable_createResponder('Scroll', scrollResponderImpl);
-function useScrollResponder(props) {
-  return React.unstable_useResponder(ScrollResponder, props);
-}
 
-var Scroll = Object.freeze({
-	ScrollResponder: ScrollResponder,
-	useScrollResponder: useScrollResponder
+  var Scroll = Object.freeze({
+    ScrollResponder: ScrollResponder,
+    useScrollResponder: useScrollResponder
+  });
+
+  var scroll = Scroll;
+
+  return scroll;
 });
-
-var scroll = Scroll;
-
-return scroll;
-
-})));

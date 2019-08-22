@@ -9,364 +9,444 @@
 
 'use strict';
 
-(function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('react')) :
-	typeof define === 'function' && define.amd ? define(['react'], factory) :
-	(global.ReactEventsPress = factory(global.React));
-}(this, (function (React) { 'use strict';
+(function(global, factory) {
+  typeof exports === "object" && typeof module !== "undefined"
+    ? (module.exports = factory(require("react")))
+    : typeof define === "function" && define.amd
+      ? define(["react"], factory)
+      : (global.ReactEventsPress = factory(global.React));
+})(this, function(React) {
+  "use strict";
 
-var DiscreteEvent = 0;
-var UserBlockingEvent = 1;
+  var DiscreteEvent = 0;
+  var UserBlockingEvent = 1;
 
-var hasPointerEvents = typeof window !== 'undefined' && window.PointerEvent !== undefined;
-var isMac = typeof window !== 'undefined' && window.navigator != null ? /^Mac/.test(window.navigator.platform) : false;
-var DEFAULT_PRESS_RETENTION_OFFSET = {
-  bottom: 20,
-  top: 20,
-  left: 20,
-  right: 20
-};
-var targetEventTypes = hasPointerEvents ? ['keydown_active', // We need to preventDefault on pointerdown for mouse/pen events
-// that are in hit target area but not the element area.
-'pointerdown_active', 'click_active'] : ['keydown_active', 'touchstart', 'mousedown', 'click_active'];
-var rootEventTypes = hasPointerEvents ? ['pointerup', 'pointermove', 'pointercancel', 'click', 'keyup', 'scroll'] : ['click', 'keyup', 'scroll', 'mousemove', 'touchmove', 'touchcancel', // Used as a 'cancel' signal for mouse interactions
-'dragstart', // We listen to this here so stopPropagation can
-// block other mouseup events used internally
-'mouseup_active', 'touchend'];
+  var hasPointerEvents =
+    typeof window !== "undefined" && window.PointerEvent !== undefined;
+  var isMac =
+    typeof window !== "undefined" && window.navigator != null
+      ? /^Mac/.test(window.navigator.platform)
+      : false;
+  var DEFAULT_PRESS_RETENTION_OFFSET = {
+    bottom: 20,
+    top: 20,
+    left: 20,
+    right: 20
+  };
+  var targetEventTypes = hasPointerEvents
+    ? [
+        "keydown_active", // We need to preventDefault on pointerdown for mouse/pen events
+        // that are in hit target area but not the element area.
+        "pointerdown_active",
+        "click_active"
+      ]
+    : ["keydown_active", "touchstart", "mousedown", "click_active"];
+  var rootEventTypes = hasPointerEvents
+    ? ["pointerup", "pointermove", "pointercancel", "click", "keyup", "scroll"]
+    : [
+        "click",
+        "keyup",
+        "scroll",
+        "mousemove",
+        "touchmove",
+        "touchcancel", // Used as a 'cancel' signal for mouse interactions
+        "dragstart", // We listen to this here so stopPropagation can
+        // block other mouseup events used internally
+        "mouseup_active",
+        "touchend"
+      ];
 
-function isFunction(obj) {
-  return typeof obj === 'function';
-}
+  function isFunction(obj) {
+    return typeof obj === "function";
+  }
 
-function createPressEvent(context, type, target, pointerType, event, touchEvent, defaultPrevented) {
-  var timeStamp = context.getTimeStamp();
-  var buttons = 1;
-  var clientX = null;
-  var clientY = null;
-  var pageX = null;
-  var pageY = null;
-  var screenX = null;
-  var screenY = null;
-  var altKey = false;
-  var ctrlKey = false;
-  var metaKey = false;
-  var shiftKey = false;
+  function createPressEvent(
+    context,
+    type,
+    target,
+    pointerType,
+    event,
+    touchEvent,
+    defaultPrevented
+  ) {
+    var timeStamp = context.getTimeStamp();
+    var buttons = 1;
+    var clientX = null;
+    var clientY = null;
+    var pageX = null;
+    var pageY = null;
+    var screenX = null;
+    var screenY = null;
+    var altKey = false;
+    var ctrlKey = false;
+    var metaKey = false;
+    var shiftKey = false;
 
-  if (event) {
-    var nativeEvent = event.nativeEvent;
-    altKey = nativeEvent.altKey;
-    ctrlKey = nativeEvent.ctrlKey;
-    metaKey = nativeEvent.metaKey;
-    shiftKey = nativeEvent.shiftKey;
-    // Only check for one property, checking for all of them is costly. We can assume
-    // if clientX exists, so do the rest.
-    var eventObject;
-    eventObject = touchEvent || nativeEvent;
+    if (event) {
+      var nativeEvent = event.nativeEvent;
+      altKey = nativeEvent.altKey;
+      ctrlKey = nativeEvent.ctrlKey;
+      metaKey = nativeEvent.metaKey;
+      shiftKey = nativeEvent.shiftKey;
+      // Only check for one property, checking for all of them is costly. We can assume
+      // if clientX exists, so do the rest.
+      var eventObject;
+      eventObject = touchEvent || nativeEvent;
 
-    if (eventObject) {
-      var _eventObject = eventObject;
-      buttons = _eventObject.buttons;
-      clientX = _eventObject.clientX;
-      clientY = _eventObject.clientY;
-      pageX = _eventObject.pageX;
-      pageY = _eventObject.pageY;
-      screenX = _eventObject.screenX;
-      screenY = _eventObject.screenY;
+      if (eventObject) {
+        var _eventObject = eventObject;
+        buttons = _eventObject.buttons;
+        clientX = _eventObject.clientX;
+        clientY = _eventObject.clientY;
+        pageX = _eventObject.pageX;
+        pageY = _eventObject.pageY;
+        screenX = _eventObject.screenX;
+        screenY = _eventObject.screenY;
+      }
+    }
+
+    return {
+      altKey: altKey,
+      buttons: buttons,
+      clientX: clientX,
+      clientY: clientY,
+      ctrlKey: ctrlKey,
+      defaultPrevented: defaultPrevented,
+      metaKey: metaKey,
+      pageX: pageX,
+      pageY: pageY,
+      pointerType: pointerType,
+      screenX: screenX,
+      screenY: screenY,
+      shiftKey: shiftKey,
+      target: target,
+      timeStamp: timeStamp,
+      type: type,
+      x: clientX,
+      y: clientY
+    };
+  }
+
+  function dispatchEvent(event, listener, context, state, name, eventPriority) {
+    var target = state.pressTarget;
+    var pointerType = state.pointerType;
+    var defaultPrevented =
+      (event != null && event.nativeEvent.defaultPrevented === true) ||
+      (name === "press" && state.shouldPreventClick);
+    var touchEvent = state.touchEvent;
+    var syntheticEvent = createPressEvent(
+      context,
+      name,
+      target,
+      pointerType,
+      event,
+      touchEvent,
+      defaultPrevented
+    );
+    context.dispatchEvent(syntheticEvent, listener, eventPriority);
+  }
+
+  function dispatchPressChangeEvent(context, props, state) {
+    var onPressChange = props.onPressChange;
+
+    if (isFunction(onPressChange)) {
+      var bool = state.isActivePressed;
+      context.dispatchEvent(bool, onPressChange, DiscreteEvent);
     }
   }
 
-  return {
-    altKey: altKey,
-    buttons: buttons,
-    clientX: clientX,
-    clientY: clientY,
-    ctrlKey: ctrlKey,
-    defaultPrevented: defaultPrevented,
-    metaKey: metaKey,
-    pageX: pageX,
-    pageY: pageY,
-    pointerType: pointerType,
-    screenX: screenX,
-    screenY: screenY,
-    shiftKey: shiftKey,
-    target: target,
-    timeStamp: timeStamp,
-    type: type,
-    x: clientX,
-    y: clientY
-  };
-}
+  function dispatchPressStartEvents(event, context, props, state) {
+    state.isPressed = true;
 
-function dispatchEvent(event, listener, context, state, name, eventPriority) {
-  var target = state.pressTarget;
-  var pointerType = state.pointerType;
-  var defaultPrevented = event != null && event.nativeEvent.defaultPrevented === true || name === 'press' && state.shouldPreventClick;
-  var touchEvent = state.touchEvent;
-  var syntheticEvent = createPressEvent(context, name, target, pointerType, event, touchEvent, defaultPrevented);
-  context.dispatchEvent(syntheticEvent, listener, eventPriority);
-}
+    if (!state.isActivePressStart) {
+      state.isActivePressStart = true;
+      var nativeEvent = event.nativeEvent;
 
-function dispatchPressChangeEvent(context, props, state) {
-  var onPressChange = props.onPressChange;
-
-  if (isFunction(onPressChange)) {
-    var bool = state.isActivePressed;
-    context.dispatchEvent(bool, onPressChange, DiscreteEvent);
-  }
-}
-
-function dispatchPressStartEvents(event, context, props, state) {
-  state.isPressed = true;
-
-  if (!state.isActivePressStart) {
-    state.isActivePressStart = true;
-    var nativeEvent = event.nativeEvent;
-
-    var _ref = state.touchEvent || nativeEvent,
+      var _ref = state.touchEvent || nativeEvent,
         x = _ref.clientX,
         y = _ref.clientY;
 
-    var wasActivePressed = state.isActivePressed;
-    state.isActivePressed = true;
+      var wasActivePressed = state.isActivePressed;
+      state.isActivePressed = true;
 
-    if (x !== undefined && y !== undefined) {
-      state.activationPosition = {
-        x: x,
-        y: y
-      };
+      if (x !== undefined && y !== undefined) {
+        state.activationPosition = {
+          x: x,
+          y: y
+        };
+      }
+
+      var onPressStart = props.onPressStart;
+
+      if (isFunction(onPressStart)) {
+        dispatchEvent(
+          event,
+          onPressStart,
+          context,
+          state,
+          "pressstart",
+          DiscreteEvent
+        );
+      }
+
+      if (!wasActivePressed) {
+        dispatchPressChangeEvent(context, props, state);
+      }
     }
+  }
 
-    var onPressStart = props.onPressStart;
+  function dispatchPressEndEvents(event, context, props, state) {
+    state.isActivePressStart = false;
+    state.isPressed = false;
 
-    if (isFunction(onPressStart)) {
-      dispatchEvent(event, onPressStart, context, state, 'pressstart', DiscreteEvent);
-    }
+    if (state.isActivePressed) {
+      state.isActivePressed = false;
+      var onPressEnd = props.onPressEnd;
 
-    if (!wasActivePressed) {
+      if (isFunction(onPressEnd)) {
+        dispatchEvent(
+          event,
+          onPressEnd,
+          context,
+          state,
+          "pressend",
+          DiscreteEvent
+        );
+      }
+
       dispatchPressChangeEvent(context, props, state);
     }
+
+    state.responderRegionOnDeactivation = null;
   }
-}
 
-function dispatchPressEndEvents(event, context, props, state) {
-  state.isActivePressStart = false;
-  state.isPressed = false;
+  function dispatchCancel(event, context, props, state) {
+    state.touchEvent = null;
 
-  if (state.isActivePressed) {
-    state.isActivePressed = false;
-    var onPressEnd = props.onPressEnd;
-
-    if (isFunction(onPressEnd)) {
-      dispatchEvent(event, onPressEnd, context, state, 'pressend', DiscreteEvent);
+    if (state.isPressed) {
+      state.ignoreEmulatedMouseEvents = false;
+      dispatchPressEndEvents(event, context, props, state);
     }
 
-    dispatchPressChangeEvent(context, props, state);
+    removeRootEventTypes(context, state);
   }
 
-  state.responderRegionOnDeactivation = null;
-}
-
-function dispatchCancel(event, context, props, state) {
-  state.touchEvent = null;
-
-  if (state.isPressed) {
-    state.ignoreEmulatedMouseEvents = false;
-    dispatchPressEndEvents(event, context, props, state);
-  }
-
-  removeRootEventTypes(context, state);
-}
-
-function isValidKeyboardEvent(nativeEvent) {
-  var key = nativeEvent.key,
+  function isValidKeyboardEvent(nativeEvent) {
+    var key = nativeEvent.key,
       target = nativeEvent.target;
-  var tagName = target.tagName,
+    var tagName = target.tagName,
       isContentEditable = target.isContentEditable; // Accessibility for keyboards. Space and Enter only.
-  // "Spacebar" is for IE 11
+    // "Spacebar" is for IE 11
 
-  return (key === 'Enter' || key === ' ' || key === 'Spacebar') && tagName !== 'INPUT' && tagName !== 'TEXTAREA' && isContentEditable !== true;
-} // TODO: account for touch hit slop
+    return (
+      (key === "Enter" || key === " " || key === "Spacebar") &&
+      tagName !== "INPUT" &&
+      tagName !== "TEXTAREA" &&
+      isContentEditable !== true
+    );
+  } // TODO: account for touch hit slop
 
+  function calculateResponderRegion(context, target, props) {
+    var pressRetentionOffset = context.objectAssign(
+      {},
+      DEFAULT_PRESS_RETENTION_OFFSET,
+      props.pressRetentionOffset
+    );
 
-function calculateResponderRegion(context, target, props) {
-  var pressRetentionOffset = context.objectAssign({}, DEFAULT_PRESS_RETENTION_OFFSET, props.pressRetentionOffset);
-
-  var _target$getBoundingCl = target.getBoundingClientRect(),
+    var _target$getBoundingCl = target.getBoundingClientRect(),
       left = _target$getBoundingCl.left,
       right = _target$getBoundingCl.right,
       bottom = _target$getBoundingCl.bottom,
       top = _target$getBoundingCl.top;
 
-  if (pressRetentionOffset) {
-    if (pressRetentionOffset.bottom != null) {
-      bottom += pressRetentionOffset.bottom;
+    if (pressRetentionOffset) {
+      if (pressRetentionOffset.bottom != null) {
+        bottom += pressRetentionOffset.bottom;
+      }
+
+      if (pressRetentionOffset.left != null) {
+        left -= pressRetentionOffset.left;
+      }
+
+      if (pressRetentionOffset.right != null) {
+        right += pressRetentionOffset.right;
+      }
+
+      if (pressRetentionOffset.top != null) {
+        top -= pressRetentionOffset.top;
+      }
     }
 
-    if (pressRetentionOffset.left != null) {
-      left -= pressRetentionOffset.left;
+    return {
+      bottom: bottom,
+      top: top,
+      left: left,
+      right: right
+    };
+  }
+
+  function getTouchFromPressEvent(nativeEvent) {
+    var targetTouches = nativeEvent.targetTouches;
+
+    if (targetTouches.length > 0) {
+      return targetTouches[0];
     }
 
-    if (pressRetentionOffset.right != null) {
-      right += pressRetentionOffset.right;
-    }
-
-    if (pressRetentionOffset.top != null) {
-      top -= pressRetentionOffset.top;
-    }
+    return null;
   }
 
-  return {
-    bottom: bottom,
-    top: top,
-    left: left,
-    right: right
-  };
-}
-
-function getTouchFromPressEvent(nativeEvent) {
-  var targetTouches = nativeEvent.targetTouches;
-
-  if (targetTouches.length > 0) {
-    return targetTouches[0];
-  }
-
-  return null;
-}
-
-function unmountResponder(context, props, state) {
-  if (state.isPressed) {
-    removeRootEventTypes(context, state);
-    dispatchPressEndEvents(null, context, props, state);
-  }
-}
-
-function addRootEventTypes(context, state) {
-  if (!state.addedRootEvents) {
-    state.addedRootEvents = true;
-    context.addRootEventTypes(rootEventTypes);
-  }
-}
-
-function removeRootEventTypes(context, state) {
-  if (state.addedRootEvents) {
-    state.addedRootEvents = false;
-    context.removeRootEventTypes(rootEventTypes);
-  }
-}
-
-function getTouchById(nativeEvent, pointerId) {
-  var changedTouches = nativeEvent.changedTouches;
-
-  for (var i = 0; i < changedTouches.length; i++) {
-    var touch = changedTouches[i];
-
-    if (touch.identifier === pointerId) {
-      return touch;
+  function unmountResponder(context, props, state) {
+    if (state.isPressed) {
+      removeRootEventTypes(context, state);
+      dispatchPressEndEvents(null, context, props, state);
     }
   }
 
-  return null;
-}
-
-function getTouchTarget(context, touchEvent) {
-  var doc = context.getActiveDocument();
-  return doc.elementFromPoint(touchEvent.clientX, touchEvent.clientY);
-}
-
-function updateIsPressWithinResponderRegion(nativeEventOrTouchEvent, context, props, state) {
-  // Calculate the responder region we use for deactivation if not
-  // already done during move event.
-  if (state.responderRegionOnDeactivation == null) {
-    state.responderRegionOnDeactivation = calculateResponderRegion(context, state.pressTarget, props);
+  function addRootEventTypes(context, state) {
+    if (!state.addedRootEvents) {
+      state.addedRootEvents = true;
+      context.addRootEventTypes(rootEventTypes);
+    }
   }
 
-  var responderRegionOnActivation = state.responderRegionOnActivation,
+  function removeRootEventTypes(context, state) {
+    if (state.addedRootEvents) {
+      state.addedRootEvents = false;
+      context.removeRootEventTypes(rootEventTypes);
+    }
+  }
+
+  function getTouchById(nativeEvent, pointerId) {
+    var changedTouches = nativeEvent.changedTouches;
+
+    for (var i = 0; i < changedTouches.length; i++) {
+      var touch = changedTouches[i];
+
+      if (touch.identifier === pointerId) {
+        return touch;
+      }
+    }
+
+    return null;
+  }
+
+  function getTouchTarget(context, touchEvent) {
+    var doc = context.getActiveDocument();
+    return doc.elementFromPoint(touchEvent.clientX, touchEvent.clientY);
+  }
+
+  function updateIsPressWithinResponderRegion(
+    nativeEventOrTouchEvent,
+    context,
+    props,
+    state
+  ) {
+    // Calculate the responder region we use for deactivation if not
+    // already done during move event.
+    if (state.responderRegionOnDeactivation == null) {
+      state.responderRegionOnDeactivation = calculateResponderRegion(
+        context,
+        state.pressTarget,
+        props
+      );
+    }
+
+    var responderRegionOnActivation = state.responderRegionOnActivation,
       responderRegionOnDeactivation = state.responderRegionOnDeactivation;
-  var left, top, right, bottom;
+    var left, top, right, bottom;
 
-  if (responderRegionOnActivation != null) {
-    left = responderRegionOnActivation.left;
-    top = responderRegionOnActivation.top;
-    right = responderRegionOnActivation.right;
-    bottom = responderRegionOnActivation.bottom;
+    if (responderRegionOnActivation != null) {
+      left = responderRegionOnActivation.left;
+      top = responderRegionOnActivation.top;
+      right = responderRegionOnActivation.right;
+      bottom = responderRegionOnActivation.bottom;
 
-    if (responderRegionOnDeactivation != null) {
-      left = Math.min(left, responderRegionOnDeactivation.left);
-      top = Math.min(top, responderRegionOnDeactivation.top);
-      right = Math.max(right, responderRegionOnDeactivation.right);
-      bottom = Math.max(bottom, responderRegionOnDeactivation.bottom);
+      if (responderRegionOnDeactivation != null) {
+        left = Math.min(left, responderRegionOnDeactivation.left);
+        top = Math.min(top, responderRegionOnDeactivation.top);
+        right = Math.max(right, responderRegionOnDeactivation.right);
+        bottom = Math.max(bottom, responderRegionOnDeactivation.bottom);
+      }
     }
-  }
 
-  var _ref2 = nativeEventOrTouchEvent,
+    var _ref2 = nativeEventOrTouchEvent,
       x = _ref2.clientX,
       y = _ref2.clientY;
-  state.isPressWithinResponderRegion = left != null && right != null && top != null && bottom != null && x !== null && y !== null && x >= left && x <= right && y >= top && y <= bottom;
-}
-
-function handleStopPropagation(props, context, nativeEvent) {
-  var stopPropagation = props.stopPropagation;
-
-  if (stopPropagation === true) {
-    nativeEvent.stopPropagation();
+    state.isPressWithinResponderRegion =
+      left != null &&
+      right != null &&
+      top != null &&
+      bottom != null &&
+      x !== null &&
+      y !== null &&
+      x >= left &&
+      x <= right &&
+      y >= top &&
+      y <= bottom;
   }
-}
 
-function targetIsDocument(target) {
-  // When target is null, it is the root
-  return target === null || target.nodeType === 9;
-}
+  function handleStopPropagation(props, context, nativeEvent) {
+    var stopPropagation = props.stopPropagation;
 
-var pressResponderImpl = {
-  targetEventTypes: targetEventTypes,
-  getInitialState: function () {
-    return {
-      activationPosition: null,
-      addedRootEvents: false,
-      isActivePressed: false,
-      isActivePressStart: false,
-      isPressed: false,
-      isPressWithinResponderRegion: true,
-      pointerType: '',
-      pressTarget: null,
-      responderRegionOnActivation: null,
-      responderRegionOnDeactivation: null,
-      ignoreEmulatedMouseEvents: false,
-      activePointerId: null,
-      shouldPreventClick: false,
-      touchEvent: null
-    };
-  },
-  onEvent: function (event, context, props, state) {
-    var pointerId = event.pointerId,
+    if (stopPropagation === true) {
+      nativeEvent.stopPropagation();
+    }
+  }
+
+  function targetIsDocument(target) {
+    // When target is null, it is the root
+    return target === null || target.nodeType === 9;
+  }
+
+  var pressResponderImpl = {
+    targetEventTypes: targetEventTypes,
+    getInitialState: function() {
+      return {
+        activationPosition: null,
+        addedRootEvents: false,
+        isActivePressed: false,
+        isActivePressStart: false,
+        isPressed: false,
+        isPressWithinResponderRegion: true,
+        pointerType: "",
+        pressTarget: null,
+        responderRegionOnActivation: null,
+        responderRegionOnDeactivation: null,
+        ignoreEmulatedMouseEvents: false,
+        activePointerId: null,
+        shouldPreventClick: false,
+        touchEvent: null
+      };
+    },
+    onEvent: function(event, context, props, state) {
+      var pointerId = event.pointerId,
         pointerType = event.pointerType,
         type = event.type;
 
-    if (props.disabled) {
-      removeRootEventTypes(context, state);
-      dispatchPressEndEvents(event, context, props, state);
-      state.ignoreEmulatedMouseEvents = false;
-      return;
-    }
+      if (props.disabled) {
+        removeRootEventTypes(context, state);
+        dispatchPressEndEvents(event, context, props, state);
+        state.ignoreEmulatedMouseEvents = false;
+        return;
+      }
 
-    var nativeEvent = event.nativeEvent;
-    var isPressed = state.isPressed;
-    handleStopPropagation(props, context, nativeEvent);
+      var nativeEvent = event.nativeEvent;
+      var isPressed = state.isPressed;
+      handleStopPropagation(props, context, nativeEvent);
 
-    switch (type) {
-      // START
-      case 'pointerdown':
-      case 'keydown':
-      case 'mousedown':
-      case 'touchstart':
-        {
+      switch (type) {
+        // START
+        case "pointerdown":
+        case "keydown":
+        case "mousedown":
+        case "touchstart": {
           if (!isPressed) {
-            var isTouchEvent = type === 'touchstart';
-            var isPointerEvent = type === 'pointerdown';
-            var isKeyboardEvent = pointerType === 'keyboard';
-            var isMouseEvent = pointerType === 'mouse'; // Ignore emulated mouse events
+            var isTouchEvent = type === "touchstart";
+            var isPointerEvent = type === "pointerdown";
+            var isKeyboardEvent = pointerType === "keyboard";
+            var isMouseEvent = pointerType === "mouse"; // Ignore emulated mouse events
 
-            if (type === 'mousedown' && state.ignoreEmulatedMouseEvents) {
+            if (type === "mousedown" && state.ignoreEmulatedMouseEvents) {
               return;
             }
 
@@ -378,14 +458,20 @@ var pressResponderImpl = {
               // Ignore unrelated key events
               if (isValidKeyboardEvent(nativeEvent)) {
                 var _ref3 = nativeEvent,
-                    altKey = _ref3.altKey,
-                    ctrlKey = _ref3.ctrlKey,
-                    metaKey = _ref3.metaKey,
-                    shiftKey = _ref3.shiftKey;
+                  altKey = _ref3.altKey,
+                  ctrlKey = _ref3.ctrlKey,
+                  metaKey = _ref3.metaKey,
+                  shiftKey = _ref3.shiftKey;
 
-                if (nativeEvent.key === ' ') {
+                if (nativeEvent.key === " ") {
                   nativeEvent.preventDefault();
-                } else if (props.preventDefault !== false && !shiftKey && !metaKey && !ctrlKey && !altKey) {
+                } else if (
+                  props.preventDefault !== false &&
+                  !shiftKey &&
+                  !metaKey &&
+                  !ctrlKey &&
+                  !altKey
+                ) {
                   state.shouldPreventClick = true;
                 }
               } else {
@@ -394,9 +480,8 @@ var pressResponderImpl = {
             } // We set these here, before the button check so we have this
             // data around for handling of the context menu
 
-
             state.pointerType = pointerType;
-            var pressTarget = state.pressTarget = event.responderTarget;
+            var pressTarget = (state.pressTarget = event.responderTarget);
 
             if (isPointerEvent) {
               state.activePointerId = pointerId;
@@ -413,14 +498,20 @@ var pressResponderImpl = {
             // Additionally we ignore primary-button + ctrl-key with Macs as that
             // acts like right-click and opens the contextmenu.
 
-
-            if (nativeEvent.buttons === 2 || nativeEvent.buttons > 4 || isMac && isMouseEvent && nativeEvent.ctrlKey) {
+            if (
+              nativeEvent.buttons === 2 ||
+              nativeEvent.buttons > 4 ||
+              (isMac && isMouseEvent && nativeEvent.ctrlKey)
+            ) {
               return;
             } // Exclude document targets
 
-
             if (!targetIsDocument(pressTarget)) {
-              state.responderRegionOnActivation = calculateResponderRegion(context, pressTarget, props);
+              state.responderRegionOnActivation = calculateResponderRegion(
+                context,
+                pressTarget,
+                props
+              );
             }
 
             state.responderRegionOnDeactivation = null;
@@ -429,7 +520,7 @@ var pressResponderImpl = {
             addRootEventTypes(context, state);
           } else {
             // Prevent spacebar press from scrolling the window
-            if (isValidKeyboardEvent(nativeEvent) && nativeEvent.key === ' ') {
+            if (isValidKeyboardEvent(nativeEvent) && nativeEvent.key === " ") {
               nativeEvent.preventDefault();
             }
           }
@@ -437,33 +528,31 @@ var pressResponderImpl = {
           break;
         }
 
-      case 'click':
-        {
+        case "click": {
           if (state.shouldPreventClick) {
             nativeEvent.preventDefault();
           }
 
           break;
         }
-    }
-  },
-  onRootEvent: function (event, context, props, state) {
-    var pointerId = event.pointerId,
+      }
+    },
+    onRootEvent: function(event, context, props, state) {
+      var pointerId = event.pointerId,
         pointerType = event.pointerType,
         target = event.target,
         type = event.type;
-    var nativeEvent = event.nativeEvent;
-    var isPressed = state.isPressed;
-    var activePointerId = state.activePointerId;
-    var previousPointerType = state.pointerType;
-    handleStopPropagation(props, context, nativeEvent);
+      var nativeEvent = event.nativeEvent;
+      var isPressed = state.isPressed;
+      var activePointerId = state.activePointerId;
+      var previousPointerType = state.pointerType;
+      handleStopPropagation(props, context, nativeEvent);
 
-    switch (type) {
-      // MOVE
-      case 'pointermove':
-      case 'mousemove':
-      case 'touchmove':
-        {
+      switch (type) {
+        // MOVE
+        case "pointermove":
+        case "mousemove":
+        case "touchmove": {
           var touchEvent; // Ignore emulated events (pointermove will dispatch touch and mouse events)
           // Ignore pointermove events during a keyboard press.
 
@@ -471,9 +560,9 @@ var pressResponderImpl = {
             return;
           }
 
-          if (type === 'pointermove' && activePointerId !== pointerId) {
+          if (type === "pointermove" && activePointerId !== pointerId) {
             return;
-          } else if (type === 'touchmove') {
+          } else if (type === "touchmove") {
             touchEvent = getTouchById(nativeEvent, activePointerId);
 
             if (touchEvent === null) {
@@ -486,12 +575,20 @@ var pressResponderImpl = {
           var pressTarget = state.pressTarget;
 
           if (pressTarget !== null && !targetIsDocument(pressTarget)) {
-            if (pointerType === 'mouse' && context.isTargetWithinNode(target, pressTarget)) {
+            if (
+              pointerType === "mouse" &&
+              context.isTargetWithinNode(target, pressTarget)
+            ) {
               state.isPressWithinResponderRegion = true;
             } else {
               // Calculate the responder region we use for deactivation, as the
               // element dimensions may have changed since activation.
-              updateIsPressWithinResponderRegion(touchEvent || nativeEvent, context, props, state);
+              updateIsPressWithinResponderRegion(
+                touchEvent || nativeEvent,
+                context,
+                props,
+                state
+              );
             }
           }
 
@@ -500,7 +597,14 @@ var pressResponderImpl = {
               var onPressMove = props.onPressMove;
 
               if (isFunction(onPressMove)) {
-                dispatchEvent(event, onPressMove, context, state, 'pressmove', UserBlockingEvent);
+                dispatchEvent(
+                  event,
+                  onPressMove,
+                  context,
+                  state,
+                  "pressmove",
+                  UserBlockingEvent
+                );
               }
             } else {
               dispatchPressStartEvents(event, context, props, state);
@@ -511,22 +615,21 @@ var pressResponderImpl = {
 
           break;
         }
-      // END
+        // END
 
-      case 'pointerup':
-      case 'keyup':
-      case 'mouseup':
-      case 'touchend':
-        {
+        case "pointerup":
+        case "keyup":
+        case "mouseup":
+        case "touchend": {
           if (isPressed) {
             var buttons = nativeEvent.buttons;
             var isKeyboardEvent = false;
 
             var _touchEvent;
 
-            if (type === 'pointerup' && activePointerId !== pointerId) {
+            if (type === "pointerup" && activePointerId !== pointerId) {
               return;
-            } else if (type === 'touchend') {
+            } else if (type === "touchend") {
               _touchEvent = getTouchById(nativeEvent, activePointerId);
 
               if (_touchEvent === null) {
@@ -535,7 +638,7 @@ var pressResponderImpl = {
 
               state.touchEvent = _touchEvent;
               target = getTouchTarget(context, _touchEvent);
-            } else if (type === 'keyup') {
+            } else if (type === "keyup") {
               // Ignore unrelated keyboard events
               if (!isValidKeyboardEvent(nativeEvent)) {
                 return;
@@ -548,17 +651,25 @@ var pressResponderImpl = {
               removeRootEventTypes(context, state);
             } // Determine whether to call preventDefault on subsequent native events.
 
-
-            if (context.isTargetWithinResponder(target) && context.isTargetWithinHostComponent(target, 'a')) {
+            if (
+              context.isTargetWithinResponder(target) &&
+              context.isTargetWithinHostComponent(target, "a")
+            ) {
               var _ref4 = nativeEvent,
-                  altKey = _ref4.altKey,
-                  ctrlKey = _ref4.ctrlKey,
-                  metaKey = _ref4.metaKey,
-                  shiftKey = _ref4.shiftKey; // Check "open in new window/tab" and "open context menu" key modifiers
+                altKey = _ref4.altKey,
+                ctrlKey = _ref4.ctrlKey,
+                metaKey = _ref4.metaKey,
+                shiftKey = _ref4.shiftKey; // Check "open in new window/tab" and "open context menu" key modifiers
 
               var preventDefault = props.preventDefault;
 
-              if (preventDefault !== false && !shiftKey && !metaKey && !ctrlKey && !altKey) {
+              if (
+                preventDefault !== false &&
+                !shiftKey &&
+                !metaKey &&
+                !ctrlKey &&
+                !altKey
+              ) {
                 state.shouldPreventClick = true;
               }
             }
@@ -568,45 +679,62 @@ var pressResponderImpl = {
             var onPress = props.onPress;
 
             if (_pressTarget !== null && isFunction(onPress)) {
-              if (!isKeyboardEvent && _pressTarget !== null && !targetIsDocument(_pressTarget)) {
-                if (pointerType === 'mouse' && context.isTargetWithinNode(target, _pressTarget)) {
+              if (
+                !isKeyboardEvent &&
+                _pressTarget !== null &&
+                !targetIsDocument(_pressTarget)
+              ) {
+                if (
+                  pointerType === "mouse" &&
+                  context.isTargetWithinNode(target, _pressTarget)
+                ) {
                   state.isPressWithinResponderRegion = true;
                 } else {
                   // If the event target isn't within the press target, check if we're still
                   // within the responder region. The region may have changed if the
                   // element's layout was modified after activation.
-                  updateIsPressWithinResponderRegion(_touchEvent || nativeEvent, context, props, state);
+                  updateIsPressWithinResponderRegion(
+                    _touchEvent || nativeEvent,
+                    context,
+                    props,
+                    state
+                  );
                 }
               }
 
               if (state.isPressWithinResponderRegion && buttons !== 4) {
-                dispatchEvent(event, onPress, context, state, 'press', DiscreteEvent);
+                dispatchEvent(
+                  event,
+                  onPress,
+                  context,
+                  state,
+                  "press",
+                  DiscreteEvent
+                );
               }
             }
 
             state.touchEvent = null;
-          } else if (type === 'mouseup') {
+          } else if (type === "mouseup") {
             state.ignoreEmulatedMouseEvents = false;
           }
 
           break;
         }
 
-      case 'click':
-        {
+        case "click": {
           // "keyup" occurs after "click"
-          if (previousPointerType !== 'keyboard') {
+          if (previousPointerType !== "keyboard") {
             removeRootEventTypes(context, state);
           }
 
           break;
         }
-      // CANCEL
+        // CANCEL
 
-      case 'scroll':
-        {
+        case "scroll": {
           // We ignore incoming scroll events when using mouse events
-          if (previousPointerType === 'mouse') {
+          if (previousPointerType === "mouse") {
             return;
           }
 
@@ -616,37 +744,42 @@ var pressResponderImpl = {
           // is inside the scroll target, then this a scroll that should
           // trigger a cancel.
 
-          if (_pressTarget2 !== null && (scrollTarget === doc || context.isTargetWithinNode(_pressTarget2, scrollTarget))) {
+          if (
+            _pressTarget2 !== null &&
+            (scrollTarget === doc ||
+              context.isTargetWithinNode(_pressTarget2, scrollTarget))
+          ) {
             dispatchCancel(event, context, props, state);
           }
 
           break;
         }
 
-      case 'pointercancel':
-      case 'touchcancel':
-      case 'dragstart':
-        {
+        case "pointercancel":
+        case "touchcancel":
+        case "dragstart": {
           dispatchCancel(event, context, props, state);
         }
+      }
+    },
+    onUnmount: function(context, props, state) {
+      unmountResponder(context, props, state);
     }
-  },
-  onUnmount: function (context, props, state) {
-    unmountResponder(context, props, state);
+  };
+  var PressResponder = React.unstable_createResponder(
+    "Press",
+    pressResponderImpl
+  );
+  function usePressResponder(props) {
+    return React.unstable_useResponder(PressResponder, props);
   }
-};
-var PressResponder = React.unstable_createResponder('Press', pressResponderImpl);
-function usePressResponder(props) {
-  return React.unstable_useResponder(PressResponder, props);
-}
 
-var Press = Object.freeze({
-	PressResponder: PressResponder,
-	usePressResponder: usePressResponder
+  var Press = Object.freeze({
+    PressResponder: PressResponder,
+    usePressResponder: usePressResponder
+  });
+
+  var press = Press;
+
+  return press;
 });
-
-var press = Press;
-
-return press;
-
-})));

@@ -9,71 +9,89 @@
 
 'use strict';
 
-(function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('react')) :
-	typeof define === 'function' && define.amd ? define(['react'], factory) :
-	(global.ReactEventsSwipe = factory(global.React));
-}(this, (function (React) { 'use strict';
+(function(global, factory) {
+  typeof exports === "object" && typeof module !== "undefined"
+    ? (module.exports = factory(require("react")))
+    : typeof define === "function" && define.amd
+      ? define(["react"], factory)
+      : (global.ReactEventsSwipe = factory(global.React));
+})(this, function(React) {
+  "use strict";
 
-var DiscreteEvent = 0;
-var UserBlockingEvent = 1;
+  var DiscreteEvent = 0;
+  var UserBlockingEvent = 1;
 
-var targetEventTypes = ['pointerdown'];
-var rootEventTypes = ['pointerup', 'pointercancel', 'pointermove_active']; // In the case we don't have PointerEvents (Safari), we listen to touch events
-// too
+  var targetEventTypes = ["pointerdown"];
+  var rootEventTypes = ["pointerup", "pointercancel", "pointermove_active"]; // In the case we don't have PointerEvents (Safari), we listen to touch events
+  // too
 
-if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
-  targetEventTypes.push('touchstart', 'mousedown');
-  rootEventTypes.push('mouseup', 'mousemove', 'touchend', 'touchcancel', 'touchmove_active');
-}
+  if (typeof window !== "undefined" && window.PointerEvent === undefined) {
+    targetEventTypes.push("touchstart", "mousedown");
+    rootEventTypes.push(
+      "mouseup",
+      "mousemove",
+      "touchend",
+      "touchcancel",
+      "touchmove_active"
+    );
+  }
 
-function isFunction(obj) {
-  return typeof obj === 'function';
-}
+  function isFunction(obj) {
+    return typeof obj === "function";
+  }
 
-function createSwipeEvent(context, type, target, eventData) {
-  return context.objectAssign({
-    target: target,
-    type: type,
-    timeStamp: context.getTimeStamp()
-  }, eventData);
-}
+  function createSwipeEvent(context, type, target, eventData) {
+    return context.objectAssign(
+      {
+        target: target,
+        type: type,
+        timeStamp: context.getTimeStamp()
+      },
+      eventData
+    );
+  }
 
-function dispatchSwipeEvent(context, listener, name, state, eventPriority, eventData) {
-  var target = state.swipeTarget;
-  var syntheticEvent = createSwipeEvent(context, name, target, eventData);
-  context.dispatchEvent(syntheticEvent, listener, eventPriority);
-}
+  function dispatchSwipeEvent(
+    context,
+    listener,
+    name,
+    state,
+    eventPriority,
+    eventData
+  ) {
+    var target = state.swipeTarget;
+    var syntheticEvent = createSwipeEvent(context, name, target, eventData);
+    context.dispatchEvent(syntheticEvent, listener, eventPriority);
+  }
 
-var swipeResponderImpl = {
-  targetEventTypes: targetEventTypes,
-  getInitialState: function () {
-    return {
-      direction: 0,
-      isSwiping: false,
-      lastDirection: 0,
-      startX: 0,
-      startY: 0,
-      touchId: null,
-      swipeTarget: null,
-      x: 0,
-      y: 0
-    };
-  },
-  onEvent: function (event, context, props, state) {
-    var target = event.target,
+  var swipeResponderImpl = {
+    targetEventTypes: targetEventTypes,
+    getInitialState: function() {
+      return {
+        direction: 0,
+        isSwiping: false,
+        lastDirection: 0,
+        startX: 0,
+        startY: 0,
+        touchId: null,
+        swipeTarget: null,
+        x: 0,
+        y: 0
+      };
+    },
+    onEvent: function(event, context, props, state) {
+      var target = event.target,
         type = event.type,
         nativeEvent = event.nativeEvent;
 
-    switch (type) {
-      case 'touchstart':
-      case 'mousedown':
-      case 'pointerdown':
-        {
+      switch (type) {
+        case "touchstart":
+        case "mousedown":
+        case "pointerdown": {
           if (!state.isSwiping) {
             var obj = nativeEvent;
 
-            if (type === 'touchstart') {
+            if (type === "touchstart") {
               obj = nativeEvent.targetTouches[0];
               state.touchId = obj.identifier;
             }
@@ -91,17 +109,16 @@ var swipeResponderImpl = {
 
           break;
         }
-    }
-  },
-  onRootEvent: function (event, context, props, state) {
-    var type = event.type,
+      }
+    },
+    onRootEvent: function(event, context, props, state) {
+      var type = event.type,
         nativeEvent = event.nativeEvent;
 
-    switch (type) {
-      case 'touchmove':
-      case 'mousemove':
-      case 'pointermove':
-        {
+      switch (type) {
+        case "touchmove":
+        case "mousemove":
+        case "pointermove": {
           if (event.passive) {
             return;
           }
@@ -109,7 +126,7 @@ var swipeResponderImpl = {
           if (state.isSwiping) {
             var obj = null;
 
-            if (type === 'touchmove') {
+            if (type === "touchmove") {
               var targetTouches = nativeEvent.targetTouches;
 
               for (var i = 0; i < targetTouches.length; i++) {
@@ -148,7 +165,14 @@ var swipeResponderImpl = {
             var onSwipeMove = props.onSwipeMove;
 
             if (isFunction(onSwipeMove)) {
-              dispatchSwipeEvent(context, onSwipeMove, 'swipemove', state, UserBlockingEvent, eventData);
+              dispatchSwipeEvent(
+                context,
+                onSwipeMove,
+                "swipemove",
+                state,
+                UserBlockingEvent,
+                eventData
+              );
             }
 
             nativeEvent.preventDefault();
@@ -157,12 +181,11 @@ var swipeResponderImpl = {
           break;
         }
 
-      case 'pointercancel':
-      case 'touchcancel':
-      case 'touchend':
-      case 'mouseup':
-      case 'pointerup':
-        {
+        case "pointercancel":
+        case "touchcancel":
+        case "touchend":
+        case "mouseup":
+        case "pointerup": {
           if (state.isSwiping) {
             if (state.x === state.startX && state.y === state.startY) {
               return;
@@ -176,13 +199,25 @@ var swipeResponderImpl = {
                 var onSwipeLeft = props.onSwipeLeft;
 
                 if (isFunction(onSwipeLeft)) {
-                  dispatchSwipeEvent(context, onSwipeLeft, 'swipeleft', state, DiscreteEvent);
+                  dispatchSwipeEvent(
+                    context,
+                    onSwipeLeft,
+                    "swipeleft",
+                    state,
+                    DiscreteEvent
+                  );
                 }
               } else if (direction === 1) {
                 var onSwipeRight = props.onSwipeRight;
 
                 if (isFunction(onSwipeRight)) {
-                  dispatchSwipeEvent(context, onSwipeRight, 'swiperight', state, DiscreteEvent);
+                  dispatchSwipeEvent(
+                    context,
+                    onSwipeRight,
+                    "swiperight",
+                    state,
+                    DiscreteEvent
+                  );
                 }
               }
             }
@@ -190,7 +225,13 @@ var swipeResponderImpl = {
             var onSwipeEnd = props.onSwipeEnd;
 
             if (isFunction(onSwipeEnd)) {
-              dispatchSwipeEvent(context, onSwipeEnd, 'swipeend', state, DiscreteEvent);
+              dispatchSwipeEvent(
+                context,
+                onSwipeEnd,
+                "swipeend",
+                state,
+                DiscreteEvent
+              );
             }
 
             state.lastDirection = direction;
@@ -202,21 +243,23 @@ var swipeResponderImpl = {
 
           break;
         }
+      }
     }
+  };
+  var SwipeResponder = React.unstable_createResponder(
+    "Swipe",
+    swipeResponderImpl
+  );
+  function useSwipeListener(props) {
+    return React.unstable_useListener(SwipeResponder, props);
   }
-};
-var SwipeResponder = React.unstable_createResponder('Swipe', swipeResponderImpl);
-function useSwipeListener(props) {
-  return React.unstable_useListener(SwipeResponder, props);
-}
 
-var Swipe = Object.freeze({
-	SwipeResponder: SwipeResponder,
-	useSwipeListener: useSwipeListener
+  var Swipe = Object.freeze({
+    SwipeResponder: SwipeResponder,
+    useSwipeListener: useSwipeListener
+  });
+
+  var swipe = Swipe;
+
+  return swipe;
 });
-
-var swipe = Swipe;
-
-return swipe;
-
-})));
