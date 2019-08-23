@@ -1,9 +1,21 @@
+/** @license React vundefined
+ * react-events-context-menu.development.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+'use strict';
+
 (function(global, factory) {
   typeof exports === "object" && typeof module !== "undefined"
     ? (module.exports = factory(require("react")))
     : typeof define === "function" && define.amd
       ? define(["react"], factory)
-      : (global.ReactEventsContextMenu = factory(global.React));
+      : ((global = global || self),
+        (global.ReactEventsContextMenu = factory(global.React)));
 })(this, function(React) {
   "use strict";
 
@@ -75,13 +87,13 @@
     "ContextMenu",
     contextMenuImpl
   );
-  function useContextMenuResponder(props) {
+  function useContextMenu(props) {
     return React.unstable_useResponder(ContextMenuResponder, props);
   }
 
-  var ContextMenu = Object.freeze({
+  var ContextMenu = /*#__PURE__*/ Object.freeze({
     ContextMenuResponder: ContextMenuResponder,
-    useContextMenuResponder: useContextMenuResponder
+    useContextMenu: useContextMenu
   });
 
   var contextMenu = ContextMenu;

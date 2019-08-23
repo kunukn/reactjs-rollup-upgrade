@@ -1,3 +1,18 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @noflow
+ * @preventMunge
+ * @preserve-invariant-messages
+ */
+
+'use strict';
+
+if (__DEV__) {
+  (function() {
 "use strict";
 
 function scheduleWork(callback) {
@@ -44,9 +59,6 @@ function formatChunk(type, props) {
 // nor polyfill, then a plain number is used for performance.
 var hasSymbol = typeof Symbol === "function" && Symbol.for;
 var REACT_ELEMENT_TYPE = hasSymbol ? Symbol.for("react.element") : 0xeac7;
-
-// TODO: We don't use AsyncMode or ConcurrentMode anymore. They were temporary
-// (unstable) APIs that have been removed. Can we remove the symbols?
 
 function createRequest(children, destination) {
   return {
@@ -110,12 +122,9 @@ function startFlowing(request, desiredBytes) {
   flushCompletedChunks(request);
 }
 
-// This file intentionally does *not* have the Flow annotation.
-// Don't add it. See `./inline-typed.js` for an explanation.
-
 function createDrainHandler(destination, request) {
   return function() {
-    return startFlowing(request, 0);
+    return startFlowing(request);
   };
 }
 
@@ -129,13 +138,17 @@ var ReactDOMFizzServerNode = {
   pipeToNodeWritable: pipeToNodeWritable
 };
 
-var ReactDOMFizzServerNode$1 = Object.freeze({
+var ReactDOMFizzServerNode$1 = /*#__PURE__*/ Object.freeze({
   default: ReactDOMFizzServerNode
 });
 
-var ReactDOMFizzServerNode$2 =
-  (ReactDOMFizzServerNode$1 && ReactDOMFizzServerNode) ||
-  ReactDOMFizzServerNode$1;
+function getCjsExportFromNamespace(n) {
+  return (n && n["default"]) || n;
+}
+
+var ReactDOMFizzServerNode$2 = getCjsExportFromNamespace(
+  ReactDOMFizzServerNode$1
+);
 
 // TODO: decide on the top-level export form.
 // This is hacky but makes it work with both Rollup and Jest
@@ -144,3 +157,6 @@ var unstableFizz_node =
   ReactDOMFizzServerNode$2.default || ReactDOMFizzServerNode$2;
 
 module.exports = unstableFizz_node;
+
+  })();
+}

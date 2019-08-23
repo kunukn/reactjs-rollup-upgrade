@@ -1,9 +1,21 @@
+/** @license React vundefined
+ * react-cache.development.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+'use strict';
+
 (function(global, factory) {
   typeof exports === "object" && typeof module !== "undefined"
     ? factory(exports, require("react"), require("scheduler"))
     : typeof define === "function" && define.amd
       ? define(["exports", "react", "scheduler"], factory)
-      : factory((global.ReactCache = {}), global.React, global.Scheduler);
+      : ((global = global || self),
+        factory((global.ReactCache = {}), global.React, global.Scheduler));
 })(this, function(exports, React, Scheduler) {
   "use strict";
 
@@ -74,8 +86,8 @@
 
   // use dynamic dispatch for CommonJS interop named imports.
 
-  var scheduleCallback = Scheduler.unstable_scheduleCallback;
-  var IdlePriority = Scheduler.unstable_IdlePriority;
+  var scheduleCallback = Scheduler.unstable_scheduleCallback,
+    IdlePriority = Scheduler.unstable_IdlePriority;
   function createLRU(limit) {
     var LIMIT = limit; // Circular, doubly-linked list
 
@@ -177,9 +189,6 @@
           entry.next = resolvedFirst;
           first = entry;
         }
-      } else {
-        // Cannot access a deleted entry
-        // TODO: Error? Warning?
       }
 
       scheduleCleanUp();

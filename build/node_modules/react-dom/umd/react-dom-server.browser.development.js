@@ -1,15 +1,45 @@
+/** @license React vundefined
+ * react-dom-server.browser.development.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+'use strict';
+
 (function(global, factory) {
   typeof exports === "object" && typeof module !== "undefined"
     ? (module.exports = factory(require("react")))
     : typeof define === "function" && define.amd
       ? define(["react"], factory)
-      : (global.ReactDOMServer = factory(global.React));
+      : ((global = global || self),
+        (global.ReactDOMServer = factory(global.React)));
 })(this, function(React) {
   "use strict";
 
   // Do not require this module directly! Use normal `invariant` calls with
   // template literal strings. The messages will be converted to ReactError during
   // build, and in production they will be minified.
+  function ReactErrorProd(error) {
+    var code = error.message;
+    var url = "https://reactjs.org/docs/error-decoder.html?invariant=" + code;
+
+    for (var i = 1; i < arguments.length; i++) {
+      url += "&args[]=" + encodeURIComponent(arguments[i]);
+    }
+
+    error.message =
+      "Minified React error #" +
+      code +
+      "; visit " +
+      url +
+      " for the full message or " +
+      "use the non-minified dev environment for full errors and additional " +
+      "helpful warnings. ";
+    return error;
+  }
 
   // Do not require this module directly! Use normal `invariant` calls with
   // template literal strings. The messages will be converted to ReactError during
@@ -19,20 +49,7 @@
     return error;
   }
 
-  // TODO: this is special because it gets imported during build.
-
   var ReactVersion = "16.8.6";
-
-  /**
-   * Use invariant() to assert state which your program assumes to be true.
-   *
-   * Provide sprintf-style format (only %s is supported) and arguments
-   * to provide information about what broke and what you were
-   * expecting.
-   *
-   * The invariant message will be stripped in production, but the invariant
-   * will remain to ensure logic does not differ in production.
-   */
 
   var ReactInternals = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
   var _assign = ReactInternals.assign;
@@ -105,7 +122,6 @@
   // The Symbol used to tag the ReactElement-like types. If there is no native Symbol
   // nor polyfill, then a plain number is used for performance.
   var hasSymbol = typeof Symbol === "function" && Symbol.for;
-
   var REACT_PORTAL_TYPE = hasSymbol ? Symbol.for("react.portal") : 0xeaca;
   var REACT_FRAGMENT_TYPE = hasSymbol ? Symbol.for("react.fragment") : 0xeacb;
   var REACT_STRICT_MODE_TYPE = hasSymbol
@@ -114,8 +130,6 @@
   var REACT_PROFILER_TYPE = hasSymbol ? Symbol.for("react.profiler") : 0xead2;
   var REACT_PROVIDER_TYPE = hasSymbol ? Symbol.for("react.provider") : 0xeacd;
   var REACT_CONTEXT_TYPE = hasSymbol ? Symbol.for("react.context") : 0xeace; // TODO: We don't use AsyncMode or ConcurrentMode anymore. They were temporary
-  // (unstable) APIs that have been removed. Can we remove the symbols?
-
   var REACT_CONCURRENT_MODE_TYPE = hasSymbol
     ? Symbol.for("react.concurrent_mode")
     : 0xeacf;
@@ -387,7 +401,7 @@
   var lowPriorityWarning$1 = lowPriorityWarning;
 
   var BEFORE_SLASH_RE = /^(.*)[\\\/]/;
-  var describeComponentFrame = function(name, source, ownerName) {
+  function describeComponentFrame(name, source, ownerName) {
     var sourceInfo = "";
 
     if (source) {
@@ -417,70 +431,12 @@
     }
 
     return "\n    in " + (name || "Unknown") + sourceInfo;
-  };
-
-  // Helps identify side effects in begin-phase lifecycle hooks and setState reducers:
-
-  // In some cases, StrictMode should also double-render lifecycles.
-  // This can be confusing for tests though,
-  // And it can be bad for performance in production.
-  // This feature flag can be used to control the behavior:
-
-  // To preserve the "Pause on caught exceptions" behavior of the debugger, we
-  // replay the begin phase of a failed component inside invokeGuardedCallback.
-
-  // Warn about deprecated, async-unsafe lifecycles; relates to RFC #6:
-
-  var warnAboutDeprecatedLifecycles = true; // Gather advanced timing metrics for Profiler subtrees.
-
-  // Trace which interactions trigger each commit.
-
-  // Only used in www builds.
+  }
 
   var enableSuspenseServerRenderer = false; // TODO: true? Here it might just be false.
-  // Only used in www builds.
-
-  // Only used in www builds.
-
-  // Disable javascript: URL strings in href for XSS protection.
-
-  var disableJavaScriptURLs = false; // React Fire: prevent the value and checked attributes from syncing
-  // with their related DOM properties
-
-  // These APIs will no longer be "unstable" in the upcoming 16.7 release,
-  // Control this behavior with a flag to support 16.6 minor releases in the meanwhile.
-
-  // See https://github.com/react-native-community/discussions-and-proposals/issues/72 for more information
-  // This is a flag so we can fix warnings in RN core before turning it on
-
-  // Experimental React Flare event system and event components support.
 
   var enableFlareAPI = false; // Experimental Host Component support.
 
-  var enableFundamentalAPI = false; // New API for JSX transforms to target - https://github.com/reactjs/rfcs/pull/107
-
-  // We will enforce mocking scheduler with scheduler/unstable_mock at some point. (v17?)
-  // Till then, we warn about the missing mock, but still fallback to a sync mode compatible version
-
-  // For tests, we flush suspense fallbacks in an act scope;
-  // *except* in some of our own tests, where we test incremental loading states.
-
-  // Changes priority of some events like mousemove to user-blocking priority,
-  // but without making them discrete. The flag exists in case it causes
-  // starvation problems.
-
-  // Add a callback property to suspense to notify which promises are currently
-  // in the update queue. This allows reporting and tracing of what is causing
-  // the user to see a loading state.
-  // Also allows hydration callbacks to fire when a dehydrated boundary gets
-  // hydrated or deleted.
-
-  // Part of the simplification of React.createElement so we can eventually move
-  // from React.createElement to React.jsx
-  // https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md
-
-  var disableLegacyContext = false;
-
   /**
    * Copyright (c) 2013-present, Facebook, Inc.
    *
@@ -488,21 +444,14 @@
    * LICENSE file in the root directory of this source tree.
    */
 
-  var ReactPropTypesSecret$1 = "SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED";
+  var ReactPropTypesSecret = "SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED";
 
-  var ReactPropTypesSecret_1 = ReactPropTypesSecret$1;
-
-  /**
-   * Copyright (c) 2013-present, Facebook, Inc.
-   *
-   * This source code is licensed under the MIT license found in the
-   * LICENSE file in the root directory of this source tree.
-   */
+  var ReactPropTypesSecret_1 = ReactPropTypesSecret;
 
   var printWarning$1 = function() {};
 
   {
-    var ReactPropTypesSecret = ReactPropTypesSecret_1;
+    var ReactPropTypesSecret$1 = ReactPropTypesSecret_1;
     var loggedTypeFailures = {};
 
     printWarning$1 = function(text) {
@@ -568,7 +517,7 @@
               componentName,
               location,
               null,
-              ReactPropTypesSecret
+              ReactPropTypesSecret$1
             );
           } catch (ex) {
             error = ex;
@@ -614,11 +563,11 @@
 
   var checkPropTypes_1 = checkPropTypes;
 
-  var ReactDebugCurrentFrame$1;
+  var ReactDebugCurrentFrame;
   var didWarnAboutInvalidateContextType;
 
   {
-    ReactDebugCurrentFrame$1 = ReactSharedInternals.ReactDebugCurrentFrame;
+    ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
     didWarnAboutInvalidateContextType = new Set();
   }
 
@@ -651,7 +600,7 @@
         values,
         location,
         "Component",
-        ReactDebugCurrentFrame$1.getCurrentStack
+        ReactDebugCurrentFrame.getCurrentStack
       );
     }
   }
@@ -723,20 +672,7 @@
         return contextType[threadID];
       }
 
-      if (disableLegacyContext) {
-        {
-          if (type.contextTypes) {
-            warningWithoutStack$1(
-              false,
-              "%s uses the legacy contextTypes API which is no longer supported. " +
-                "Use React.createContext() with static contextType instead.",
-              getComponentName(type) || "Unknown"
-            );
-          }
-        }
-
-        return emptyObject;
-      } else {
+      {
         var maskedContext = maskContext(type, context);
 
         {
@@ -748,20 +684,7 @@
         return maskedContext;
       }
     } else {
-      if (disableLegacyContext) {
-        {
-          if (type.contextTypes) {
-            warningWithoutStack$1(
-              false,
-              "%s uses the legacy contextTypes API which is no longer supported. " +
-                "Use React.createContext() with React.useContext() instead.",
-              getComponentName(type) || "Unknown"
-            );
-          }
-        }
-
-        return undefined;
-      } else {
+      {
         var _maskedContext = maskContext(type, context);
 
         {
@@ -775,9 +698,6 @@
     }
   }
 
-  // Allocates a new index for each request. Tries to stay as compact as possible so that these
-  // indices can be used to reference a tightly packaged array. As opposed to being used in a Map.
-  // The first allocated index is 1.
   var nextAvailableThreadIDs = new Uint16Array(16);
 
   for (var i = 0; i < 15; i++) {
@@ -865,20 +785,19 @@
 
   var ATTRIBUTE_NAME_CHAR =
     ATTRIBUTE_NAME_START_CHAR + "\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040";
-
   var ROOT_ATTRIBUTE_NAME = "data-reactroot";
   var VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
     "^[" + ATTRIBUTE_NAME_START_CHAR + "][" + ATTRIBUTE_NAME_CHAR + "]*$"
   );
-  var hasOwnProperty$1 = Object.prototype.hasOwnProperty;
+  var hasOwnProperty = Object.prototype.hasOwnProperty;
   var illegalAttributeNameCache = {};
   var validatedAttributeNameCache = {};
   function isAttributeNameSafe(attributeName) {
-    if (hasOwnProperty$1.call(validatedAttributeNameCache, attributeName)) {
+    if (hasOwnProperty.call(validatedAttributeNameCache, attributeName)) {
       return true;
     }
 
-    if (hasOwnProperty$1.call(illegalAttributeNameCache, attributeName)) {
+    if (hasOwnProperty.call(illegalAttributeNameCache, attributeName)) {
       return false;
     }
 
@@ -1341,10 +1260,10 @@
     );
   });
 
-  var ReactDebugCurrentFrame$2 = null;
+  var ReactDebugCurrentFrame$1 = null;
 
   {
-    ReactDebugCurrentFrame$2 = ReactSharedInternals.ReactDebugCurrentFrame;
+    ReactDebugCurrentFrame$1 = ReactSharedInternals.ReactDebugCurrentFrame;
   } // A javascript: URL can contain leading C0 control or \u0020 SPACE,
   // and any newline or tab are filtered out as if they're not part of the URL.
   // https://url.spec.whatwg.org/#url-parsing
@@ -1360,20 +1279,7 @@
   var didWarn = false;
 
   function sanitizeURL(url) {
-    if (disableJavaScriptURLs) {
-      (function() {
-        if (!!isJavaScriptProtocol.test(url)) {
-          {
-            throw ReactError(
-              Error(
-                "React has blocked a javascript: URL as a security precaution." +
-                  ReactDebugCurrentFrame$2.getStackAddendum()
-              )
-            );
-          }
-        }
-      })();
-    } else if (true && !didWarn && isJavaScriptProtocol.test(url)) {
+    if (!didWarn && isJavaScriptProtocol.test(url)) {
       didWarn = true;
       warning$1(
         false,
@@ -1484,17 +1390,6 @@
   function quoteAttributeValueForBrowser(value) {
     return '"' + escapeTextForBrowser(value) + '"';
   }
-
-  /**
-   * Operations for dealing with DOM properties.
-   */
-
-  /**
-   * Creates markup for the ID property.
-   *
-   * @param {string} id Unescaped ID.
-   * @return {string} Markup string.
-   */
 
   function createMarkupForRoot() {
     return ROOT_ATTRIBUTE_NAME + '=""';
@@ -1984,10 +1879,6 @@
 
         lastRenderPhaseUpdate.next = update;
       }
-    } else {
-      // This means an update has happened after the function component has
-      // returned. On the server this is a no-op. In React Fiber, the update
-      // would be scheduled for a future render.
     }
   }
 
@@ -2062,13 +1953,13 @@
     return parentNamespace;
   }
 
-  var ReactDebugCurrentFrame$3 = null;
+  var ReactDebugCurrentFrame$2 = null;
   var ReactControlledValuePropTypes = {
     checkPropTypes: null
   };
 
   {
-    ReactDebugCurrentFrame$3 = ReactSharedInternals.ReactDebugCurrentFrame;
+    ReactDebugCurrentFrame$2 = ReactSharedInternals.ReactDebugCurrentFrame;
     var hasReadOnlyValue = {
       button: true,
       checkbox: true,
@@ -2128,7 +2019,7 @@
         props,
         "prop",
         tagName,
-        ReactDebugCurrentFrame$3.getStackAddendum
+        ReactDebugCurrentFrame$2.getStackAddendum
       );
     };
   }
@@ -2162,13 +2053,11 @@
     omittedCloseTags
   );
 
-  // or add stack by default to invariants where possible.
-
   var HTML = "__html";
-  var ReactDebugCurrentFrame$4 = null;
+  var ReactDebugCurrentFrame$3 = null;
 
   {
-    ReactDebugCurrentFrame$4 = ReactSharedInternals.ReactDebugCurrentFrame;
+    ReactDebugCurrentFrame$3 = ReactSharedInternals.ReactDebugCurrentFrame;
   }
 
   function assertValidProps(tag, props) {
@@ -2186,7 +2075,7 @@
               Error(
                 tag +
                   " is a void element tag and must neither have `children` nor use `dangerouslySetInnerHTML`." +
-                  ReactDebugCurrentFrame$4.getStackAddendum()
+                  ReactDebugCurrentFrame$3.getStackAddendum()
               )
             );
           }
@@ -2247,7 +2136,7 @@
           throw ReactError(
             Error(
               "The `style` prop expects a mapping from style properties to values, not a string. For example, style={{marginRight: spacing + 'em'}} when using JSX." +
-                ReactDebugCurrentFrame$4.getStackAddendum()
+                ReactDebugCurrentFrame$3.getStackAddendum()
             )
           );
         }
@@ -2587,11 +2476,11 @@
   var warnedProperties = {};
   var rARIA = new RegExp("^(aria)-[" + ATTRIBUTE_NAME_CHAR + "]*$");
   var rARIACamel = new RegExp("^(aria)[A-Z][" + ATTRIBUTE_NAME_CHAR + "]*$");
-  var hasOwnProperty$2 = Object.prototype.hasOwnProperty;
+  var hasOwnProperty$1 = Object.prototype.hasOwnProperty;
 
   function validateProperty(tagName, name) {
     if (
-      hasOwnProperty$2.call(warnedProperties, name) &&
+      hasOwnProperty$1.call(warnedProperties, name) &&
       warnedProperties[name]
     ) {
       return true;
@@ -2727,28 +2616,10 @@
   }
 
   /**
-   * Registers plugins so that they can extract and dispatch events.
-   *
-   * @see {EventPluginHub}
-   */
-
-  /**
-   * Ordered list of injected plugins.
-   */
-
-  /**
-   * Mapping from event name to dispatch config
-   */
-
-  /**
    * Mapping from registration name to plugin module
    */
 
   var registrationNameModules = {};
-  /**
-   * Mapping from registration name to event name
-   */
-
   /**
    * Mapping from lowercase registration names to the properly cased version,
    * used to warn in the case of missing event handlers. Available
@@ -2757,27 +2628,6 @@
    */
 
   var possibleRegistrationNames = {}; // Trust the developer to only use possibleRegistrationNames in true
-
-  /**
-   * Injects an ordering of plugins (by plugin name). This allows the ordering
-   * to be decoupled from injection of the actual plugins so that ordering is
-   * always deterministic regardless of packaging, on-the-fly injection, etc.
-   *
-   * @param {array} InjectedEventPluginOrder
-   * @internal
-   * @see {EventPluginHub.injection.injectEventPluginOrder}
-   */
-
-  /**
-   * Injects plugins to be used by `EventPluginHub`. The plugin names must be
-   * in the ordering injected by `injectEventPluginOrder`.
-   *
-   * Plugins can be injected as part of page initialization or on-the-fly.
-   *
-   * @param {object} injectedNamesToPlugins Map from names to plugin modules.
-   * @internal
-   * @see {EventPluginHub.injection.injectEventPluginsByName}
-   */
 
   // When adding attributes to the HTML or SVG whitelist, be sure to
   // also add them to this module to ensure casing and incorrect name
@@ -3565,7 +3415,7 @@
 
   var currentDebugStacks = [];
   var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
-  var ReactDebugCurrentFrame;
+  var ReactDebugCurrentFrame$4;
   var prevGetCurrentStackImpl = null;
 
   var getCurrentServerStackImpl = function() {
@@ -3587,7 +3437,7 @@
   var hasWarnedAboutUsingContextAsConsumer = false;
 
   {
-    ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+    ReactDebugCurrentFrame$4 = ReactSharedInternals.ReactDebugCurrentFrame;
 
     validatePropertiesInDevelopment = function(type, props) {
       validateProperties(type, props);
@@ -3614,8 +3464,8 @@
       if (currentDebugStacks.length === 1) {
         // We are entering a server renderer.
         // Remember the previous (e.g. client) global stack implementation.
-        prevGetCurrentStackImpl = ReactDebugCurrentFrame.getCurrentStack;
-        ReactDebugCurrentFrame.getCurrentStack = getCurrentServerStackImpl;
+        prevGetCurrentStackImpl = ReactDebugCurrentFrame$4.getCurrentStack;
+        ReactDebugCurrentFrame$4.getCurrentStack = getCurrentServerStackImpl;
       }
     };
 
@@ -3636,7 +3486,7 @@
       if (currentDebugStacks.length === 0) {
         // We are exiting the server renderer.
         // Restore the previous (e.g. client) global stack implementation.
-        ReactDebugCurrentFrame.getCurrentStack = prevGetCurrentStackImpl;
+        ReactDebugCurrentFrame$4.getCurrentStack = prevGetCurrentStackImpl;
         prevGetCurrentStackImpl = null;
       }
     };
@@ -3851,7 +3701,7 @@
     return content;
   }
 
-  var hasOwnProperty = Object.prototype.hasOwnProperty;
+  var hasOwnProperty$2 = Object.prototype.hasOwnProperty;
   var STYLE = "style";
   var RESERVED_PROPS = {
     children: null,
@@ -3871,11 +3721,7 @@
     var ret = "<" + tagVerbatim;
 
     for (var propKey in props) {
-      if (!hasOwnProperty.call(props, propKey)) {
-        continue;
-      }
-
-      if (enableFlareAPI && propKey === "listeners") {
+      if (!hasOwnProperty$2.call(props, propKey)) {
         continue;
       }
 
@@ -4097,10 +3943,7 @@
       ) {
         if (typeof inst.componentWillMount === "function") {
           {
-            if (
-              warnAboutDeprecatedLifecycles &&
-              inst.componentWillMount.__suppressDeprecationWarning !== true
-            ) {
+            if (inst.componentWillMount.__suppressDeprecationWarning !== true) {
               var _componentName4 = getComponentName(Component) || "Unknown";
 
               if (!didWarnAboutDeprecatedWillMount[_componentName4]) {
@@ -4183,20 +4026,7 @@
       validateRenderResult(child, Component);
       var childContext;
 
-      if (disableLegacyContext) {
-        {
-          var childContextTypes = Component.childContextTypes;
-
-          if (childContextTypes !== undefined) {
-            warningWithoutStack$1(
-              false,
-              "%s uses the legacy childContextTypes API which is no longer supported. " +
-                "Use React.createContext() instead.",
-              getComponentName(Component) || "Unknown"
-            );
-          }
-        }
-      } else {
+      {
         if (typeof inst.getChildContext === "function") {
           var _childContextTypes = Component.childContextTypes;
 
@@ -4410,12 +4240,14 @@
 
                   (function() {
                     if (!fallbackFrame) {
-                      {
+                      if (true) {
                         throw ReactError(
                           Error(
                             "ReactDOMServer did not find an internal fallback frame for Suspense. This is a bug in React. Please file an issue."
                           )
                         );
+                      } else {
+                        throw ReactErrorProd(Error(303));
                       }
                     }
                   })();
@@ -4436,7 +4268,7 @@
             var child = frame.children[frame.childIndex++];
             var outBuffer = "";
 
-            {
+            if (true) {
               pushCurrentDebugStack(this.stack); // We're starting work on this frame, so reset its inner stack.
 
               frame.debugElementStack.length = 0;
@@ -4453,12 +4285,14 @@
                 if (enableSuspenseServerRenderer) {
                   (function() {
                     if (!(_this.suspenseDepth > 0)) {
-                      {
+                      if (true) {
                         throw ReactError(
                           Error(
                             "A React component suspended while rendering, but no fallback UI was specified.\n\nAdd a <Suspense fallback=...> component higher in the tree to provide a loading indicator or placeholder to display."
                           )
                         );
+                      } else {
+                        throw ReactErrorProd(Error(342));
                       }
                     }
                   })();
@@ -4466,11 +4300,13 @@
                   suspended = true;
                 } else {
                   (function() {
-                    {
-                      {
+                    if (!false) {
+                      if (true) {
                         throw ReactError(
                           Error("ReactDOMServer does not yet support Suspense.")
                         );
+                      } else {
+                        throw ReactErrorProd(Error(294));
                       }
                     }
                   })();
@@ -4479,7 +4315,7 @@
                 throw err;
               }
             } finally {
-              {
+              if (true) {
                 popCurrentDebugStack();
               }
             }
@@ -4609,61 +4445,7 @@
             }
 
             case REACT_SUSPENSE_TYPE: {
-              if (enableSuspenseServerRenderer) {
-                var fallback = nextChild.props.fallback;
-
-                if (fallback === undefined) {
-                  // If there is no fallback, then this just behaves as a fragment.
-                  var _nextChildren3 = toArray(nextChild.props.children);
-
-                  var _frame3 = {
-                    type: null,
-                    domNamespace: parentNamespace,
-                    children: _nextChildren3,
-                    childIndex: 0,
-                    context: context,
-                    footer: ""
-                  };
-
-                  {
-                    _frame3.debugElementStack = [];
-                  }
-
-                  this.stack.push(_frame3);
-                  return "";
-                }
-
-                var fallbackChildren = toArray(fallback);
-
-                var _nextChildren2 = toArray(nextChild.props.children);
-
-                var fallbackFrame = {
-                  type: null,
-                  domNamespace: parentNamespace,
-                  children: fallbackChildren,
-                  childIndex: 0,
-                  context: context,
-                  footer: "<!--/$-->"
-                };
-                var _frame2 = {
-                  fallbackFrame: fallbackFrame,
-                  type: REACT_SUSPENSE_TYPE,
-                  domNamespace: parentNamespace,
-                  children: _nextChildren2,
-                  childIndex: 0,
-                  context: context,
-                  footer: "<!--/$-->"
-                };
-
-                {
-                  _frame2.debugElementStack = [];
-                  fallbackFrame.debugElementStack = [];
-                }
-
-                this.stack.push(_frame2);
-                this.suspenseDepth++;
-                return "<!--$-->";
-              } else {
+              {
                 (function() {
                   {
                     {
@@ -4824,41 +4606,6 @@
               // eslint-disable-next-line-no-fallthrough
 
               case REACT_FUNDAMENTAL_TYPE: {
-                if (enableFundamentalAPI) {
-                  var fundamentalImpl = elementType.impl;
-                  var open = fundamentalImpl.getServerSideString(
-                    null,
-                    nextElement.props
-                  );
-                  var getServerSideStringClose =
-                    fundamentalImpl.getServerSideStringClose;
-                  var close =
-                    getServerSideStringClose !== undefined
-                      ? getServerSideStringClose(null, nextElement.props)
-                      : "";
-
-                  var _nextChildren8 =
-                    fundamentalImpl.reconcileChildren !== false
-                      ? toArray(nextChild.props.children)
-                      : [];
-
-                  var _frame8 = {
-                    type: null,
-                    domNamespace: parentNamespace,
-                    children: _nextChildren8,
-                    childIndex: 0,
-                    context: context,
-                    footer: close
-                  };
-
-                  {
-                    _frame8.debugElementStack = [];
-                  }
-
-                  this.stack.push(_frame8);
-                  return open;
-                }
-
                 (function() {
                   {
                     {
@@ -5356,21 +5103,13 @@
     })();
   } // Note: when changing this, also consider https://github.com/facebook/react/issues/11526
 
-  var ReactDOMServerBrowser = {
+  var ReactDOMServer = {
     renderToString: renderToString,
     renderToStaticMarkup: renderToStaticMarkup,
     renderToNodeStream: renderToNodeStream,
     renderToStaticNodeStream: renderToStaticNodeStream,
     version: ReactVersion
   };
-
-  var ReactDOMServerBrowser$1 = Object.freeze({
-    default: ReactDOMServerBrowser
-  });
-
-  var ReactDOMServer =
-    (ReactDOMServerBrowser$1 && ReactDOMServerBrowser) ||
-    ReactDOMServerBrowser$1;
 
   // TODO: decide on the top-level export form.
   // This is hacky but makes it work with both Rollup and Jest

@@ -1,9 +1,21 @@
+/** @license React vundefined
+ * react-events-drag.development.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+'use strict';
+
 (function(global, factory) {
   typeof exports === "object" && typeof module !== "undefined"
     ? (module.exports = factory(require("react")))
     : typeof define === "function" && define.amd
       ? define(["react"], factory)
-      : (global.ReactEventsDrag = factory(global.React));
+      : ((global = global || self),
+        (global.ReactEventsDrag = factory(global.React)));
 })(this, function(React) {
   "use strict";
 
@@ -206,13 +218,13 @@
     }
   };
   var DragResponder = React.unstable_createResponder("Drag", dragResponderImpl);
-  function useDragResponder(props) {
+  function useDrag(props) {
     return React.unstable_useResponder(DragResponder, props);
   }
 
-  var Drag = Object.freeze({
+  var Drag = /*#__PURE__*/ Object.freeze({
     DragResponder: DragResponder,
-    useDragResponder: useDragResponder
+    useDrag: useDrag
   });
 
   var drag = Drag;

@@ -1,9 +1,20 @@
+/** @license React vundefined
+ * react-is.development.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+'use strict';
+
 (function(global, factory) {
   typeof exports === "object" && typeof module !== "undefined"
     ? factory(exports)
     : typeof define === "function" && define.amd
       ? define(["exports"], factory)
-      : factory((global.ReactIs = {}));
+      : ((global = global || self), factory((global.ReactIs = {})));
 })(this, function(exports) {
   "use strict";
 
@@ -247,7 +258,6 @@
     return typeOf(object) === REACT_SUSPENSE_TYPE;
   }
 
-  exports.typeOf = typeOf;
   exports.AsyncMode = AsyncMode;
   exports.ConcurrentMode = ConcurrentMode;
   exports.ContextConsumer = ContextConsumer;
@@ -261,7 +271,6 @@
   exports.Profiler = Profiler;
   exports.StrictMode = StrictMode;
   exports.Suspense = Suspense;
-  exports.isValidElementType = isValidElementType;
   exports.isAsyncMode = isAsyncMode;
   exports.isConcurrentMode = isConcurrentMode;
   exports.isContextConsumer = isContextConsumer;
@@ -275,6 +284,8 @@
   exports.isProfiler = isProfiler;
   exports.isStrictMode = isStrictMode;
   exports.isSuspense = isSuspense;
+  exports.isValidElementType = isValidElementType;
+  exports.typeOf = typeOf;
 
   Object.defineProperty(exports, "__esModule", { value: true });
 });

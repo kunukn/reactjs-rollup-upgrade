@@ -1,3 +1,18 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @noflow
+ * @preventMunge
+ * @preserve-invariant-messages
+ */
+
+'use strict';
+
+if (__DEV__) {
+  (function() {
 "use strict";
 
 var React = require("react");
@@ -194,15 +209,24 @@ var dragResponderImpl = {
   }
 };
 var DragResponder = React.unstable_createResponder("Drag", dragResponderImpl);
-function useDragResponder(props) {
+function useDrag(props) {
   return React.unstable_useResponder(DragResponder, props);
 }
 
-var Drag = Object.freeze({
+var Drag = /*#__PURE__*/ Object.freeze({
   DragResponder: DragResponder,
-  useDragResponder: useDragResponder
+  useDrag: useDrag
 });
 
-var drag = Drag;
+function getCjsExportFromNamespace(n) {
+  return (n && n["default"]) || n;
+}
+
+var require$$0 = getCjsExportFromNamespace(Drag);
+
+var drag = require$$0;
 
 module.exports = drag;
+
+  })();
+}

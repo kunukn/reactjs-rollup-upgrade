@@ -1,9 +1,21 @@
+/** @license React vundefined
+ * react-events-focus.development.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+'use strict';
+
 (function(global, factory) {
   typeof exports === "object" && typeof module !== "undefined"
     ? (module.exports = factory(require("react")))
     : typeof define === "function" && define.amd
       ? define(["react"], factory)
-      : (global.ReactEventsFocus = factory(global.React));
+      : ((global = global || self),
+        (global.ReactEventsFocus = factory(global.React)));
 })(this, function(React) {
   "use strict";
 
@@ -271,7 +283,7 @@
     "Focus",
     focusResponderImpl
   );
-  function useFocusResponder(props) {
+  function useFocus(props) {
     return React.unstable_useResponder(FocusResponder, props);
   }
   /**
@@ -384,15 +396,15 @@
     "FocusWithin",
     focusWithinResponderImpl
   );
-  function useFocusWithinResponder(props) {
+  function useFocusWithin(props) {
     return React.unstable_useResponder(FocusWithinResponder, props);
   }
 
-  var Focus = Object.freeze({
+  var Focus = /*#__PURE__*/ Object.freeze({
     FocusResponder: FocusResponder,
-    useFocusResponder: useFocusResponder,
+    useFocus: useFocus,
     FocusWithinResponder: FocusWithinResponder,
-    useFocusWithinResponder: useFocusWithinResponder
+    useFocusWithin: useFocusWithin
   });
 
   var focus = Focus;

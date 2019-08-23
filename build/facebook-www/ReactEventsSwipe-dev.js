@@ -1,3 +1,18 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @noflow
+ * @preventMunge
+ * @preserve-invariant-messages
+ */
+
+'use strict';
+
+if (__DEV__) {
+  (function() {
 "use strict";
 
 var React = require("react");
@@ -234,15 +249,24 @@ var SwipeResponder = React.unstable_createResponder(
   "Swipe",
   swipeResponderImpl
 );
-function useSwipeListener(props) {
-  return React.unstable_useListener(SwipeResponder, props);
+function useSwipe(props) {
+  return React.unstable_useResponder(SwipeResponder, props);
 }
 
-var Swipe = Object.freeze({
+var Swipe = /*#__PURE__*/ Object.freeze({
   SwipeResponder: SwipeResponder,
-  useSwipeListener: useSwipeListener
+  useSwipe: useSwipe
 });
 
-var swipe = Swipe;
+function getCjsExportFromNamespace(n) {
+  return (n && n["default"]) || n;
+}
+
+var require$$0 = getCjsExportFromNamespace(Swipe);
+
+var swipe = require$$0;
 
 module.exports = swipe;
+
+  })();
+}

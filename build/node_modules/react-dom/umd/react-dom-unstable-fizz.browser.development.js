@@ -1,9 +1,20 @@
+/** @license React vundefined
+ * react-dom-unstable-fizz.browser.development.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+'use strict';
+
 (function(global, factory) {
   typeof exports === "object" && typeof module !== "undefined"
     ? (module.exports = factory())
     : typeof define === "function" && define.amd
       ? define(factory)
-      : (global.ReactDOMFizzServer = factory());
+      : ((global = global || self), (global.ReactDOMFizzServer = factory()));
 })(this, function() {
   "use strict";
 
@@ -14,11 +25,9 @@
     // WHATWG Streams do not yet have a way to flush the underlying
     // transform streams. https://github.com/whatwg/streams/issues/960
   }
-
   function writeChunk(destination, buffer) {
     destination.enqueue(buffer);
   }
-
   function close(destination) {
     destination.close();
   }
@@ -42,9 +51,6 @@
   // nor polyfill, then a plain number is used for performance.
   var hasSymbol = typeof Symbol === "function" && Symbol.for;
   var REACT_ELEMENT_TYPE = hasSymbol ? Symbol.for("react.element") : 0xeac7;
-
-  // TODO: We don't use AsyncMode or ConcurrentMode anymore. They were temporary
-  // (unstable) APIs that have been removed. Can we remove the symbols?
 
   function createRequest(children, destination) {
     return {
@@ -83,6 +89,7 @@
     var destination = request.destination;
     var chunks = request.completedChunks;
     request.completedChunks = [];
+
     try {
       for (var i = 0; i < chunks.length; i++) {
         var chunk = chunks[i];
@@ -105,9 +112,6 @@
     flushCompletedChunks(request);
   }
 
-  // This file intentionally does *not* have the Flow annotation.
-  // Don't add it. See `./inline-typed.js` for an explanation.
-
   function renderToReadableStream(children) {
     var request;
     return new ReadableStream({
@@ -126,19 +130,11 @@
     renderToReadableStream: renderToReadableStream
   };
 
-  var ReactDOMFizzServerBrowser$1 = Object.freeze({
-    default: ReactDOMFizzServerBrowser
-  });
-
-  var ReactDOMFizzServerBrowser$2 =
-    (ReactDOMFizzServerBrowser$1 && ReactDOMFizzServerBrowser) ||
-    ReactDOMFizzServerBrowser$1;
-
   // TODO: decide on the top-level export form.
   // This is hacky but makes it work with both Rollup and Jest
 
   var unstableFizz_browser =
-    ReactDOMFizzServerBrowser$2.default || ReactDOMFizzServerBrowser$2;
+    ReactDOMFizzServerBrowser.default || ReactDOMFizzServerBrowser;
 
   return unstableFizz_browser;
 });

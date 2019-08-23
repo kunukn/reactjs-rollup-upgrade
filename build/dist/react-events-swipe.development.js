@@ -1,9 +1,21 @@
+/** @license React vundefined
+ * react-events-swipe.development.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+'use strict';
+
 (function(global, factory) {
   typeof exports === "object" && typeof module !== "undefined"
     ? (module.exports = factory(require("react")))
     : typeof define === "function" && define.amd
       ? define(["react"], factory)
-      : (global.ReactEventsSwipe = factory(global.React));
+      : ((global = global || self),
+        (global.ReactEventsSwipe = factory(global.React)));
 })(this, function(React) {
   "use strict";
 
@@ -239,13 +251,13 @@
     "Swipe",
     swipeResponderImpl
   );
-  function useSwipeListener(props) {
-    return React.unstable_useListener(SwipeResponder, props);
+  function useSwipe(props) {
+    return React.unstable_useResponder(SwipeResponder, props);
   }
 
-  var Swipe = Object.freeze({
+  var Swipe = /*#__PURE__*/ Object.freeze({
     SwipeResponder: SwipeResponder,
-    useSwipeListener: useSwipeListener
+    useSwipe: useSwipe
   });
 
   var swipe = Swipe;

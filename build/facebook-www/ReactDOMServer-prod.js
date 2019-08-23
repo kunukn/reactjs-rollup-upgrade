@@ -1,417 +1,159 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @noflow
+ * @preventMunge
+ * @preserve-invariant-messages
+ */
+
 "use strict";
-
 var React = require("react");
-
-// Do not require this module directly! Use normal `invariant` calls with
-// template literal strings. The messages will be converted to ReactError during
-// build, and in production they will be minified.
 function ReactErrorProd(error) {
-  var code = error.message;
-  var url = "https://reactjs.org/docs/error-decoder.html?invariant=" + code;
-
-  for (var i = 1; i < arguments.length; i++) {
+  for (
+    var code = error.message,
+      url = "https://reactjs.org/docs/error-decoder.html?invariant=" + code,
+      i = 1;
+    i < arguments.length;
+    i++
+  )
     url += "&args[]=" + encodeURIComponent(arguments[i]);
-  }
-
   error.message =
     "Minified React error #" +
     code +
     "; visit " +
     url +
-    " for the full message or " +
-    "use the non-minified dev environment for full errors and additional " +
-    "helpful warnings. ";
+    " for the full message or use the non-minified dev environment for full errors and additional helpful warnings. ";
   return error;
 }
-
-// Do not require this module directly! Use normal `invariant` calls with
-// template literal strings. The messages will be converted to ReactError during
-// build, and in production they will be minified.
-
-// TODO: this is special because it gets imported during build.
-
-var ReactVersion = "16.8.6";
-
-/**
- * Use invariant() to assert state which your program assumes to be true.
- *
- * Provide sprintf-style format (only %s is supported) and arguments
- * to provide information about what broke and what you were
- * expecting.
- *
- * The invariant message will be stripped in production, but the invariant
- * will remain to ensure logic does not differ in production.
- */
-
 require("warning");
-
-// The Symbol used to tag the ReactElement-like types. If there is no native Symbol
-// nor polyfill, then a plain number is used for performance.
-var hasSymbol = typeof Symbol === "function" && Symbol.for;
-
-var REACT_PORTAL_TYPE = hasSymbol ? Symbol.for("react.portal") : 0xeaca;
-var REACT_FRAGMENT_TYPE = hasSymbol ? Symbol.for("react.fragment") : 0xeacb;
-var REACT_STRICT_MODE_TYPE = hasSymbol
-  ? Symbol.for("react.strict_mode")
-  : 0xeacc;
-var REACT_PROFILER_TYPE = hasSymbol ? Symbol.for("react.profiler") : 0xead2;
-var REACT_PROVIDER_TYPE = hasSymbol ? Symbol.for("react.provider") : 0xeacd;
-var REACT_CONTEXT_TYPE = hasSymbol ? Symbol.for("react.context") : 0xeace; // TODO: We don't use AsyncMode or ConcurrentMode anymore. They were temporary
-// (unstable) APIs that have been removed. Can we remove the symbols?
-
-var REACT_CONCURRENT_MODE_TYPE = hasSymbol
-  ? Symbol.for("react.concurrent_mode")
-  : 0xeacf;
-var REACT_FORWARD_REF_TYPE = hasSymbol
-  ? Symbol.for("react.forward_ref")
-  : 0xead0;
-var REACT_SUSPENSE_TYPE = hasSymbol ? Symbol.for("react.suspense") : 0xead1;
-var REACT_SUSPENSE_LIST_TYPE = hasSymbol
-  ? Symbol.for("react.suspense_list")
-  : 0xead8;
-var REACT_MEMO_TYPE = hasSymbol ? Symbol.for("react.memo") : 0xead3;
-var REACT_LAZY_TYPE = hasSymbol ? Symbol.for("react.lazy") : 0xead4;
-var REACT_FUNDAMENTAL_TYPE = hasSymbol
-  ? Symbol.for("react.fundamental")
-  : 0xead5;
-
-var ReactSharedInternals =
-  React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // Prevent newer renderers from RTE when used with older react package versions.
-// Current owner and dispatcher used to share the same ref,
-// but PR #14548 split them out to better support the react-debug-tools package.
-
-if (!ReactSharedInternals.hasOwnProperty("ReactCurrentDispatcher")) {
-  ReactSharedInternals.ReactCurrentDispatcher = {
-    current: null
-  };
-}
-
-if (!ReactSharedInternals.hasOwnProperty("ReactCurrentBatchConfig")) {
-  ReactSharedInternals.ReactCurrentBatchConfig = {
-    suspense: null
-  };
-}
-
-var Uninitialized = -1;
-var Pending = 0;
-var Resolved = 1;
-var Rejected = 2;
-function refineResolvedLazyComponent(lazyComponent) {
-  return lazyComponent._status === Resolved ? lazyComponent._result : null;
-}
+var hasSymbol = "function" === typeof Symbol && Symbol.for,
+  REACT_PORTAL_TYPE = hasSymbol ? Symbol.for("react.portal") : 60106,
+  REACT_FRAGMENT_TYPE = hasSymbol ? Symbol.for("react.fragment") : 60107,
+  REACT_STRICT_MODE_TYPE = hasSymbol ? Symbol.for("react.strict_mode") : 60108,
+  REACT_PROFILER_TYPE = hasSymbol ? Symbol.for("react.profiler") : 60114,
+  REACT_PROVIDER_TYPE = hasSymbol ? Symbol.for("react.provider") : 60109,
+  REACT_CONTEXT_TYPE = hasSymbol ? Symbol.for("react.context") : 60110,
+  REACT_CONCURRENT_MODE_TYPE = hasSymbol
+    ? Symbol.for("react.concurrent_mode")
+    : 60111,
+  REACT_FORWARD_REF_TYPE = hasSymbol ? Symbol.for("react.forward_ref") : 60112,
+  REACT_SUSPENSE_TYPE = hasSymbol ? Symbol.for("react.suspense") : 60113,
+  REACT_SUSPENSE_LIST_TYPE = hasSymbol
+    ? Symbol.for("react.suspense_list")
+    : 60120,
+  REACT_MEMO_TYPE = hasSymbol ? Symbol.for("react.memo") : 60115,
+  REACT_LAZY_TYPE = hasSymbol ? Symbol.for("react.lazy") : 60116,
+  REACT_FUNDAMENTAL_TYPE = hasSymbol ? Symbol.for("react.fundamental") : 60117,
+  ReactSharedInternals =
+    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+ReactSharedInternals.hasOwnProperty("ReactCurrentDispatcher") ||
+  (ReactSharedInternals.ReactCurrentDispatcher = { current: null });
+ReactSharedInternals.hasOwnProperty("ReactCurrentBatchConfig") ||
+  (ReactSharedInternals.ReactCurrentBatchConfig = { suspense: null });
 function initializeLazyComponentType(lazyComponent) {
-  if (lazyComponent._status === Uninitialized) {
-    lazyComponent._status = Pending;
+  if (-1 === lazyComponent._status) {
+    lazyComponent._status = 0;
     var ctor = lazyComponent._ctor;
-    var thenable = ctor();
-    lazyComponent._result = thenable;
-    thenable.then(
+    ctor = ctor();
+    lazyComponent._result = ctor;
+    ctor.then(
       function(moduleObject) {
-        if (lazyComponent._status === Pending) {
-          var defaultExport = moduleObject.default;
-
-          lazyComponent._status = Resolved;
-          lazyComponent._result = defaultExport;
-        }
+        0 === lazyComponent._status &&
+          ((moduleObject = moduleObject.default),
+          (lazyComponent._status = 1),
+          (lazyComponent._result = moduleObject));
       },
       function(error) {
-        if (lazyComponent._status === Pending) {
-          lazyComponent._status = Rejected;
-          lazyComponent._result = error;
-        }
+        0 === lazyComponent._status &&
+          ((lazyComponent._status = 2), (lazyComponent._result = error));
       }
     );
   }
 }
-
-function getWrappedName(outerType, innerType, wrapperName) {
-  var functionName = innerType.displayName || innerType.name || "";
-  return (
-    outerType.displayName ||
-    (functionName !== "" ? wrapperName + "(" + functionName + ")" : wrapperName)
-  );
-}
-
 function getComponentName(type) {
-  if (type == null) {
-    // Host root, text node or just invalid type.
-    return null;
-  }
-
-  if (typeof type === "function") {
-    return type.displayName || type.name || null;
-  }
-
-  if (typeof type === "string") {
-    return type;
-  }
-
+  if (null == type) return null;
+  if ("function" === typeof type) return type.displayName || type.name || null;
+  if ("string" === typeof type) return type;
   switch (type) {
     case REACT_FRAGMENT_TYPE:
       return "Fragment";
-
     case REACT_PORTAL_TYPE:
       return "Portal";
-
     case REACT_PROFILER_TYPE:
       return "Profiler";
-
     case REACT_STRICT_MODE_TYPE:
       return "StrictMode";
-
     case REACT_SUSPENSE_TYPE:
       return "Suspense";
-
     case REACT_SUSPENSE_LIST_TYPE:
       return "SuspenseList";
   }
-
-  if (typeof type === "object") {
+  if ("object" === typeof type)
     switch (type.$$typeof) {
       case REACT_CONTEXT_TYPE:
         return "Context.Consumer";
-
       case REACT_PROVIDER_TYPE:
         return "Context.Provider";
-
       case REACT_FORWARD_REF_TYPE:
-        return getWrappedName(type, type.render, "ForwardRef");
-
+        var innerType = type.render;
+        innerType = innerType.displayName || innerType.name || "";
+        return (
+          type.displayName ||
+          ("" !== innerType ? "ForwardRef(" + innerType + ")" : "ForwardRef")
+        );
       case REACT_MEMO_TYPE:
         return getComponentName(type.type);
-
-      case REACT_LAZY_TYPE: {
-        var thenable = type;
-        var resolvedThenable = refineResolvedLazyComponent(thenable);
-
-        if (resolvedThenable) {
-          return getComponentName(resolvedThenable);
-        }
-
-        break;
-      }
+      case REACT_LAZY_TYPE:
+        if ((type = 1 === type._status ? type._result : null))
+          return getComponentName(type);
     }
-  }
-
   return null;
 }
-
 require("lowPriorityWarning");
-
-// Re-export dynamic flags from the www version.
-var _require = require("ReactFeatureFlags");
-var debugRenderPhaseSideEffects = _require.debugRenderPhaseSideEffects;
-var debugRenderPhaseSideEffectsForStrictMode =
-  _require.debugRenderPhaseSideEffectsForStrictMode;
-var replayFailedUnitOfWorkWithInvokeGuardedCallback =
-  _require.replayFailedUnitOfWorkWithInvokeGuardedCallback;
-var warnAboutDeprecatedLifecycles = _require.warnAboutDeprecatedLifecycles;
-var disableInputAttributeSyncing = _require.disableInputAttributeSyncing;
-var warnAboutShorthandPropertyCollision =
-  _require.warnAboutShorthandPropertyCollision;
-var warnAboutDeprecatedSetNativeProps =
-  _require.warnAboutDeprecatedSetNativeProps;
-var enableUserBlockingEvents = _require.enableUserBlockingEvents;
-var disableLegacyContext = _require.disableLegacyContext;
-var disableSchedulerTimeoutBasedOnReactExpirationTime =
-  _require.disableSchedulerTimeoutBasedOnReactExpirationTime; // In www, we have experimental support for gathering data
-
-var enableSuspenseServerRenderer = true;
-var disableJavaScriptURLs = true;
-// The flag is intentionally updated in a timeout.
-var enableFlareAPI = true;
-var enableFundamentalAPI = false;
-
-// Flow magic to verify the exports of this file match the original version.
-
-var emptyObject = {};
-
+var disableLegacyContext = require("ReactFeatureFlags").disableLegacyContext,
+  emptyObject = {};
 function maskContext(type, context) {
-  var contextTypes = type.contextTypes;
-
-  if (!contextTypes) {
-    return emptyObject;
-  }
-
-  var maskedContext = {};
-
-  for (var contextName in contextTypes) {
-    maskedContext[contextName] = context[contextName];
-  }
-
+  type = type.contextTypes;
+  if (!type) return emptyObject;
+  var maskedContext = {},
+    contextName;
+  for (contextName in type) maskedContext[contextName] = context[contextName];
   return maskedContext;
 }
-
 function validateContextBounds(context, threadID) {
-  // If we don't have enough slots in this context to store this threadID,
-  // fill it in without leaving any holes to ensure that the VM optimizes
-  // this as non-holey index properties.
-  // (Note: If `react` package is < 16.6, _threadCount is undefined.)
-  for (var i = context._threadCount | 0; i <= threadID; i++) {
-    // We assume that this is the same as the defaultValue which might not be
-    // true if we're rendering inside a secondary renderer but they are
-    // secondary because these use cases are very rare.
-    context[i] = context._currentValue2;
-    context._threadCount = i + 1;
-  }
+  for (var i = context._threadCount | 0; i <= threadID; i++)
+    (context[i] = context._currentValue2), (context._threadCount = i + 1);
 }
 function processContext(type, context, threadID, isClass) {
-  if (isClass) {
-    var contextType = type.contextType;
-
-    if (typeof contextType === "object" && contextType !== null) {
-      validateContextBounds(contextType, threadID);
-      return contextType[threadID];
-    }
-
-    if (disableLegacyContext) {
-      return emptyObject;
-    } else {
-      var maskedContext = maskContext(type, context);
-
-      return maskedContext;
-    }
-  } else {
-    if (disableLegacyContext) {
-      return undefined;
-    } else {
-      var _maskedContext = maskContext(type, context);
-
-      return _maskedContext;
-    }
-  }
+  if (isClass)
+    return (
+      (isClass = type.contextType),
+      "object" === typeof isClass && null !== isClass
+        ? (validateContextBounds(isClass, threadID), isClass[threadID])
+        : disableLegacyContext
+          ? emptyObject
+          : maskContext(type, context)
+    );
+  if (!disableLegacyContext) return maskContext(type, context);
 }
-
-// Allocates a new index for each request. Tries to stay as compact as possible so that these
-// indices can be used to reference a tightly packaged array. As opposed to being used in a Map.
-// The first allocated index is 1.
-var nextAvailableThreadIDs = new Uint16Array(16);
-
-for (var i = 0; i < 15; i++) {
+for (var nextAvailableThreadIDs = new Uint16Array(16), i = 0; 15 > i; i++)
   nextAvailableThreadIDs[i] = i + 1;
-}
-
 nextAvailableThreadIDs[15] = 0;
-
-function growThreadCountAndReturnNextAvailable() {
-  var oldArray = nextAvailableThreadIDs;
-  var oldSize = oldArray.length;
-  var newSize = oldSize * 2;
-
-  (function() {
-    if (!(newSize <= 0x10000)) {
-      {
-        throw ReactErrorProd(Error(304));
-      }
-    }
-  })();
-
-  var newArray = new Uint16Array(newSize);
-  newArray.set(oldArray);
-  nextAvailableThreadIDs = newArray;
-  nextAvailableThreadIDs[0] = oldSize + 1;
-
-  for (var _i = oldSize; _i < newSize - 1; _i++) {
-    nextAvailableThreadIDs[_i] = _i + 1;
-  }
-
-  nextAvailableThreadIDs[newSize - 1] = 0;
-  return oldSize;
-}
-
-function allocThreadID() {
-  var nextID = nextAvailableThreadIDs[0];
-
-  if (nextID === 0) {
-    return growThreadCountAndReturnNextAvailable();
-  }
-
-  nextAvailableThreadIDs[0] = nextAvailableThreadIDs[nextID];
-  return nextID;
-}
-function freeThreadID(id) {
-  nextAvailableThreadIDs[id] = nextAvailableThreadIDs[0];
-  nextAvailableThreadIDs[0] = id;
-}
-
-// A reserved attribute.
-// It is handled by React separately and shouldn't be written to the DOM.
-var RESERVED = 0; // A simple string attribute.
-// Attributes that aren't in the whitelist are presumed to have this type.
-
-var STRING = 1; // A string attribute that accepts booleans in React. In HTML, these are called
-// "enumerated" attributes with "true" and "false" as possible values.
-// When true, it should be set to a "true" string.
-// When false, it should be set to a "false" string.
-
-var BOOLEANISH_STRING = 2; // A real boolean attribute.
-// When true, it should be present (set either to an empty string or its name).
-// When false, it should be omitted.
-
-var BOOLEAN = 3; // An attribute that can be used as a flag as well as with a value.
-// When true, it should be present (set either to an empty string or its name).
-// When false, it should be omitted.
-// For any other value, should be present with that value.
-
-var OVERLOADED_BOOLEAN = 4; // An attribute that must be numeric or parse as a numeric.
-// When falsy, it should be removed.
-
-var NUMERIC = 5; // An attribute that must be positive numeric or parse as a positive numeric.
-// When falsy, it should be removed.
-
-var POSITIVE_NUMERIC = 6;
-
-/* eslint-disable max-len */
-var ATTRIBUTE_NAME_START_CHAR =
-  ":A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD";
-/* eslint-enable max-len */
-
-var ATTRIBUTE_NAME_CHAR =
-  ATTRIBUTE_NAME_START_CHAR + "\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040";
-
-var ROOT_ATTRIBUTE_NAME = "data-reactroot";
-var VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
-  "^[" + ATTRIBUTE_NAME_START_CHAR + "][" + ATTRIBUTE_NAME_CHAR + "]*$"
-);
-var hasOwnProperty$1 = Object.prototype.hasOwnProperty;
-var illegalAttributeNameCache = {};
-var validatedAttributeNameCache = {};
+var VALID_ATTRIBUTE_NAME_REGEX = /^[:A-Z_a-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD][:A-Z_a-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\-.0-9\u00B7\u0300-\u036F\u203F-\u2040]*$/,
+  hasOwnProperty = Object.prototype.hasOwnProperty,
+  illegalAttributeNameCache = {},
+  validatedAttributeNameCache = {};
 function isAttributeNameSafe(attributeName) {
-  if (hasOwnProperty$1.call(validatedAttributeNameCache, attributeName)) {
-    return true;
-  }
-
-  if (hasOwnProperty$1.call(illegalAttributeNameCache, attributeName)) {
-    return false;
-  }
-
-  if (VALID_ATTRIBUTE_NAME_REGEX.test(attributeName)) {
-    validatedAttributeNameCache[attributeName] = true;
-    return true;
-  }
-
-  illegalAttributeNameCache[attributeName] = true;
-
-  return false;
-}
-function shouldIgnoreAttribute(name, propertyInfo, isCustomComponentTag) {
-  if (propertyInfo !== null) {
-    return propertyInfo.type === RESERVED;
-  }
-
-  if (isCustomComponentTag) {
-    return false;
-  }
-
-  if (
-    name.length > 2 &&
-    (name[0] === "o" || name[0] === "O") &&
-    (name[1] === "n" || name[1] === "N")
-  ) {
-    return true;
-  }
-
-  return false;
+  if (hasOwnProperty.call(validatedAttributeNameCache, attributeName))
+    return !0;
+  if (hasOwnProperty.call(illegalAttributeNameCache, attributeName)) return !1;
+  if (VALID_ATTRIBUTE_NAME_REGEX.test(attributeName))
+    return (validatedAttributeNameCache[attributeName] = !0);
+  illegalAttributeNameCache[attributeName] = !0;
+  return !1;
 }
 function shouldRemoveAttributeWithWarning(
   name,
@@ -419,32 +161,18 @@ function shouldRemoveAttributeWithWarning(
   propertyInfo,
   isCustomComponentTag
 ) {
-  if (propertyInfo !== null && propertyInfo.type === RESERVED) {
-    return false;
-  }
-
+  if (null !== propertyInfo && 0 === propertyInfo.type) return !1;
   switch (typeof value) {
-    case "function": // $FlowIssue symbol is perfectly valid here
-
+    case "function":
     case "symbol":
-      // eslint-disable-line
-      return true;
-
-    case "boolean": {
-      if (isCustomComponentTag) {
-        return false;
-      }
-
-      if (propertyInfo !== null) {
-        return !propertyInfo.acceptsBooleans;
-      } else {
-        var prefix = name.toLowerCase().slice(0, 5);
-        return prefix !== "data-" && prefix !== "aria-";
-      }
-    }
-
+      return !0;
+    case "boolean":
+      if (isCustomComponentTag) return !1;
+      if (null !== propertyInfo) return !propertyInfo.acceptsBooleans;
+      name = name.toLowerCase().slice(0, 5);
+      return "data-" !== name && "aria-" !== name;
     default:
-      return false;
+      return !1;
   }
 }
 function shouldRemoveAttribute(
@@ -453,47 +181,31 @@ function shouldRemoveAttribute(
   propertyInfo,
   isCustomComponentTag
 ) {
-  if (value === null || typeof value === "undefined") {
-    return true;
-  }
-
   if (
+    null === value ||
+    "undefined" === typeof value ||
     shouldRemoveAttributeWithWarning(
       name,
       value,
       propertyInfo,
       isCustomComponentTag
     )
-  ) {
-    return true;
-  }
-
-  if (isCustomComponentTag) {
-    return false;
-  }
-
-  if (propertyInfo !== null) {
+  )
+    return !0;
+  if (isCustomComponentTag) return !1;
+  if (null !== propertyInfo)
     switch (propertyInfo.type) {
-      case BOOLEAN:
+      case 3:
         return !value;
-
-      case OVERLOADED_BOOLEAN:
-        return value === false;
-
-      case NUMERIC:
+      case 4:
+        return !1 === value;
+      case 5:
         return isNaN(value);
-
-      case POSITIVE_NUMERIC:
-        return isNaN(value) || value < 1;
+      case 6:
+        return isNaN(value) || 1 > value;
     }
-  }
-
-  return false;
+  return !1;
 }
-function getPropertyInfo(name) {
-  return properties.hasOwnProperty(name) ? properties[name] : null;
-}
-
 function PropertyInfoRecord(
   name,
   type,
@@ -502,2417 +214,1211 @@ function PropertyInfoRecord(
   attributeNamespace,
   sanitizeURL
 ) {
-  this.acceptsBooleans =
-    type === BOOLEANISH_STRING ||
-    type === BOOLEAN ||
-    type === OVERLOADED_BOOLEAN;
+  this.acceptsBooleans = 2 === type || 3 === type || 4 === type;
   this.attributeName = attributeName;
   this.attributeNamespace = attributeNamespace;
   this.mustUseProperty = mustUseProperty;
   this.propertyName = name;
   this.type = type;
   this.sanitizeURL = sanitizeURL;
-} // When adding attributes to this list, be sure to also add them to
-// the `possibleStandardNames` module to ensure casing and incorrect
-// name warnings.
-
-var properties = {}; // These props are reserved by React. They shouldn't be written to the DOM.
-
-[
-  "children",
-  "dangerouslySetInnerHTML", // TODO: This prevents the assignment of defaultValue to regular
-  // elements (not just inputs). Now that ReactDOMInput assigns to the
-  // defaultValue property -- do we need this?
-  "defaultValue",
-  "defaultChecked",
-  "innerHTML",
-  "suppressContentEditableWarning",
-  "suppressHydrationWarning",
-  "style"
-].forEach(function(name) {
-  properties[name] = new PropertyInfoRecord(
-    name,
-    RESERVED,
-    false, // mustUseProperty
-    name, // attributeName
-    null, // attributeNamespace
-    false
-  );
-}); // A few React string attributes have a different name.
-// This is a mapping from React prop names to the attribute names.
-
+}
+var properties = {};
+"children dangerouslySetInnerHTML defaultValue defaultChecked innerHTML suppressContentEditableWarning suppressHydrationWarning style"
+  .split(" ")
+  .forEach(function(name) {
+    properties[name] = new PropertyInfoRecord(name, 0, !1, name, null, !1);
+  });
 [
   ["acceptCharset", "accept-charset"],
   ["className", "class"],
   ["htmlFor", "for"],
   ["httpEquiv", "http-equiv"]
 ].forEach(function(_ref) {
-  var name = _ref[0],
-    attributeName = _ref[1];
-  properties[name] = new PropertyInfoRecord(
-    name,
-    STRING,
-    false, // mustUseProperty
-    attributeName, // attributeName
-    null, // attributeNamespace
-    false
-  );
-}); // These are "enumerated" HTML attributes that accept "true" and "false".
-// In React, we let users pass `true` and `false` even though technically
-// these aren't boolean attributes (they are coerced to strings).
-
+  var name = _ref[0];
+  properties[name] = new PropertyInfoRecord(name, 1, !1, _ref[1], null, !1);
+});
 ["contentEditable", "draggable", "spellCheck", "value"].forEach(function(name) {
   properties[name] = new PropertyInfoRecord(
     name,
-    BOOLEANISH_STRING,
-    false, // mustUseProperty
-    name.toLowerCase(), // attributeName
-    null, // attributeNamespace
-    false
+    2,
+    !1,
+    name.toLowerCase(),
+    null,
+    !1
   );
-}); // These are "enumerated" SVG attributes that accept "true" and "false".
-// In React, we let users pass `true` and `false` even though technically
-// these aren't boolean attributes (they are coerced to strings).
-// Since these are SVG attributes, their attribute names are case-sensitive.
-
+});
 [
   "autoReverse",
   "externalResourcesRequired",
   "focusable",
   "preserveAlpha"
 ].forEach(function(name) {
-  properties[name] = new PropertyInfoRecord(
-    name,
-    BOOLEANISH_STRING,
-    false, // mustUseProperty
-    name, // attributeName
-    null, // attributeNamespace
-    false
-  );
-}); // These are HTML boolean attributes.
-
-[
-  "allowFullScreen",
-  "async", // Note: there is a special case that prevents it from being written to the DOM
-  // on the client side because the browsers are inconsistent. Instead we call focus().
-  "autoFocus",
-  "autoPlay",
-  "controls",
-  "default",
-  "defer",
-  "disabled",
-  "disablePictureInPicture",
-  "formNoValidate",
-  "hidden",
-  "loop",
-  "noModule",
-  "noValidate",
-  "open",
-  "playsInline",
-  "readOnly",
-  "required",
-  "reversed",
-  "scoped",
-  "seamless", // Microdata
-  "itemScope"
-].forEach(function(name) {
-  properties[name] = new PropertyInfoRecord(
-    name,
-    BOOLEAN,
-    false, // mustUseProperty
-    name.toLowerCase(), // attributeName
-    null, // attributeNamespace
-    false
-  );
-}); // These are the few React props that we set as DOM properties
-// rather than attributes. These are all booleans.
-
-[
-  "checked", // Note: `option.selected` is not updated if `select.multiple` is
-  // disabled with `removeAttribute`. We have special logic for handling this.
-  "multiple",
-  "muted",
-  "selected"
-].forEach(function(name) {
-  properties[name] = new PropertyInfoRecord(
-    name,
-    BOOLEAN,
-    true, // mustUseProperty
-    name, // attributeName
-    null, // attributeNamespace
-    false
-  );
-}); // These are HTML attributes that are "overloaded booleans": they behave like
-// booleans, but can also accept a string value.
-
+  properties[name] = new PropertyInfoRecord(name, 2, !1, name, null, !1);
+});
+"allowFullScreen async autoFocus autoPlay controls default defer disabled disablePictureInPicture formNoValidate hidden loop noModule noValidate open playsInline readOnly required reversed scoped seamless itemScope"
+  .split(" ")
+  .forEach(function(name) {
+    properties[name] = new PropertyInfoRecord(
+      name,
+      3,
+      !1,
+      name.toLowerCase(),
+      null,
+      !1
+    );
+  });
+["checked", "multiple", "muted", "selected"].forEach(function(name) {
+  properties[name] = new PropertyInfoRecord(name, 3, !0, name, null, !1);
+});
 ["capture", "download"].forEach(function(name) {
-  properties[name] = new PropertyInfoRecord(
-    name,
-    OVERLOADED_BOOLEAN,
-    false, // mustUseProperty
-    name, // attributeName
-    null, // attributeNamespace
-    false
-  );
-}); // These are HTML attributes that must be positive numbers.
-
+  properties[name] = new PropertyInfoRecord(name, 4, !1, name, null, !1);
+});
 ["cols", "rows", "size", "span"].forEach(function(name) {
-  properties[name] = new PropertyInfoRecord(
-    name,
-    POSITIVE_NUMERIC,
-    false, // mustUseProperty
-    name, // attributeName
-    null, // attributeNamespace
-    false
-  );
-}); // These are HTML attributes that must be numbers.
-
+  properties[name] = new PropertyInfoRecord(name, 6, !1, name, null, !1);
+});
 ["rowSpan", "start"].forEach(function(name) {
   properties[name] = new PropertyInfoRecord(
     name,
-    NUMERIC,
-    false, // mustUseProperty
-    name.toLowerCase(), // attributeName
-    null, // attributeNamespace
-    false
+    5,
+    !1,
+    name.toLowerCase(),
+    null,
+    !1
   );
 });
-var CAMELIZE = /[\-\:]([a-z])/g;
-
-var capitalize = function(token) {
+var CAMELIZE = /[\-:]([a-z])/g;
+function capitalize(token) {
   return token[1].toUpperCase();
-}; // This is a list of all SVG attributes that need special casing, namespacing,
-// or boolean value assignment. Regular attributes that just accept strings
-// and have the same names are omitted, just like in the HTML whitelist.
-// Some of these attributes can be hard to find. This list was created by
-// scrapping the MDN documentation.
-
-[
-  "accent-height",
-  "alignment-baseline",
-  "arabic-form",
-  "baseline-shift",
-  "cap-height",
-  "clip-path",
-  "clip-rule",
-  "color-interpolation",
-  "color-interpolation-filters",
-  "color-profile",
-  "color-rendering",
-  "dominant-baseline",
-  "enable-background",
-  "fill-opacity",
-  "fill-rule",
-  "flood-color",
-  "flood-opacity",
-  "font-family",
-  "font-size",
-  "font-size-adjust",
-  "font-stretch",
-  "font-style",
-  "font-variant",
-  "font-weight",
-  "glyph-name",
-  "glyph-orientation-horizontal",
-  "glyph-orientation-vertical",
-  "horiz-adv-x",
-  "horiz-origin-x",
-  "image-rendering",
-  "letter-spacing",
-  "lighting-color",
-  "marker-end",
-  "marker-mid",
-  "marker-start",
-  "overline-position",
-  "overline-thickness",
-  "paint-order",
-  "panose-1",
-  "pointer-events",
-  "rendering-intent",
-  "shape-rendering",
-  "stop-color",
-  "stop-opacity",
-  "strikethrough-position",
-  "strikethrough-thickness",
-  "stroke-dasharray",
-  "stroke-dashoffset",
-  "stroke-linecap",
-  "stroke-linejoin",
-  "stroke-miterlimit",
-  "stroke-opacity",
-  "stroke-width",
-  "text-anchor",
-  "text-decoration",
-  "text-rendering",
-  "underline-position",
-  "underline-thickness",
-  "unicode-bidi",
-  "unicode-range",
-  "units-per-em",
-  "v-alphabetic",
-  "v-hanging",
-  "v-ideographic",
-  "v-mathematical",
-  "vector-effect",
-  "vert-adv-y",
-  "vert-origin-x",
-  "vert-origin-y",
-  "word-spacing",
-  "writing-mode",
-  "xmlns:xlink",
-  "x-height"
-].forEach(function(attributeName) {
-  var name = attributeName.replace(CAMELIZE, capitalize);
-  properties[name] = new PropertyInfoRecord(
-    name,
-    STRING,
-    false, // mustUseProperty
-    attributeName,
-    null, // attributeNamespace
-    false
-  );
-}); // String SVG attributes with the xlink namespace.
-
-[
-  "xlink:actuate",
-  "xlink:arcrole",
-  "xlink:role",
-  "xlink:show",
-  "xlink:title",
-  "xlink:type"
-].forEach(function(attributeName) {
-  var name = attributeName.replace(CAMELIZE, capitalize);
-  properties[name] = new PropertyInfoRecord(
-    name,
-    STRING,
-    false, // mustUseProperty
-    attributeName,
-    "http://www.w3.org/1999/xlink",
-    false
-  );
-}); // String SVG attributes with the xml namespace.
-
+}
+"accent-height alignment-baseline arabic-form baseline-shift cap-height clip-path clip-rule color-interpolation color-interpolation-filters color-profile color-rendering dominant-baseline enable-background fill-opacity fill-rule flood-color flood-opacity font-family font-size font-size-adjust font-stretch font-style font-variant font-weight glyph-name glyph-orientation-horizontal glyph-orientation-vertical horiz-adv-x horiz-origin-x image-rendering letter-spacing lighting-color marker-end marker-mid marker-start overline-position overline-thickness paint-order panose-1 pointer-events rendering-intent shape-rendering stop-color stop-opacity strikethrough-position strikethrough-thickness stroke-dasharray stroke-dashoffset stroke-linecap stroke-linejoin stroke-miterlimit stroke-opacity stroke-width text-anchor text-decoration text-rendering underline-position underline-thickness unicode-bidi unicode-range units-per-em v-alphabetic v-hanging v-ideographic v-mathematical vector-effect vert-adv-y vert-origin-x vert-origin-y word-spacing writing-mode xmlns:xlink x-height"
+  .split(" ")
+  .forEach(function(attributeName) {
+    var name = attributeName.replace(CAMELIZE, capitalize);
+    properties[name] = new PropertyInfoRecord(
+      name,
+      1,
+      !1,
+      attributeName,
+      null,
+      !1
+    );
+  });
+"xlink:actuate xlink:arcrole xlink:role xlink:show xlink:title xlink:type"
+  .split(" ")
+  .forEach(function(attributeName) {
+    var name = attributeName.replace(CAMELIZE, capitalize);
+    properties[name] = new PropertyInfoRecord(
+      name,
+      1,
+      !1,
+      attributeName,
+      "http://www.w3.org/1999/xlink",
+      !1
+    );
+  });
 ["xml:base", "xml:lang", "xml:space"].forEach(function(attributeName) {
   var name = attributeName.replace(CAMELIZE, capitalize);
   properties[name] = new PropertyInfoRecord(
     name,
-    STRING,
-    false, // mustUseProperty
+    1,
+    !1,
     attributeName,
     "http://www.w3.org/XML/1998/namespace",
-    false
+    !1
   );
-}); // These attribute exists both in HTML and SVG.
-// The attribute name is case-sensitive in SVG so we can't just use
-// the React name like we do for attributes that exist only in HTML.
-
+});
 ["tabIndex", "crossOrigin"].forEach(function(attributeName) {
   properties[attributeName] = new PropertyInfoRecord(
     attributeName,
-    STRING,
-    false, // mustUseProperty
-    attributeName.toLowerCase(), // attributeName
-    null, // attributeNamespace
-    false
+    1,
+    !1,
+    attributeName.toLowerCase(),
+    null,
+    !1
   );
-}); // These attributes accept URLs. These must not allow javascript: URLS.
-// These will also need to accept Trusted Types object in the future.
-
-var xlinkHref = "xlinkHref";
-properties[xlinkHref] = new PropertyInfoRecord(
+});
+properties.xlinkHref = new PropertyInfoRecord(
   "xlinkHref",
-  STRING,
-  false, // mustUseProperty
+  1,
+  !1,
   "xlink:href",
   "http://www.w3.org/1999/xlink",
-  true
+  !0
 );
 ["src", "href", "action", "formAction"].forEach(function(attributeName) {
   properties[attributeName] = new PropertyInfoRecord(
     attributeName,
-    STRING,
-    false, // mustUseProperty
-    attributeName.toLowerCase(), // attributeName
-    null, // attributeNamespace
-    true
+    1,
+    !1,
+    attributeName.toLowerCase(),
+    null,
+    !0
   );
 });
-
-// and any newline or tab are filtered out as if they're not part of the URL.
-// https://url.spec.whatwg.org/#url-parsing
-// Tab or newline are defined as \r\n\t:
-// https://infra.spec.whatwg.org/#ascii-tab-or-newline
-// A C0 control is a code point in the range \u0000 NULL to \u001F
-// INFORMATION SEPARATOR ONE, inclusive:
-// https://infra.spec.whatwg.org/#c0-control-or-space
-
-/* eslint-disable max-len */
-
-var isJavaScriptProtocol = /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[\r\n\t]*s[\r\n\t]*c[\r\n\t]*r[\r\n\t]*i[\r\n\t]*p[\r\n\t]*t[\r\n\t]*\:/i;
-var didWarn = false;
-
-function sanitizeURL(url) {
-  if (disableJavaScriptURLs) {
-    (function() {
-      if (!!isJavaScriptProtocol.test(url)) {
-        {
-          throw ReactErrorProd(Error(323), "");
-        }
-      }
-    })();
-  } else {
-  }
-}
-
-// code copied and modified from escape-html
-
-/**
- * Module variables.
- * @private
- */
-var matchHtmlRegExp = /["'&<>]/;
-/**
- * Escapes special characters and HTML entities in a given html string.
- *
- * @param  {string} string HTML string to escape for later insertion
- * @return {string}
- * @public
- */
-
-function escapeHtml(string) {
-  var str = "" + string;
-  var match = matchHtmlRegExp.exec(str);
-
-  if (!match) {
-    return str;
-  }
-
-  var escape;
-  var html = "";
-  var index;
-  var lastIndex = 0;
-
-  for (index = match.index; index < str.length; index++) {
-    switch (str.charCodeAt(index)) {
-      case 34:
-        // "
-        escape = "&quot;";
-        break;
-
-      case 38:
-        // &
-        escape = "&amp;";
-        break;
-
-      case 39:
-        // '
-        escape = "&#x27;"; // modified from escape-html; used to be '&#39'
-
-        break;
-
-      case 60:
-        // <
-        escape = "&lt;";
-        break;
-
-      case 62:
-        // >
-        escape = "&gt;";
-        break;
-
-      default:
-        continue;
-    }
-
-    if (lastIndex !== index) {
-      html += str.substring(lastIndex, index);
-    }
-
-    lastIndex = index + 1;
-    html += escape;
-  }
-
-  return lastIndex !== index ? html + str.substring(lastIndex, index) : html;
-} // end code copied and modified from escape-html
-
-/**
- * Escapes text to prevent scripting attacks.
- *
- * @param {*} text Text value to escape.
- * @return {string} An escaped string.
- */
-
+var isJavaScriptProtocol = /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[\r\n\t]*s[\r\n\t]*c[\r\n\t]*r[\r\n\t]*i[\r\n\t]*p[\r\n\t]*t[\r\n\t]*:/i,
+  matchHtmlRegExp = /["'&<>]/;
 function escapeTextForBrowser(text) {
-  if (typeof text === "boolean" || typeof text === "number") {
-    // this shortcircuit helps perf for types that we know will never have
-    // special characters, especially given that this function is used often
-    // for numeric dom ids.
-    return "" + text;
+  if ("boolean" === typeof text || "number" === typeof text) return "" + text;
+  text = "" + text;
+  var match = matchHtmlRegExp.exec(text);
+  if (match) {
+    var html = "",
+      index,
+      lastIndex = 0;
+    for (index = match.index; index < text.length; index++) {
+      switch (text.charCodeAt(index)) {
+        case 34:
+          match = "&quot;";
+          break;
+        case 38:
+          match = "&amp;";
+          break;
+        case 39:
+          match = "&#x27;";
+          break;
+        case 60:
+          match = "&lt;";
+          break;
+        case 62:
+          match = "&gt;";
+          break;
+        default:
+          continue;
+      }
+      lastIndex !== index && (html += text.substring(lastIndex, index));
+      lastIndex = index + 1;
+      html += match;
+    }
+    text = lastIndex !== index ? html + text.substring(lastIndex, index) : html;
   }
-
-  return escapeHtml(text);
+  return text;
 }
-
-/**
- * Escapes attribute value to prevent scripting attacks.
- *
- * @param {*} value Value to escape.
- * @return {string} An escaped string.
- */
-
-function quoteAttributeValueForBrowser(value) {
-  return '"' + escapeTextForBrowser(value) + '"';
-}
-
-/**
- * Operations for dealing with DOM properties.
- */
-
-/**
- * Creates markup for the ID property.
- *
- * @param {string} id Unescaped ID.
- * @return {string} Markup string.
- */
-
-function createMarkupForRoot() {
-  return ROOT_ATTRIBUTE_NAME + '=""';
-}
-/**
- * Creates markup for a property.
- *
- * @param {string} name
- * @param {*} value
- * @return {?string} Markup string, or null if the property was invalid.
- */
-
 function createMarkupForProperty(name, value) {
-  var propertyInfo = getPropertyInfo(name);
-
-  if (name !== "style" && shouldIgnoreAttribute(name, propertyInfo, false)) {
+  var propertyInfo = properties.hasOwnProperty(name) ? properties[name] : null;
+  var JSCompiler_temp;
+  if ((JSCompiler_temp = "style" !== name))
+    JSCompiler_temp =
+      null !== propertyInfo
+        ? 0 === propertyInfo.type
+        : !(2 < name.length) ||
+          ("o" !== name[0] && "O" !== name[0]) ||
+          ("n" !== name[1] && "N" !== name[1])
+          ? !1
+          : !0;
+  if (JSCompiler_temp || shouldRemoveAttribute(name, value, propertyInfo, !1))
     return "";
+  if (null !== propertyInfo) {
+    name = propertyInfo.attributeName;
+    JSCompiler_temp = propertyInfo.type;
+    if (3 === JSCompiler_temp || (4 === JSCompiler_temp && !0 === value))
+      return name + '=""';
+    if (
+      propertyInfo.sanitizeURL &&
+      ((value = "" + value), isJavaScriptProtocol.test(value))
+    )
+      throw ReactErrorProd(Error(323), "");
+    return name + "=" + ('"' + escapeTextForBrowser(value) + '"');
   }
-
-  if (shouldRemoveAttribute(name, value, propertyInfo, false)) {
-    return "";
-  }
-
-  if (propertyInfo !== null) {
-    var attributeName = propertyInfo.attributeName;
-    var type = propertyInfo.type;
-
-    if (type === BOOLEAN || (type === OVERLOADED_BOOLEAN && value === true)) {
-      return attributeName + '=""';
-    } else {
-      if (propertyInfo.sanitizeURL) {
-        value = "" + value;
-        sanitizeURL(value);
-      }
-
-      return attributeName + "=" + quoteAttributeValueForBrowser(value);
-    }
-  } else if (isAttributeNameSafe(name)) {
-    return name + "=" + quoteAttributeValueForBrowser(value);
-  }
-
-  return "";
+  return isAttributeNameSafe(name)
+    ? name + "=" + ('"' + escapeTextForBrowser(value) + '"')
+    : "";
 }
-/**
- * Creates markup for a custom property.
- *
- * @param {string} name
- * @param {*} value
- * @return {string} Markup string, or empty string if the property was invalid.
- */
-
-function createMarkupForCustomAttribute(name, value) {
-  if (!isAttributeNameSafe(name) || value == null) {
-    return "";
-  }
-
-  return name + "=" + quoteAttributeValueForBrowser(value);
-}
-
-/**
- * inlined Object.is polyfill to avoid requiring consumers ship their own
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is
- */
-function is(x, y) {
-  return (
-    (x === y && (x !== 0 || 1 / x === 1 / y)) || (x !== x && y !== y) // eslint-disable-line no-self-compare
-  );
-}
-
-var currentlyRenderingComponent = null;
-var firstWorkInProgressHook = null;
-var workInProgressHook = null; // Whether the work-in-progress hook is a re-rendered hook
-
-var isReRender = false; // Whether an update was scheduled during the currently executing render pass.
-
-var didScheduleRenderPhaseUpdate = false; // Lazily created map of render-phase updates
-
-var renderPhaseUpdates = null; // Counter to prevent infinite loops.
-
-var numberOfReRenders = 0;
-var RE_RENDER_LIMIT = 25;
+var currentlyRenderingComponent = null,
+  firstWorkInProgressHook = null,
+  workInProgressHook = null,
+  isReRender = !1,
+  didScheduleRenderPhaseUpdate = !1,
+  renderPhaseUpdates = null,
+  numberOfReRenders = 0;
 function resolveCurrentlyRenderingComponent() {
-  (function() {
-    if (!(currentlyRenderingComponent !== null)) {
-      {
-        throw ReactErrorProd(Error(321));
-      }
-    }
-  })();
-
+  if (null === currentlyRenderingComponent) throw ReactErrorProd(Error(321));
   return currentlyRenderingComponent;
 }
-
-function areHookInputsEqual(nextDeps, prevDeps) {
-  if (prevDeps === null) {
-    return false;
-  }
-
-  for (var i = 0; i < prevDeps.length && i < nextDeps.length; i++) {
-    if (is(nextDeps[i], prevDeps[i])) {
-      continue;
-    }
-
-    return false;
-  }
-
-  return true;
-}
-
 function createHook() {
-  if (numberOfReRenders > 0) {
-    (function() {
-      {
-        {
-          throw ReactErrorProd(Error(312));
-        }
-      }
-    })();
-  }
-
-  return {
-    memoizedState: null,
-    queue: null,
-    next: null
-  };
+  if (0 < numberOfReRenders) throw ReactErrorProd(Error(312));
+  return { memoizedState: null, queue: null, next: null };
 }
-
 function createWorkInProgressHook() {
-  if (workInProgressHook === null) {
-    // This is the first hook in the list
-    if (firstWorkInProgressHook === null) {
-      isReRender = false;
-      firstWorkInProgressHook = workInProgressHook = createHook();
-    } else {
-      // There's already a work-in-progress. Reuse it.
-      isReRender = true;
-      workInProgressHook = firstWorkInProgressHook;
-    }
-  } else {
-    if (workInProgressHook.next === null) {
-      isReRender = false; // Append to the end of the list
-
-      workInProgressHook = workInProgressHook.next = createHook();
-    } else {
-      // There's already a work-in-progress. Reuse it.
-      isReRender = true;
-      workInProgressHook = workInProgressHook.next;
-    }
-  }
-
+  null === workInProgressHook
+    ? null === firstWorkInProgressHook
+      ? ((isReRender = !1),
+        (firstWorkInProgressHook = workInProgressHook = createHook()))
+      : ((isReRender = !0), (workInProgressHook = firstWorkInProgressHook))
+    : null === workInProgressHook.next
+      ? ((isReRender = !1),
+        (workInProgressHook = workInProgressHook.next = createHook()))
+      : ((isReRender = !0), (workInProgressHook = workInProgressHook.next));
   return workInProgressHook;
 }
-
-function prepareToUseHooks(componentIdentity) {
-  currentlyRenderingComponent = componentIdentity;
-
-  // The following should have already been reset
-  // didScheduleRenderPhaseUpdate = false;
-  // firstWorkInProgressHook = null;
-  // numberOfReRenders = 0;
-  // renderPhaseUpdates = null;
-  // workInProgressHook = null;
-}
 function finishHooks(Component, props, children, refOrContext) {
-  // This must be called after every function component to prevent hooks from
-  // being used in classes.
-  while (didScheduleRenderPhaseUpdate) {
-    // Updates were scheduled during the render phase. They are stored in
-    // the `renderPhaseUpdates` map. Call the component again, reusing the
-    // work-in-progress hooks and applying the additional updates on top. Keep
-    // restarting until no more updates are scheduled.
-    didScheduleRenderPhaseUpdate = false;
-    numberOfReRenders += 1; // Start over from the beginning of the list
-
-    workInProgressHook = null;
-    children = Component(props, refOrContext);
-  }
-
-  currentlyRenderingComponent = null;
-  firstWorkInProgressHook = null;
+  for (; didScheduleRenderPhaseUpdate; )
+    (didScheduleRenderPhaseUpdate = !1),
+      (numberOfReRenders += 1),
+      (workInProgressHook = null),
+      (children = Component(props, refOrContext));
+  firstWorkInProgressHook = currentlyRenderingComponent = null;
   numberOfReRenders = 0;
-  renderPhaseUpdates = null;
-  workInProgressHook = null;
-
+  workInProgressHook = renderPhaseUpdates = null;
   return children;
 }
-
-function readContext(context, observedBits) {
-  var threadID = currentThreadID;
-  validateContextBounds(context, threadID);
-
-  return context[threadID];
-}
-
-function useContext(context, observedBits) {
-  resolveCurrentlyRenderingComponent();
-  var threadID = currentThreadID;
-  validateContextBounds(context, threadID);
-  return context[threadID];
-}
-
 function basicStateReducer(state, action) {
-  return typeof action === "function" ? action(state) : action;
-}
-
-function useState(initialState) {
-  return useReducer(
-    basicStateReducer, // useReducer has a special case to support lazy useState initializers
-    initialState
-  );
+  return "function" === typeof action ? action(state) : action;
 }
 function useReducer(reducer, initialArg, init) {
   currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
   workInProgressHook = createWorkInProgressHook();
-
   if (isReRender) {
-    // This is a re-render. Apply the new render phase updates to the previous
-    // current hook.
     var queue = workInProgressHook.queue;
-    var dispatch = queue.dispatch;
-
-    if (renderPhaseUpdates !== null) {
-      // Render phase updates are stored in a map of queue -> linked list
-      var firstRenderPhaseUpdate = renderPhaseUpdates.get(queue);
-
-      if (firstRenderPhaseUpdate !== undefined) {
-        renderPhaseUpdates.delete(queue);
-        var newState = workInProgressHook.memoizedState;
-        var update = firstRenderPhaseUpdate;
-
-        do {
-          // Process this render phase update. We don't have to check the
-          // priority because it will always be the same as the current
-          // render's.
-          var action = update.action;
-
-          newState = reducer(newState, action);
-
-          update = update.next;
-        } while (update !== null);
-
-        workInProgressHook.memoizedState = newState;
-        return [newState, dispatch];
-      }
+    initialArg = queue.dispatch;
+    if (
+      null !== renderPhaseUpdates &&
+      ((init = renderPhaseUpdates.get(queue)), void 0 !== init)
+    ) {
+      renderPhaseUpdates.delete(queue);
+      queue = workInProgressHook.memoizedState;
+      do (queue = reducer(queue, init.action)), (init = init.next);
+      while (null !== init);
+      workInProgressHook.memoizedState = queue;
+      return [queue, initialArg];
     }
-
-    return [workInProgressHook.memoizedState, dispatch];
-  } else {
-    var initialState;
-
-    if (reducer === basicStateReducer) {
-      // Special case for `useState`.
-      initialState =
-        typeof initialArg === "function" ? initialArg() : initialArg;
-    } else {
-      initialState = init !== undefined ? init(initialArg) : initialArg;
-    }
-
-    workInProgressHook.memoizedState = initialState;
-
-    var _queue = (workInProgressHook.queue = {
-      last: null,
-      dispatch: null
-    });
-
-    var _dispatch = (_queue.dispatch = dispatchAction.bind(
-      null,
-      currentlyRenderingComponent,
-      _queue
-    ));
-
-    return [workInProgressHook.memoizedState, _dispatch];
+    return [workInProgressHook.memoizedState, initialArg];
   }
+  reducer =
+    reducer === basicStateReducer
+      ? "function" === typeof initialArg
+        ? initialArg()
+        : initialArg
+      : void 0 !== init
+        ? init(initialArg)
+        : initialArg;
+  workInProgressHook.memoizedState = reducer;
+  reducer = workInProgressHook.queue = { last: null, dispatch: null };
+  reducer = reducer.dispatch = dispatchAction.bind(
+    null,
+    currentlyRenderingComponent,
+    reducer
+  );
+  return [workInProgressHook.memoizedState, reducer];
 }
-
-function useMemo(nextCreate, deps) {
-  currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
-  workInProgressHook = createWorkInProgressHook();
-  var nextDeps = deps === undefined ? null : deps;
-
-  if (workInProgressHook !== null) {
-    var prevState = workInProgressHook.memoizedState;
-
-    if (prevState !== null) {
-      if (nextDeps !== null) {
-        var prevDeps = prevState[1];
-
-        if (areHookInputsEqual(nextDeps, prevDeps)) {
-          return prevState[0];
+function dispatchAction(componentIdentity, queue, action) {
+  if (!(25 > numberOfReRenders)) throw ReactErrorProd(Error(301));
+  if (componentIdentity === currentlyRenderingComponent)
+    if (
+      ((didScheduleRenderPhaseUpdate = !0),
+      (componentIdentity = { action: action, next: null }),
+      null === renderPhaseUpdates && (renderPhaseUpdates = new Map()),
+      (action = renderPhaseUpdates.get(queue)),
+      void 0 === action)
+    )
+      renderPhaseUpdates.set(queue, componentIdentity);
+    else {
+      for (queue = action; null !== queue.next; ) queue = queue.next;
+      queue.next = componentIdentity;
+    }
+}
+function noop() {}
+var currentThreadID = 0,
+  Dispatcher = {
+    readContext: function(context) {
+      var threadID = currentThreadID;
+      validateContextBounds(context, threadID);
+      return context[threadID];
+    },
+    useContext: function(context) {
+      resolveCurrentlyRenderingComponent();
+      var threadID = currentThreadID;
+      validateContextBounds(context, threadID);
+      return context[threadID];
+    },
+    useMemo: function(nextCreate, deps) {
+      currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
+      workInProgressHook = createWorkInProgressHook();
+      deps = void 0 === deps ? null : deps;
+      if (null !== workInProgressHook) {
+        var prevState = workInProgressHook.memoizedState;
+        if (null !== prevState && null !== deps) {
+          a: {
+            var JSCompiler_inline_result = prevState[1];
+            if (null === JSCompiler_inline_result)
+              JSCompiler_inline_result = !1;
+            else {
+              for (
+                var i = 0;
+                i < JSCompiler_inline_result.length && i < deps.length;
+                i++
+              ) {
+                var x = deps[i],
+                  y = JSCompiler_inline_result[i];
+                if (
+                  (x !== y || (0 === x && 1 / x !== 1 / y)) &&
+                  (x === x || y === y)
+                ) {
+                  JSCompiler_inline_result = !1;
+                  break a;
+                }
+              }
+              JSCompiler_inline_result = !0;
+            }
+          }
+          if (JSCompiler_inline_result) return prevState[0];
         }
       }
+      nextCreate = nextCreate();
+      workInProgressHook.memoizedState = [nextCreate, deps];
+      return nextCreate;
+    },
+    useReducer: useReducer,
+    useRef: function(initialValue) {
+      currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
+      workInProgressHook = createWorkInProgressHook();
+      var previousRef = workInProgressHook.memoizedState;
+      return null === previousRef
+        ? ((initialValue = { current: initialValue }),
+          (workInProgressHook.memoizedState = initialValue))
+        : previousRef;
+    },
+    useState: function(initialState) {
+      return useReducer(basicStateReducer, initialState);
+    },
+    useLayoutEffect: function() {},
+    useCallback: function(callback) {
+      return callback;
+    },
+    useImperativeHandle: noop,
+    useEffect: noop,
+    useDebugValue: noop,
+    useResponder: function(responder, props) {
+      return { props: props, responder: responder };
     }
-  }
-
-  var nextValue = nextCreate();
-
-  workInProgressHook.memoizedState = [nextValue, nextDeps];
-  return nextValue;
-}
-
-function useRef(initialValue) {
-  currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
-  workInProgressHook = createWorkInProgressHook();
-  var previousRef = workInProgressHook.memoizedState;
-
-  if (previousRef === null) {
-    var ref = {
-      current: initialValue
-    };
-
-    workInProgressHook.memoizedState = ref;
-    return ref;
-  } else {
-    return previousRef;
-  }
-}
-
-function useLayoutEffect(create, inputs) {}
-
-function dispatchAction(componentIdentity, queue, action) {
-  (function() {
-    if (!(numberOfReRenders < RE_RENDER_LIMIT)) {
-      {
-        throw ReactErrorProd(Error(301));
-      }
-    }
-  })();
-
-  if (componentIdentity === currentlyRenderingComponent) {
-    // This is a render phase update. Stash it in a lazily-created map of
-    // queue -> linked list of updates. After this render pass, we'll restart
-    // and apply the stashed updates on top of the work-in-progress hook.
-    didScheduleRenderPhaseUpdate = true;
-    var update = {
-      action: action,
-      next: null
-    };
-
-    if (renderPhaseUpdates === null) {
-      renderPhaseUpdates = new Map();
-    }
-
-    var firstRenderPhaseUpdate = renderPhaseUpdates.get(queue);
-
-    if (firstRenderPhaseUpdate === undefined) {
-      renderPhaseUpdates.set(queue, update);
-    } else {
-      // Append the update to the end of the list.
-      var lastRenderPhaseUpdate = firstRenderPhaseUpdate;
-
-      while (lastRenderPhaseUpdate.next !== null) {
-        lastRenderPhaseUpdate = lastRenderPhaseUpdate.next;
-      }
-
-      lastRenderPhaseUpdate.next = update;
-    }
-  } else {
-    // This means an update has happened after the function component has
-    // returned. On the server this is a no-op. In React Fiber, the update
-    // would be scheduled for a future render.
-  }
-}
-
-function useCallback(callback, deps) {
-  // Callbacks are passed as they are in the server environment.
-  return callback;
-}
-
-function useResponder(responder, props) {
-  return {
-    props: props,
-    responder: responder
+  },
+  Namespaces = {
+    html: "http://www.w3.org/1999/xhtml",
+    mathml: "http://www.w3.org/1998/Math/MathML",
+    svg: "http://www.w3.org/2000/svg"
   };
-}
-
-function noop() {}
-
-var currentThreadID = 0;
-function setCurrentThreadID(threadID) {
-  currentThreadID = threadID;
-}
-var Dispatcher = {
-  readContext: readContext,
-  useContext: useContext,
-  useMemo: useMemo,
-  useReducer: useReducer,
-  useRef: useRef,
-  useState: useState,
-  useLayoutEffect: useLayoutEffect,
-  useCallback: useCallback,
-  // useImperativeHandle is not run in the server environment
-  useImperativeHandle: noop,
-  // Effects are not run in the server environment.
-  useEffect: noop,
-  // Debugging effect
-  useDebugValue: noop,
-  useResponder: useResponder
-};
-
-var HTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
-var MATH_NAMESPACE = "http://www.w3.org/1998/Math/MathML";
-var SVG_NAMESPACE = "http://www.w3.org/2000/svg";
-var Namespaces = {
-  html: HTML_NAMESPACE,
-  mathml: MATH_NAMESPACE,
-  svg: SVG_NAMESPACE
-}; // Assumes there is no parent namespace.
-
 function getIntrinsicNamespace(type) {
   switch (type) {
     case "svg":
-      return SVG_NAMESPACE;
-
+      return "http://www.w3.org/2000/svg";
     case "math":
-      return MATH_NAMESPACE;
-
+      return "http://www.w3.org/1998/Math/MathML";
     default:
-      return HTML_NAMESPACE;
+      return "http://www.w3.org/1999/xhtml";
   }
 }
-function getChildNamespace(parentNamespace, type) {
-  if (parentNamespace == null || parentNamespace === HTML_NAMESPACE) {
-    // No (or default) parent namespace: potential entry point.
-    return getIntrinsicNamespace(type);
-  }
-
-  if (parentNamespace === SVG_NAMESPACE && type === "foreignObject") {
-    // We're leaving SVG.
-    return HTML_NAMESPACE;
-  } // By default, pass namespace below.
-
-  return parentNamespace;
-}
-
-// For HTML, certain tags should omit their close tag. We keep a whitelist for
-// those special-case tags.
 var omittedCloseTags = {
-  area: true,
-  base: true,
-  br: true,
-  col: true,
-  embed: true,
-  hr: true,
-  img: true,
-  input: true,
-  keygen: true,
-  link: true,
-  meta: true,
-  param: true,
-  source: true,
-  track: true,
-  wbr: true // NOTE: menuitem's close tag should be omitted, but that causes problems.
-};
-
-// `omittedCloseTags` except that `menuitem` should still have its closing tag.
-
-var voidElementTags = Object.assign(
-  {
-    menuitem: true
+    area: !0,
+    base: !0,
+    br: !0,
+    col: !0,
+    embed: !0,
+    hr: !0,
+    img: !0,
+    input: !0,
+    keygen: !0,
+    link: !0,
+    meta: !0,
+    param: !0,
+    source: !0,
+    track: !0,
+    wbr: !0
   },
-  omittedCloseTags
-);
-
-// or add stack by default to invariants where possible.
-
-var HTML = "__html";
-function assertValidProps(tag, props) {
-  if (!props) {
-    return;
-  } // Note the use of `==` which checks for null or undefined.
-
-  if (voidElementTags[tag]) {
-    (function() {
-      if (!(props.children == null && props.dangerouslySetInnerHTML == null)) {
-        {
-          throw ReactErrorProd(Error(137), tag, "");
-        }
-      }
-    })();
-  }
-
-  if (props.dangerouslySetInnerHTML != null) {
-    (function() {
-      if (!(props.children == null)) {
-        {
-          throw ReactErrorProd(Error(60));
-        }
-      }
-    })();
-
-    (function() {
-      if (
-        !(
-          typeof props.dangerouslySetInnerHTML === "object" &&
-          HTML in props.dangerouslySetInnerHTML
-        )
-      ) {
-        {
-          throw ReactErrorProd(Error(61));
-        }
-      }
-    })();
-  }
-
-  (function() {
-    if (!(props.style == null || typeof props.style === "object")) {
-      {
-        throw ReactErrorProd(Error(62), "");
-      }
-    }
-  })();
-}
-
-/**
- * CSS properties which accept numbers but are not in units of "px".
- */
-var isUnitlessNumber = {
-  animationIterationCount: true,
-  borderImageOutset: true,
-  borderImageSlice: true,
-  borderImageWidth: true,
-  boxFlex: true,
-  boxFlexGroup: true,
-  boxOrdinalGroup: true,
-  columnCount: true,
-  columns: true,
-  flex: true,
-  flexGrow: true,
-  flexPositive: true,
-  flexShrink: true,
-  flexNegative: true,
-  flexOrder: true,
-  gridArea: true,
-  gridRow: true,
-  gridRowEnd: true,
-  gridRowSpan: true,
-  gridRowStart: true,
-  gridColumn: true,
-  gridColumnEnd: true,
-  gridColumnSpan: true,
-  gridColumnStart: true,
-  fontWeight: true,
-  lineClamp: true,
-  lineHeight: true,
-  opacity: true,
-  order: true,
-  orphans: true,
-  tabSize: true,
-  widows: true,
-  zIndex: true,
-  zoom: true,
-  // SVG-related properties
-  fillOpacity: true,
-  floodOpacity: true,
-  stopOpacity: true,
-  strokeDasharray: true,
-  strokeDashoffset: true,
-  strokeMiterlimit: true,
-  strokeOpacity: true,
-  strokeWidth: true
-};
-/**
- * @param {string} prefix vendor-specific prefix, eg: Webkit
- * @param {string} key style name, eg: transitionDuration
- * @return {string} style name prefixed with `prefix`, properly camelCased, eg:
- * WebkitTransitionDuration
- */
-
-function prefixKey(prefix, key) {
-  return prefix + key.charAt(0).toUpperCase() + key.substring(1);
-}
-/**
- * Support style names that may come passed in prefixed by adding permutations
- * of vendor prefixes.
- */
-
-var prefixes = ["Webkit", "ms", "Moz", "O"]; // Using Object.keys here, or else the vanilla for-in loop makes IE8 go into an
-// infinite loop, because it iterates over the newly added props too.
-
+  voidElementTags = Object.assign({ menuitem: !0 }, omittedCloseTags),
+  isUnitlessNumber = {
+    animationIterationCount: !0,
+    borderImageOutset: !0,
+    borderImageSlice: !0,
+    borderImageWidth: !0,
+    boxFlex: !0,
+    boxFlexGroup: !0,
+    boxOrdinalGroup: !0,
+    columnCount: !0,
+    columns: !0,
+    flex: !0,
+    flexGrow: !0,
+    flexPositive: !0,
+    flexShrink: !0,
+    flexNegative: !0,
+    flexOrder: !0,
+    gridArea: !0,
+    gridRow: !0,
+    gridRowEnd: !0,
+    gridRowSpan: !0,
+    gridRowStart: !0,
+    gridColumn: !0,
+    gridColumnEnd: !0,
+    gridColumnSpan: !0,
+    gridColumnStart: !0,
+    fontWeight: !0,
+    lineClamp: !0,
+    lineHeight: !0,
+    opacity: !0,
+    order: !0,
+    orphans: !0,
+    tabSize: !0,
+    widows: !0,
+    zIndex: !0,
+    zoom: !0,
+    fillOpacity: !0,
+    floodOpacity: !0,
+    stopOpacity: !0,
+    strokeDasharray: !0,
+    strokeDashoffset: !0,
+    strokeMiterlimit: !0,
+    strokeOpacity: !0,
+    strokeWidth: !0
+  },
+  prefixes = ["Webkit", "ms", "Moz", "O"];
 Object.keys(isUnitlessNumber).forEach(function(prop) {
   prefixes.forEach(function(prefix) {
-    isUnitlessNumber[prefixKey(prefix, prop)] = isUnitlessNumber[prop];
+    prefix = prefix + prop.charAt(0).toUpperCase() + prop.substring(1);
+    isUnitlessNumber[prefix] = isUnitlessNumber[prop];
   });
 });
-
-/**
- * Convert a value into the proper css writable value. The style name `name`
- * should be logical (no hyphens), as specified
- * in `CSSProperty.isUnitlessNumber`.
- *
- * @param {string} name CSS property name such as `topMargin`.
- * @param {*} value CSS property value such as `10px`.
- * @return {string} Normalized style value with dimensions applied.
- */
-
-function dangerousStyleValue(name, value, isCustomProperty) {
-  // Note that we've removed escapeTextForBrowser() calls here since the
-  // whole string will be escaped when the attribute is injected into
-  // the markup. If you provide unsafe user data here they can inject
-  // arbitrary CSS which may be problematic (I couldn't repro this):
-  // https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet
-  // http://www.thespanner.co.uk/2007/11/26/ultimate-xss-css-injection/
-  // This is not an XSS hole but instead a potential CSS injection issue
-  // which has lead to a greater discussion about how we're going to
-  // trust URLs moving forward. See #2115901
-  var isEmpty = value == null || typeof value === "boolean" || value === "";
-
-  if (isEmpty) {
-    return "";
-  }
-
-  if (
-    !isCustomProperty &&
-    typeof value === "number" &&
-    value !== 0 &&
-    !(isUnitlessNumber.hasOwnProperty(name) && isUnitlessNumber[name])
-  ) {
-    return value + "px"; // Presumes implicit 'px' suffix for unitless numbers
-  }
-
-  return ("" + value).trim();
-}
-
-var uppercasePattern = /([A-Z])/g;
-var msPattern = /^ms-/;
-/**
- * Hyphenates a camelcased CSS property name, for example:
- *
- *   > hyphenateStyleName('backgroundColor')
- *   < "background-color"
- *   > hyphenateStyleName('MozTransition')
- *   < "-moz-transition"
- *   > hyphenateStyleName('msTransition')
- *   < "-ms-transition"
- *
- * As Modernizr suggests (http://modernizr.com/docs/#prefixed), an `ms` prefix
- * is converted to `-ms-`.
- */
-
-function hyphenateStyleName(name) {
-  return name
-    .replace(uppercasePattern, "-$1")
-    .toLowerCase()
-    .replace(msPattern, "-ms-");
-}
-
-function isCustomComponent(tagName, props) {
-  if (tagName.indexOf("-") === -1) {
-    return typeof props.is === "string";
-  }
-
-  switch (tagName) {
-    // These are reserved SVG and MathML elements.
-    // We don't mind this whitelist too much because we expect it to never grow.
-    // The alternative is to track the namespace in a few places which is convoluted.
-    // https://w3c.github.io/webcomponents/spec/custom/#custom-elements-core-concepts
-    case "annotation-xml":
-    case "color-profile":
-    case "font-face":
-    case "font-face-src":
-    case "font-face-uri":
-    case "font-face-format":
-    case "font-face-name":
-    case "missing-glyph":
-      return false;
-
-    default:
-      return true;
-  }
-}
-
-/**
- * Registers plugins so that they can extract and dispatch events.
- *
- * @see {EventPluginHub}
- */
-
-/**
- * Ordered list of injected plugins.
- */
-
-/**
- * Mapping from event name to dispatch config
- */
-
-/**
- * Mapping from registration name to plugin module
- */
-
-/**
- * Mapping from registration name to event name
- */
-
-/**
- * Mapping from lowercase registration names to the properly cased version,
- * used to warn in the case of missing event handlers. Available
- * only in false.
- * @type {Object}
- */
-
-// Trust the developer to only use possibleRegistrationNames in false
-
-/**
- * Injects an ordering of plugins (by plugin name). This allows the ordering
- * to be decoupled from injection of the actual plugins so that ordering is
- * always deterministic regardless of packaging, on-the-fly injection, etc.
- *
- * @param {array} InjectedEventPluginOrder
- * @internal
- * @see {EventPluginHub.injection.injectEventPluginOrder}
- */
-
-/**
- * Injects plugins to be used by `EventPluginHub`. The plugin names must be
- * in the ordering injected by `injectEventPluginOrder`.
- *
- * Plugins can be injected as part of page initialization or on-the-fly.
- *
- * @param {object} injectedNamesToPlugins Map from names to plugin modules.
- * @internal
- * @see {EventPluginHub.injection.injectEventPluginsByName}
- */
-
-// When adding attributes to the HTML or SVG whitelist, be sure to
-// also add them to this module to ensure casing and incorrect name
-// warnings.
-
-var toArray = React.Children.toArray; // This is only used in DEV.
-var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
-var newlineEatingTags = {
-  listing: true,
-  pre: true,
-  textarea: true
-}; // We accept any tag to be rendered but since this gets injected into arbitrary
-// HTML, we want to make sure that it's a safe tag.
-// http://www.w3.org/TR/REC-xml/#NT-Name
-
-var VALID_TAG_REGEX = /^[a-zA-Z][a-zA-Z:_\.\-\d]*$/; // Simplified subset
-
-var validatedTagCache = {};
-
-function validateDangerousTag(tag) {
-  if (!validatedTagCache.hasOwnProperty(tag)) {
-    (function() {
-      if (!VALID_TAG_REGEX.test(tag)) {
-        {
-          throw ReactErrorProd(Error(65), tag);
-        }
-      }
-    })();
-
-    validatedTagCache[tag] = true;
-  }
-}
-
-var styleNameCache = {};
-
-var processStyleName = function(styleName) {
-  if (styleNameCache.hasOwnProperty(styleName)) {
-    return styleNameCache[styleName];
-  }
-
-  var result = hyphenateStyleName(styleName);
-  styleNameCache[styleName] = result;
-  return result;
-};
-
-function createMarkupForStyles(styles) {
-  var serialized = "";
-  var delimiter = "";
-
-  for (var styleName in styles) {
-    if (!styles.hasOwnProperty(styleName)) {
-      continue;
-    }
-
-    var isCustomProperty = styleName.indexOf("--") === 0;
-    var styleValue = styles[styleName];
-
-    if (styleValue != null) {
-      serialized +=
-        delimiter +
-        (isCustomProperty ? styleName : processStyleName(styleName)) +
-        ":";
-      serialized += dangerousStyleValue(
-        styleName,
-        styleValue,
-        isCustomProperty
-      );
-      delimiter = ";";
-    }
-  }
-
-  return serialized || null;
-}
-
-function shouldConstruct(Component) {
-  return Component.prototype && Component.prototype.isReactComponent;
-}
-
-function getNonChildrenInnerMarkup(props) {
-  var innerHTML = props.dangerouslySetInnerHTML;
-
-  if (innerHTML != null) {
-    if (innerHTML.__html != null) {
-      return innerHTML.__html;
-    }
-  } else {
-    var content = props.children;
-
-    if (typeof content === "string" || typeof content === "number") {
-      return escapeTextForBrowser(content);
-    }
-  }
-
-  return null;
-}
-
-function flattenTopLevelChildren(children) {
-  if (!React.isValidElement(children)) {
-    return toArray(children);
-  }
-
-  var element = children;
-
-  if (element.type !== REACT_FRAGMENT_TYPE) {
-    return [element];
-  }
-
-  var fragmentChildren = element.props.children;
-
-  if (!React.isValidElement(fragmentChildren)) {
-    return toArray(fragmentChildren);
-  }
-
-  var fragmentChildElement = fragmentChildren;
-  return [fragmentChildElement];
-}
-
+var uppercasePattern = /([A-Z])/g,
+  msPattern = /^ms-/,
+  toArray = React.Children.toArray,
+  ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher,
+  newlineEatingTags = { listing: !0, pre: !0, textarea: !0 },
+  VALID_TAG_REGEX = /^[a-zA-Z][a-zA-Z:_\.\-\d]*$/,
+  validatedTagCache = {},
+  styleNameCache = {};
 function flattenOptionChildren(children) {
-  if (children === undefined || children === null) {
-    return children;
-  }
-
-  var content = ""; // Flatten children and warn if they aren't strings or numbers;
-  // invalid types are ignored.
-
+  if (void 0 === children || null === children) return children;
+  var content = "";
   React.Children.forEach(children, function(child) {
-    if (child == null) {
-      return;
-    }
-
-    content += child;
+    null != child && (content += child);
   });
   return content;
 }
-
-var hasOwnProperty = Object.prototype.hasOwnProperty;
-var STYLE = "style";
-var RESERVED_PROPS = {
-  children: null,
-  dangerouslySetInnerHTML: null,
-  suppressContentEditableWarning: null,
-  suppressHydrationWarning: null
-};
-
-function createOpenTagMarkup(
-  tagVerbatim,
-  tagLowercase,
-  props,
-  namespace,
-  makeStaticMarkup,
-  isRootElement
-) {
-  var ret = "<" + tagVerbatim;
-
-  for (var propKey in props) {
-    if (!hasOwnProperty.call(props, propKey)) {
-      continue;
-    }
-
-    if (enableFlareAPI && propKey === "listeners") {
-      continue;
-    }
-
-    var propValue = props[propKey];
-
-    if (propValue == null) {
-      continue;
-    }
-
-    if (propKey === STYLE) {
-      propValue = createMarkupForStyles(propValue);
-    }
-
-    var markup = null;
-
-    if (isCustomComponent(tagLowercase, props)) {
-      if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-        markup = createMarkupForCustomAttribute(propKey, propValue);
-      }
-    } else {
-      markup = createMarkupForProperty(propKey, propValue);
-    }
-
-    if (markup) {
-      ret += " " + markup;
-    }
-  } // For static pages, no need to put React ID and checksum. Saves lots of
-  // bytes.
-
-  if (makeStaticMarkup) {
-    return ret;
-  }
-
-  if (isRootElement) {
-    ret += " " + createMarkupForRoot();
-  }
-
-  return ret;
-}
-
+var hasOwnProperty$1 = Object.prototype.hasOwnProperty,
+  RESERVED_PROPS = {
+    children: null,
+    dangerouslySetInnerHTML: null,
+    suppressContentEditableWarning: null,
+    suppressHydrationWarning: null
+  };
 function validateRenderResult(child, type) {
-  if (child === undefined) {
-    (function() {
-      {
-        {
-          throw ReactErrorProd(
-            Error(152),
-            getComponentName(type) || "Component"
-          );
-        }
-      }
-    })();
-  }
+  if (void 0 === child)
+    throw ReactErrorProd(Error(152), getComponentName(type) || "Component");
 }
-
 function resolve(child, context, threadID) {
-  while (React.isValidElement(child)) {
-    // Safe because we just checked it's an element.
-    var element = child;
-    var Component = element.type;
-
-    if (typeof Component !== "function") {
-      break;
-    }
-
-    processChild(element, Component);
-  } // Extra closure so queue and replace can be captured properly
-
   function processChild(element, Component) {
-    var isClass = shouldConstruct(Component);
-    var publicContext = processContext(Component, context, threadID, isClass);
-    var queue = [];
-    var replace = false;
-    var updater = {
-      isMounted: function(publicInstance) {
-        return false;
-      },
-      enqueueForceUpdate: function(publicInstance) {
-        if (queue === null) {
-          return null;
+    var isClass = Component.prototype && Component.prototype.isReactComponent,
+      publicContext = processContext(Component, context, threadID, isClass),
+      queue = [],
+      replace = !1,
+      updater = {
+        isMounted: function() {
+          return !1;
+        },
+        enqueueForceUpdate: function() {
+          if (null === queue) return null;
+        },
+        enqueueReplaceState: function(publicInstance, completeState) {
+          replace = !0;
+          queue = [completeState];
+        },
+        enqueueSetState: function(publicInstance, currentPartialState) {
+          if (null === queue) return null;
+          queue.push(currentPartialState);
         }
-      },
-      enqueueReplaceState: function(publicInstance, completeState) {
-        replace = true;
-        queue = [completeState];
-      },
-      enqueueSetState: function(publicInstance, currentPartialState) {
-        if (queue === null) {
-          return null;
-        }
-
-        queue.push(currentPartialState);
-      }
-    };
-    var inst;
-
+      };
     if (isClass) {
-      inst = new Component(element.props, publicContext, updater);
-
-      if (typeof Component.getDerivedStateFromProps === "function") {
+      if (
+        ((isClass = new Component(element.props, publicContext, updater)),
+        "function" === typeof Component.getDerivedStateFromProps)
+      ) {
         var partialState = Component.getDerivedStateFromProps.call(
           null,
           element.props,
-          inst.state
+          isClass.state
         );
-
-        if (partialState != null) {
-          inst.state = Object.assign({}, inst.state, partialState);
-        }
+        null != partialState &&
+          (isClass.state = Object.assign({}, isClass.state, partialState));
       }
-    } else {
-      var componentIdentity = {};
-      prepareToUseHooks(componentIdentity);
-      inst = Component(element.props, publicContext, updater);
-      inst = finishHooks(Component, element.props, inst, publicContext);
-
-      if (inst == null || inst.render == null) {
-        child = inst;
-        validateRenderResult(child, Component);
-        return;
-      }
-    }
-
-    inst.props = element.props;
-    inst.context = publicContext;
-    inst.updater = updater;
-    var initialState = inst.state;
-
-    if (initialState === undefined) {
-      inst.state = initialState = null;
-    }
-
-    if (
-      typeof inst.UNSAFE_componentWillMount === "function" ||
-      typeof inst.componentWillMount === "function"
+    } else if (
+      ((currentlyRenderingComponent = {}),
+      (isClass = Component(element.props, publicContext, updater)),
+      (isClass = finishHooks(Component, element.props, isClass, publicContext)),
+      null == isClass || null == isClass.render)
     ) {
-      if (typeof inst.componentWillMount === "function") {
-        if (typeof Component.getDerivedStateFromProps !== "function") {
-          inst.componentWillMount();
-        }
-      }
-
+      child = isClass;
+      validateRenderResult(child, Component);
+      return;
+    }
+    isClass.props = element.props;
+    isClass.context = publicContext;
+    isClass.updater = updater;
+    updater = isClass.state;
+    void 0 === updater && (isClass.state = updater = null);
+    if (
+      "function" === typeof isClass.UNSAFE_componentWillMount ||
+      "function" === typeof isClass.componentWillMount
+    )
       if (
-        typeof inst.UNSAFE_componentWillMount === "function" &&
-        typeof Component.getDerivedStateFromProps !== "function"
+        ("function" === typeof isClass.componentWillMount &&
+          "function" !== typeof Component.getDerivedStateFromProps &&
+          isClass.componentWillMount(),
+        "function" === typeof isClass.UNSAFE_componentWillMount &&
+          "function" !== typeof Component.getDerivedStateFromProps &&
+          isClass.UNSAFE_componentWillMount(),
+        queue.length)
       ) {
-        // In order to support react-lifecycles-compat polyfilled components,
-        // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
-        inst.UNSAFE_componentWillMount();
-      }
-
-      if (queue.length) {
-        var oldQueue = queue;
+        updater = queue;
         var oldReplace = replace;
         queue = null;
-        replace = false;
-
-        if (oldReplace && oldQueue.length === 1) {
-          inst.state = oldQueue[0];
-        } else {
-          var nextState = oldReplace ? oldQueue[0] : inst.state;
-          var dontMutate = true;
-
-          for (var i = oldReplace ? 1 : 0; i < oldQueue.length; i++) {
-            var partial = oldQueue[i];
-
-            var _partialState =
-              typeof partial === "function"
-                ? partial.call(inst, nextState, element.props, publicContext)
+        replace = !1;
+        if (oldReplace && 1 === updater.length) isClass.state = updater[0];
+        else {
+          partialState = oldReplace ? updater[0] : isClass.state;
+          var dontMutate = !0;
+          for (
+            oldReplace = oldReplace ? 1 : 0;
+            oldReplace < updater.length;
+            oldReplace++
+          ) {
+            var partial = updater[oldReplace];
+            partial =
+              "function" === typeof partial
+                ? partial.call(
+                    isClass,
+                    partialState,
+                    element.props,
+                    publicContext
+                  )
                 : partial;
-
-            if (_partialState != null) {
-              if (dontMutate) {
-                dontMutate = false;
-                nextState = Object.assign({}, nextState, _partialState);
-              } else {
-                Object.assign(nextState, _partialState);
-              }
-            }
+            null != partial &&
+              (dontMutate
+                ? ((dontMutate = !1),
+                  (partialState = Object.assign({}, partialState, partial)))
+                : Object.assign(partialState, partial));
           }
-
-          inst.state = nextState;
+          isClass.state = partialState;
         }
-      } else {
-        queue = null;
-      }
-    }
-
-    child = inst.render();
-
+      } else queue = null;
+    child = isClass.render();
     validateRenderResult(child, Component);
-    var childContext;
-
-    if (disableLegacyContext) {
-    } else {
-      if (typeof inst.getChildContext === "function") {
-        var _childContextTypes = Component.childContextTypes;
-
-        if (typeof _childContextTypes === "object") {
-          childContext = inst.getChildContext();
-
-          for (var contextKey in childContext) {
-            (function() {
-              if (!(contextKey in _childContextTypes)) {
-                {
-                  throw ReactErrorProd(
-                    Error(108),
-                    getComponentName(Component) || "Unknown",
-                    contextKey
-                  );
-                }
-              }
-            })();
-          }
-        } else {
-        }
+    if (!disableLegacyContext) {
+      if (
+        "function" === typeof isClass.getChildContext &&
+        ((element = Component.childContextTypes), "object" === typeof element)
+      ) {
+        var childContext = isClass.getChildContext();
+        for (var contextKey in childContext)
+          if (!(contextKey in element))
+            throw ReactErrorProd(
+              Error(108),
+              getComponentName(Component) || "Unknown",
+              contextKey
+            );
       }
-
-      if (childContext) {
-        context = Object.assign({}, context, childContext);
-      }
+      childContext && (context = Object.assign({}, context, childContext));
     }
   }
-
-  return {
-    child: child,
-    context: context
-  };
+  for (; React.isValidElement(child); ) {
+    var element$jscomp$0 = child,
+      Component$jscomp$0 = element$jscomp$0.type;
+    if ("function" !== typeof Component$jscomp$0) break;
+    processChild(element$jscomp$0, Component$jscomp$0);
+  }
+  return { child: child, context: context };
 }
-
-var ReactDOMServerRenderer =
-  /*#__PURE__*/
-  (function() {
-    // TODO: type this more strictly:
-    // DEV-only
+var ReactDOMServerRenderer = (function() {
     function ReactDOMServerRenderer(children, makeStaticMarkup) {
-      var flatChildren = flattenTopLevelChildren(children);
-      var topFrame = {
+      React.isValidElement(children)
+        ? children.type !== REACT_FRAGMENT_TYPE
+          ? (children = [children])
+          : ((children = children.props.children),
+            (children = React.isValidElement(children)
+              ? [children]
+              : toArray(children)))
+        : (children = toArray(children));
+      children = {
         type: null,
-        // Assume all trees start in the HTML namespace (not totally true, but
-        // this is what we did historically)
         domNamespace: Namespaces.html,
-        children: flatChildren,
+        children: children,
         childIndex: 0,
         context: emptyObject,
         footer: ""
       };
-
-      this.threadID = allocThreadID();
-      this.stack = [topFrame];
-      this.exhausted = false;
+      var JSCompiler_inline_result = nextAvailableThreadIDs[0];
+      if (0 === JSCompiler_inline_result) {
+        var oldArray = nextAvailableThreadIDs;
+        JSCompiler_inline_result = oldArray.length;
+        var newSize = 2 * JSCompiler_inline_result;
+        if (!(65536 >= newSize)) throw ReactErrorProd(Error(304));
+        var newArray = new Uint16Array(newSize);
+        newArray.set(oldArray);
+        nextAvailableThreadIDs = newArray;
+        nextAvailableThreadIDs[0] = JSCompiler_inline_result + 1;
+        for (
+          oldArray = JSCompiler_inline_result;
+          oldArray < newSize - 1;
+          oldArray++
+        )
+          nextAvailableThreadIDs[oldArray] = oldArray + 1;
+        nextAvailableThreadIDs[newSize - 1] = 0;
+      } else
+        nextAvailableThreadIDs[0] =
+          nextAvailableThreadIDs[JSCompiler_inline_result];
+      this.threadID = JSCompiler_inline_result;
+      this.stack = [children];
+      this.exhausted = !1;
       this.currentSelectValue = null;
-      this.previousWasTextNode = false;
+      this.previousWasTextNode = !1;
       this.makeStaticMarkup = makeStaticMarkup;
-      this.suspenseDepth = 0; // Context (new API)
-
+      this.suspenseDepth = 0;
       this.contextIndex = -1;
       this.contextStack = [];
       this.contextValueStack = [];
     }
-
     var _proto = ReactDOMServerRenderer.prototype;
-
-    _proto.destroy = function destroy() {
+    _proto.destroy = function() {
       if (!this.exhausted) {
-        this.exhausted = true;
+        this.exhausted = !0;
         this.clearProviders();
-        freeThreadID(this.threadID);
+        var id = this.threadID;
+        nextAvailableThreadIDs[id] = nextAvailableThreadIDs[0];
+        nextAvailableThreadIDs[0] = id;
       }
     };
-    /**
-     * Note: We use just two stacks regardless of how many context providers you have.
-     * Providers are always popped in the reverse order to how they were pushed
-     * so we always know on the way down which provider you'll encounter next on the way up.
-     * On the way down, we push the current provider, and its context value *before*
-     * we mutated it, onto the stacks. Therefore, on the way up, we always know which
-     * provider needs to be "restored" to which value.
-     * https://github.com/facebook/react/pull/12985#issuecomment-396301248
-     */
-
-    _proto.pushProvider = function pushProvider(provider) {
-      var index = ++this.contextIndex;
-      var context = provider.type._context;
-      var threadID = this.threadID;
+    _proto.pushProvider = function(provider) {
+      var index = ++this.contextIndex,
+        context = provider.type._context,
+        threadID = this.threadID;
       validateContextBounds(context, threadID);
-      var previousValue = context[threadID]; // Remember which value to restore this context to on our way up.
-
+      var previousValue = context[threadID];
       this.contextStack[index] = context;
       this.contextValueStack[index] = previousValue;
-
       context[threadID] = provider.props.value;
     };
-
-    _proto.popProvider = function popProvider(provider) {
-      var index = this.contextIndex;
-
-      var context = this.contextStack[index];
-      var previousValue = this.contextValueStack[index]; // "Hide" these null assignments from Flow by using `any`
-      // because conceptually they are deletions--as long as we
-      // promise to never access values beyond `this.contextIndex`.
-
+    _proto.popProvider = function() {
+      var index = this.contextIndex,
+        context = this.contextStack[index],
+        previousValue = this.contextValueStack[index];
       this.contextStack[index] = null;
       this.contextValueStack[index] = null;
-
-      this.contextIndex--; // Restore to the previous value we stored as we were walking down.
-      // We've already verified that this context has been expanded to accommodate
-      // this thread id, so we don't need to do it again.
-
+      this.contextIndex--;
       context[this.threadID] = previousValue;
     };
-
-    _proto.clearProviders = function clearProviders() {
-      // Restore any remaining providers on the stack to previous values
-      for (var index = this.contextIndex; index >= 0; index--) {
-        var context = this.contextStack[index];
-        var previousValue = this.contextValueStack[index];
-        context[this.threadID] = previousValue;
-      }
+    _proto.clearProviders = function() {
+      for (var index = this.contextIndex; 0 <= index; index--)
+        this.contextStack[index][this.threadID] = this.contextValueStack[index];
     };
-
-    _proto.read = function read(bytes) {
-      var _this = this;
-
-      if (this.exhausted) {
-        return null;
-      }
-
+    _proto.read = function(bytes) {
+      if (this.exhausted) return null;
       var prevThreadID = currentThreadID;
-      setCurrentThreadID(this.threadID);
+      currentThreadID = this.threadID;
       var prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = Dispatcher;
-
       try {
-        // Markup generated within <Suspense> ends up buffered until we know
-        // nothing in that boundary suspended
-        var out = [""];
-        var suspended = false;
-
-        while (out[0].length < bytes) {
-          if (this.stack.length === 0) {
-            this.exhausted = true;
-            freeThreadID(this.threadID);
+        for (var out = [""], suspended = !1; out[0].length < bytes; ) {
+          if (0 === this.stack.length) {
+            this.exhausted = !0;
+            var id = this.threadID;
+            nextAvailableThreadIDs[id] = nextAvailableThreadIDs[0];
+            nextAvailableThreadIDs[0] = id;
             break;
           }
-
           var frame = this.stack[this.stack.length - 1];
-
           if (suspended || frame.childIndex >= frame.children.length) {
             var footer = frame.footer;
-
-            if (footer !== "") {
-              this.previousWasTextNode = false;
-            }
-
+            "" !== footer && (this.previousWasTextNode = !1);
             this.stack.pop();
-
-            if (frame.type === "select") {
-              this.currentSelectValue = null;
-            } else if (
-              frame.type != null &&
-              frame.type.type != null &&
+            if ("select" === frame.type) this.currentSelectValue = null;
+            else if (
+              null != frame.type &&
+              null != frame.type.type &&
               frame.type.type.$$typeof === REACT_PROVIDER_TYPE
-            ) {
-              var provider = frame.type;
-              this.popProvider(provider);
-            } else if (frame.type === REACT_SUSPENSE_TYPE) {
+            )
+              this.popProvider(frame.type);
+            else if (frame.type === REACT_SUSPENSE_TYPE) {
               this.suspenseDepth--;
               var buffered = out.pop();
-
               if (suspended) {
-                suspended = false; // If rendering was suspended at this boundary, render the fallbackFrame
-
+                suspended = !1;
                 var fallbackFrame = frame.fallbackFrame;
-
-                (function() {
-                  if (!fallbackFrame) {
-                    {
-                      throw ReactErrorProd(Error(303));
-                    }
-                  }
-                })();
-
+                if (!fallbackFrame) throw ReactErrorProd(Error(303));
                 this.stack.push(fallbackFrame);
-                out[this.suspenseDepth] += "<!--$!-->"; // Skip flushing output since we're switching to the fallback
-
+                out[this.suspenseDepth] += "\x3c!--$!--\x3e";
                 continue;
-              } else {
-                out[this.suspenseDepth] += buffered;
-              }
-            } // Flush output
-
-            out[this.suspenseDepth] += footer;
-            continue;
-          }
-
-          var child = frame.children[frame.childIndex++];
-          var outBuffer = "";
-
-          try {
-            outBuffer += this.render(child, frame.context, frame.domNamespace);
-          } catch (err) {
-            if (err != null && typeof err.then === "function") {
-              if (enableSuspenseServerRenderer) {
-                (function() {
-                  if (!(_this.suspenseDepth > 0)) {
-                    {
-                      throw ReactErrorProd(Error(342));
-                    }
-                  }
-                })();
-
-                suspended = true;
-              } else {
-                (function() {
-                  {
-                    {
-                      throw ReactErrorProd(Error(294));
-                    }
-                  }
-                })();
-              }
-            } else {
-              throw err;
+              } else out[this.suspenseDepth] += buffered;
             }
-          } finally {
+            out[this.suspenseDepth] += footer;
+          } else {
+            var child = frame.children[frame.childIndex++],
+              outBuffer = "";
+            try {
+              outBuffer += this.render(
+                child,
+                frame.context,
+                frame.domNamespace
+              );
+            } catch (err) {
+              if (null != err && "function" === typeof err.then) {
+                if (!(0 < this.suspenseDepth)) throw ReactErrorProd(Error(342));
+                suspended = !0;
+              } else throw err;
+            } finally {
+            }
+            out.length <= this.suspenseDepth && out.push("");
+            out[this.suspenseDepth] += outBuffer;
           }
-
-          if (out.length <= this.suspenseDepth) {
-            out.push("");
-          }
-
-          out[this.suspenseDepth] += outBuffer;
         }
-
         return out[0];
       } finally {
-        ReactCurrentDispatcher.current = prevDispatcher;
-        setCurrentThreadID(prevThreadID);
+        (ReactCurrentDispatcher.current = prevDispatcher),
+          (currentThreadID = prevThreadID);
       }
     };
-
-    _proto.render = function render(child, context, parentNamespace) {
-      if (typeof child === "string" || typeof child === "number") {
-        var text = "" + child;
-
-        if (text === "") {
-          return "";
+    _proto.render = function(child, context, parentNamespace) {
+      if ("string" === typeof child || "number" === typeof child) {
+        parentNamespace = "" + child;
+        if ("" === parentNamespace) return "";
+        if (this.makeStaticMarkup) return escapeTextForBrowser(parentNamespace);
+        if (this.previousWasTextNode)
+          return "\x3c!-- --\x3e" + escapeTextForBrowser(parentNamespace);
+        this.previousWasTextNode = !0;
+        return escapeTextForBrowser(parentNamespace);
+      }
+      context = resolve(child, context, this.threadID);
+      child = context.child;
+      context = context.context;
+      if (null === child || !1 === child) return "";
+      if (!React.isValidElement(child)) {
+        if (null != child && null != child.$$typeof) {
+          parentNamespace = child.$$typeof;
+          if (parentNamespace === REACT_PORTAL_TYPE)
+            throw ReactErrorProd(Error(257));
+          throw ReactErrorProd(Error(258), parentNamespace.toString());
         }
-
-        if (this.makeStaticMarkup) {
-          return escapeTextForBrowser(text);
-        }
-
-        if (this.previousWasTextNode) {
-          return "<!-- -->" + escapeTextForBrowser(text);
-        }
-
-        this.previousWasTextNode = true;
-        return escapeTextForBrowser(text);
-      } else {
-        var nextChild;
-
-        var _resolve = resolve(child, context, this.threadID);
-
-        nextChild = _resolve.child;
-        context = _resolve.context;
-
-        if (nextChild === null || nextChild === false) {
-          return "";
-        } else if (!React.isValidElement(nextChild)) {
-          if (nextChild != null && nextChild.$$typeof != null) {
-            // Catch unexpected special types early.
-            var $$typeof = nextChild.$$typeof;
-
-            (function() {
-              if (!($$typeof !== REACT_PORTAL_TYPE)) {
-                {
-                  throw ReactErrorProd(Error(257));
-                }
-              }
-            })(); // Catch-all to prevent an infinite loop if React.Children.toArray() supports some new type.
-
-            (function() {
-              {
-                {
-                  throw ReactErrorProd(Error(258), $$typeof.toString());
-                }
-              }
-            })();
-          }
-
-          var nextChildren = toArray(nextChild);
-          var frame = {
-            type: null,
-            domNamespace: parentNamespace,
-            children: nextChildren,
-            childIndex: 0,
-            context: context,
-            footer: ""
-          };
-
-          this.stack.push(frame);
-          return "";
-        } // Safe because we just checked it's an element.
-
-        var nextElement = nextChild;
-        var elementType = nextElement.type;
-
-        if (typeof elementType === "string") {
-          return this.renderDOM(nextElement, context, parentNamespace);
-        }
-
-        switch (elementType) {
-          case REACT_STRICT_MODE_TYPE:
-          case REACT_CONCURRENT_MODE_TYPE:
-          case REACT_PROFILER_TYPE:
-          case REACT_SUSPENSE_LIST_TYPE:
-          case REACT_FRAGMENT_TYPE: {
-            var _nextChildren = toArray(nextChild.props.children);
-
-            var _frame = {
+        child = toArray(child);
+        this.stack.push({
+          type: null,
+          domNamespace: parentNamespace,
+          children: child,
+          childIndex: 0,
+          context: context,
+          footer: ""
+        });
+        return "";
+      }
+      var elementType = child.type;
+      if ("string" === typeof elementType)
+        return this.renderDOM(child, context, parentNamespace);
+      switch (elementType) {
+        case REACT_STRICT_MODE_TYPE:
+        case REACT_CONCURRENT_MODE_TYPE:
+        case REACT_PROFILER_TYPE:
+        case REACT_SUSPENSE_LIST_TYPE:
+        case REACT_FRAGMENT_TYPE:
+          return (
+            (child = toArray(child.props.children)),
+            this.stack.push({
               type: null,
               domNamespace: parentNamespace,
-              children: _nextChildren,
+              children: child,
               childIndex: 0,
               context: context,
               footer: ""
-            };
-
-            this.stack.push(_frame);
-            return "";
-          }
-
-          case REACT_SUSPENSE_TYPE: {
-            if (enableSuspenseServerRenderer) {
-              var fallback = nextChild.props.fallback;
-
-              if (fallback === undefined) {
-                // If there is no fallback, then this just behaves as a fragment.
-                var _nextChildren3 = toArray(nextChild.props.children);
-
-                var _frame3 = {
-                  type: null,
-                  domNamespace: parentNamespace,
-                  children: _nextChildren3,
-                  childIndex: 0,
-                  context: context,
-                  footer: ""
-                };
-
-                this.stack.push(_frame3);
-                return "";
-              }
-
-              var fallbackChildren = toArray(fallback);
-
-              var _nextChildren2 = toArray(nextChild.props.children);
-
-              var fallbackFrame = {
+            }),
+            ""
+          );
+        case REACT_SUSPENSE_TYPE:
+          elementType = child.props.fallback;
+          if (void 0 === elementType)
+            return (
+              (child = toArray(child.props.children)),
+              this.stack.push({
                 type: null,
                 domNamespace: parentNamespace,
-                children: fallbackChildren,
-                childIndex: 0,
-                context: context,
-                footer: "<!--/$-->"
-              };
-              var _frame2 = {
-                fallbackFrame: fallbackFrame,
-                type: REACT_SUSPENSE_TYPE,
-                domNamespace: parentNamespace,
-                children: _nextChildren2,
-                childIndex: 0,
-                context: context,
-                footer: "<!--/$-->"
-              };
-
-              this.stack.push(_frame2);
-              this.suspenseDepth++;
-              return "<!--$-->";
-            } else {
-              (function() {
-                {
-                  {
-                    throw ReactErrorProd(Error(294));
-                  }
-                }
-              })();
-            }
-          }
-          // eslint-disable-next-line-no-fallthrough
-
-          default:
-            break;
-        }
-
-        if (typeof elementType === "object" && elementType !== null) {
-          switch (elementType.$$typeof) {
-            case REACT_FORWARD_REF_TYPE: {
-              var element = nextChild;
-
-              var _nextChildren4;
-
-              var componentIdentity = {};
-              prepareToUseHooks(componentIdentity);
-              _nextChildren4 = elementType.render(element.props, element.ref);
-              _nextChildren4 = finishHooks(
-                elementType.render,
-                element.props,
-                _nextChildren4,
-                element.ref
-              );
-              _nextChildren4 = toArray(_nextChildren4);
-              var _frame4 = {
-                type: null,
-                domNamespace: parentNamespace,
-                children: _nextChildren4,
+                children: child,
                 childIndex: 0,
                 context: context,
                 footer: ""
-              };
-
-              this.stack.push(_frame4);
-              return "";
-            }
-
-            case REACT_MEMO_TYPE: {
-              var _element = nextChild;
-              var _nextChildren5 = [
+              }),
+              ""
+            );
+          elementType = toArray(elementType);
+          child = toArray(child.props.children);
+          this.stack.push({
+            fallbackFrame: {
+              type: null,
+              domNamespace: parentNamespace,
+              children: elementType,
+              childIndex: 0,
+              context: context,
+              footer: "\x3c!--/$--\x3e"
+            },
+            type: REACT_SUSPENSE_TYPE,
+            domNamespace: parentNamespace,
+            children: child,
+            childIndex: 0,
+            context: context,
+            footer: "\x3c!--/$--\x3e"
+          });
+          this.suspenseDepth++;
+          return "\x3c!--$--\x3e";
+      }
+      if ("object" === typeof elementType && null !== elementType)
+        switch (elementType.$$typeof) {
+          case REACT_FORWARD_REF_TYPE:
+            currentlyRenderingComponent = {};
+            var _nextChildren4 = elementType.render(child.props, child.ref);
+            _nextChildren4 = finishHooks(
+              elementType.render,
+              child.props,
+              _nextChildren4,
+              child.ref
+            );
+            _nextChildren4 = toArray(_nextChildren4);
+            this.stack.push({
+              type: null,
+              domNamespace: parentNamespace,
+              children: _nextChildren4,
+              childIndex: 0,
+              context: context,
+              footer: ""
+            });
+            return "";
+          case REACT_MEMO_TYPE:
+            return (
+              (child = [
                 React.createElement(
                   elementType.type,
-                  Object.assign(
-                    {
-                      ref: _element.ref
-                    },
-                    _element.props
-                  )
+                  Object.assign({ ref: child.ref }, child.props)
                 )
-              ];
-              var _frame5 = {
+              ]),
+              this.stack.push({
                 type: null,
                 domNamespace: parentNamespace,
-                children: _nextChildren5,
+                children: child,
                 childIndex: 0,
                 context: context,
                 footer: ""
-              };
-
-              this.stack.push(_frame5);
-              return "";
-            }
-
-            case REACT_PROVIDER_TYPE: {
-              var provider = nextChild;
-              var nextProps = provider.props;
-
-              var _nextChildren6 = toArray(nextProps.children);
-
-              var _frame6 = {
-                type: provider,
+              }),
+              ""
+            );
+          case REACT_PROVIDER_TYPE:
+            return (
+              (elementType = toArray(child.props.children)),
+              (parentNamespace = {
+                type: child,
                 domNamespace: parentNamespace,
-                children: _nextChildren6,
+                children: elementType,
                 childIndex: 0,
                 context: context,
                 footer: ""
-              };
-
-              this.pushProvider(provider);
-              this.stack.push(_frame6);
-              return "";
-            }
-
-            case REACT_CONTEXT_TYPE: {
-              var reactContext = nextChild.type; // The logic below for Context differs depending on PROD or DEV mode. In
-              // DEV mode, we create a separate object for Context.Consumer that acts
-              // like a proxy to Context. This proxy object adds unnecessary code in PROD
-              // so we use the old behaviour (Context.Consumer references Context) to
-              // reduce size and overhead. The separate object references context via
-              // a property called "_context", which also gives us the ability to check
-              // in DEV mode if this property exists or not and warn if it does not.
-
-              var _nextProps = nextChild.props;
-              var threadID = this.threadID;
-              validateContextBounds(reactContext, threadID);
-              var nextValue = reactContext[threadID];
-
-              var _nextChildren7 = toArray(_nextProps.children(nextValue));
-
-              var _frame7 = {
-                type: nextChild,
-                domNamespace: parentNamespace,
-                children: _nextChildren7,
-                childIndex: 0,
-                context: context,
-                footer: ""
-              };
-
-              this.stack.push(_frame7);
-              return "";
-            }
-            // eslint-disable-next-line-no-fallthrough
-
-            case REACT_FUNDAMENTAL_TYPE: {
-              if (enableFundamentalAPI) {
-                var fundamentalImpl = elementType.impl;
-                var open = fundamentalImpl.getServerSideString(
-                  null,
-                  nextElement.props
-                );
-                var getServerSideStringClose =
-                  fundamentalImpl.getServerSideStringClose;
-                var close =
-                  getServerSideStringClose !== undefined
-                    ? getServerSideStringClose(null, nextElement.props)
-                    : "";
-
-                var _nextChildren8 =
-                  fundamentalImpl.reconcileChildren !== false
-                    ? toArray(nextChild.props.children)
-                    : [];
-
-                var _frame8 = {
-                  type: null,
-                  domNamespace: parentNamespace,
-                  children: _nextChildren8,
-                  childIndex: 0,
-                  context: context,
-                  footer: close
-                };
-
-                this.stack.push(_frame8);
-                return open;
-              }
-
-              (function() {
-                {
-                  {
-                    throw ReactErrorProd(Error(338));
-                  }
-                }
-              })();
-            }
-            // eslint-disable-next-line-no-fallthrough
-
-            case REACT_LAZY_TYPE: {
-              var _element2 = nextChild;
-              var lazyComponent = nextChild.type; // Attempt to initialize lazy component regardless of whether the
-              // suspense server-side renderer is enabled so synchronously
-              // resolved constructors are supported.
-
-              initializeLazyComponentType(lazyComponent);
-
-              switch (lazyComponent._status) {
-                case Resolved: {
-                  var _nextChildren9 = [
+              }),
+              this.pushProvider(child),
+              this.stack.push(parentNamespace),
+              ""
+            );
+          case REACT_CONTEXT_TYPE:
+            elementType = child.type;
+            _nextChildren4 = child.props;
+            var threadID = this.threadID;
+            validateContextBounds(elementType, threadID);
+            elementType = toArray(
+              _nextChildren4.children(elementType[threadID])
+            );
+            this.stack.push({
+              type: child,
+              domNamespace: parentNamespace,
+              children: elementType,
+              childIndex: 0,
+              context: context,
+              footer: ""
+            });
+            return "";
+          case REACT_FUNDAMENTAL_TYPE:
+            throw ReactErrorProd(Error(338));
+          case REACT_LAZY_TYPE:
+            switch (
+              ((elementType = child.type),
+              initializeLazyComponentType(elementType),
+              elementType._status)
+            ) {
+              case 1:
+                return (
+                  (child = [
                     React.createElement(
-                      lazyComponent._result,
-                      Object.assign(
-                        {
-                          ref: _element2.ref
-                        },
-                        _element2.props
-                      )
+                      elementType._result,
+                      Object.assign({ ref: child.ref }, child.props)
                     )
-                  ];
-                  var _frame9 = {
+                  ]),
+                  this.stack.push({
                     type: null,
                     domNamespace: parentNamespace,
-                    children: _nextChildren9,
+                    children: child,
                     childIndex: 0,
                     context: context,
                     footer: ""
-                  };
-
-                  this.stack.push(_frame9);
-                  return "";
-                }
-
-                case Rejected:
-                  throw lazyComponent._result;
-
-                case Pending:
-                default:
-                  (function() {
-                    {
-                      {
-                        throw ReactErrorProd(Error(295));
-                      }
-                    }
-                  })();
-              }
+                  }),
+                  ""
+                );
+              case 2:
+                throw elementType._result;
+              default:
+                throw ReactErrorProd(Error(295));
             }
-          }
         }
-
-        var info = "";
-
-        (function() {
-          {
-            {
-              throw ReactErrorProd(
-                Error(130),
-                elementType == null ? elementType : typeof elementType,
-                info
-              );
-            }
-          }
-        })();
-      }
+      throw ReactErrorProd(
+        Error(130),
+        null == elementType ? elementType : typeof elementType,
+        ""
+      );
     };
-
-    _proto.renderDOM = function renderDOM(element, context, parentNamespace) {
+    _proto.renderDOM = function(element, context, parentNamespace) {
       var tag = element.type.toLowerCase();
-      var namespace = parentNamespace;
-
-      if (parentNamespace === Namespaces.html) {
-        namespace = getIntrinsicNamespace(tag);
+      parentNamespace === Namespaces.html && getIntrinsicNamespace(tag);
+      if (!validatedTagCache.hasOwnProperty(tag)) {
+        if (!VALID_TAG_REGEX.test(tag)) throw ReactErrorProd(Error(65), tag);
+        validatedTagCache[tag] = !0;
       }
-
-      validateDangerousTag(tag);
       var props = element.props;
-
-      if (tag === "input") {
-        props = Object.assign(
-          {
-            type: undefined
-          },
-          props,
-          {
-            defaultChecked: undefined,
-            defaultValue: undefined,
-            value: props.value != null ? props.value : props.defaultValue,
-            checked:
-              props.checked != null ? props.checked : props.defaultChecked
-          }
-        );
-      } else if (tag === "textarea") {
+      if ("input" === tag)
+        props = Object.assign({ type: void 0 }, props, {
+          defaultChecked: void 0,
+          defaultValue: void 0,
+          value: null != props.value ? props.value : props.defaultValue,
+          checked: null != props.checked ? props.checked : props.defaultChecked
+        });
+      else if ("textarea" === tag) {
         var initialValue = props.value;
-
-        if (initialValue == null) {
-          var defaultValue = props.defaultValue; // TODO (yungsters): Remove support for children content in <textarea>.
-
+        if (null == initialValue) {
+          initialValue = props.defaultValue;
           var textareaChildren = props.children;
-
-          if (textareaChildren != null) {
-            (function() {
-              if (!(defaultValue == null)) {
-                {
-                  throw ReactErrorProd(Error(92));
-                }
-              }
-            })();
-
+          if (null != textareaChildren) {
+            if (null != initialValue) throw ReactErrorProd(Error(92));
             if (Array.isArray(textareaChildren)) {
-              (function() {
-                if (!(textareaChildren.length <= 1)) {
-                  {
-                    throw ReactErrorProd(Error(93));
-                  }
-                }
-              })();
-
+              if (!(1 >= textareaChildren.length))
+                throw ReactErrorProd(Error(93));
               textareaChildren = textareaChildren[0];
             }
-
-            defaultValue = "" + textareaChildren;
+            initialValue = "" + textareaChildren;
           }
-
-          if (defaultValue == null) {
-            defaultValue = "";
-          }
-
-          initialValue = defaultValue;
+          null == initialValue && (initialValue = "");
         }
-
         props = Object.assign({}, props, {
-          value: undefined,
+          value: void 0,
           children: "" + initialValue
         });
-      } else if (tag === "select") {
-        this.currentSelectValue =
-          props.value != null ? props.value : props.defaultValue;
-        props = Object.assign({}, props, {
-          value: undefined
-        });
-      } else if (tag === "option") {
-        var selected = null;
-        var selectValue = this.currentSelectValue;
+      } else if ("select" === tag)
+        (this.currentSelectValue =
+          null != props.value ? props.value : props.defaultValue),
+          (props = Object.assign({}, props, { value: void 0 }));
+      else if ("option" === tag) {
+        textareaChildren = this.currentSelectValue;
         var optionChildren = flattenOptionChildren(props.children);
-
-        if (selectValue != null) {
-          var value;
-
-          if (props.value != null) {
-            value = props.value + "";
-          } else {
-            value = optionChildren;
-          }
-
-          selected = false;
-
-          if (Array.isArray(selectValue)) {
-            // multiple
-            for (var j = 0; j < selectValue.length; j++) {
-              if ("" + selectValue[j] === value) {
-                selected = true;
+        if (null != textareaChildren) {
+          var value = null != props.value ? props.value + "" : optionChildren;
+          initialValue = !1;
+          if (Array.isArray(textareaChildren))
+            for (var j = 0; j < textareaChildren.length; j++) {
+              if ("" + textareaChildren[j] === value) {
+                initialValue = !0;
                 break;
               }
             }
-          } else {
-            selected = "" + selectValue === value;
-          }
-
-          props = Object.assign(
-            {
-              selected: undefined,
-              children: undefined
-            },
-            props,
-            {
-              selected: selected,
-              children: optionChildren
+          else initialValue = "" + textareaChildren === value;
+          props = Object.assign({ selected: void 0, children: void 0 }, props, {
+            selected: initialValue,
+            children: optionChildren
+          });
+        }
+      }
+      if ((initialValue = props)) {
+        if (
+          voidElementTags[tag] &&
+          (null != initialValue.children ||
+            null != initialValue.dangerouslySetInnerHTML)
+        )
+          throw ReactErrorProd(Error(137), tag, "");
+        if (null != initialValue.dangerouslySetInnerHTML) {
+          if (null != initialValue.children) throw ReactErrorProd(Error(60));
+          if (
+            !(
+              "object" === typeof initialValue.dangerouslySetInnerHTML &&
+              "__html" in initialValue.dangerouslySetInnerHTML
+            )
+          )
+            throw ReactErrorProd(Error(61));
+        }
+        if (
+          null != initialValue.style &&
+          "object" !== typeof initialValue.style
+        )
+          throw ReactErrorProd(Error(62), "");
+      }
+      initialValue = props;
+      textareaChildren = this.makeStaticMarkup;
+      optionChildren = 1 === this.stack.length;
+      value = "<" + element.type;
+      for (out in initialValue)
+        if (hasOwnProperty$1.call(initialValue, out) && "listeners" !== out) {
+          var propValue = initialValue[out];
+          if (null != propValue) {
+            if ("style" === out) {
+              j = void 0;
+              var serialized = "",
+                delimiter = "";
+              for (j in propValue)
+                if (propValue.hasOwnProperty(j)) {
+                  var isCustomProperty = 0 === j.indexOf("--"),
+                    styleValue = propValue[j];
+                  if (null != styleValue) {
+                    if (isCustomProperty) var JSCompiler_temp = j;
+                    else if (
+                      ((JSCompiler_temp = j),
+                      styleNameCache.hasOwnProperty(JSCompiler_temp))
+                    )
+                      JSCompiler_temp = styleNameCache[JSCompiler_temp];
+                    else {
+                      var result = JSCompiler_temp.replace(
+                        uppercasePattern,
+                        "-$1"
+                      )
+                        .toLowerCase()
+                        .replace(msPattern, "-ms-");
+                      JSCompiler_temp = styleNameCache[
+                        JSCompiler_temp
+                      ] = result;
+                    }
+                    serialized += delimiter + JSCompiler_temp + ":";
+                    delimiter = j;
+                    isCustomProperty =
+                      null == styleValue ||
+                      "boolean" === typeof styleValue ||
+                      "" === styleValue
+                        ? ""
+                        : isCustomProperty ||
+                          "number" !== typeof styleValue ||
+                          0 === styleValue ||
+                          (isUnitlessNumber.hasOwnProperty(delimiter) &&
+                            isUnitlessNumber[delimiter])
+                          ? ("" + styleValue).trim()
+                          : styleValue + "px";
+                    serialized += isCustomProperty;
+                    delimiter = ";";
+                  }
+                }
+              propValue = serialized || null;
             }
-          );
+            j = null;
+            b: if (
+              ((isCustomProperty = tag),
+              (styleValue = initialValue),
+              -1 === isCustomProperty.indexOf("-"))
+            )
+              isCustomProperty = "string" === typeof styleValue.is;
+            else
+              switch (isCustomProperty) {
+                case "annotation-xml":
+                case "color-profile":
+                case "font-face":
+                case "font-face-src":
+                case "font-face-uri":
+                case "font-face-format":
+                case "font-face-name":
+                case "missing-glyph":
+                  isCustomProperty = !1;
+                  break b;
+                default:
+                  isCustomProperty = !0;
+              }
+            isCustomProperty
+              ? RESERVED_PROPS.hasOwnProperty(out) ||
+                ((j = out),
+                (j =
+                  isAttributeNameSafe(j) && null != propValue
+                    ? j + "=" + ('"' + escapeTextForBrowser(propValue) + '"')
+                    : ""))
+              : (j = createMarkupForProperty(out, propValue));
+            j && (value += " " + j);
+          }
         }
-      }
-
-      assertValidProps(tag, props);
-      var out = createOpenTagMarkup(
-        element.type,
-        tag,
-        props,
-        namespace,
-        this.makeStaticMarkup,
-        this.stack.length === 1
-      );
-      var footer = "";
-
-      if (omittedCloseTags.hasOwnProperty(tag)) {
-        out += "/>";
-      } else {
-        out += ">";
-        footer = "</" + element.type + ">";
-      }
-
-      var children;
-      var innerMarkup = getNonChildrenInnerMarkup(props);
-
-      if (innerMarkup != null) {
-        children = [];
-
-        if (newlineEatingTags[tag] && innerMarkup.charAt(0) === "\n") {
-          // text/html ignores the first character in these tags if it's a newline
-          // Prefer to break application/xml over text/html (for now) by adding
-          // a newline specifically to get eaten by the parser. (Alternately for
-          // textareas, replacing "^\n" with "\r\n" doesn't get eaten, and the first
-          // \r is normalized out by HTMLTextAreaElement#value.)
-          // See: <http://www.w3.org/TR/html-polyglot/#newlines-in-textarea-and-pre>
-          // See: <http://www.w3.org/TR/html5/syntax.html#element-restrictions>
-          // See: <http://www.w3.org/TR/html5/syntax.html#newlines>
-          // See: Parsing of "textarea" "listing" and "pre" elements
-          //  from <http://www.w3.org/TR/html5/syntax.html#parsing-main-inbody>
-          out += "\n";
+      textareaChildren || (optionChildren && (value += ' data-reactroot=""'));
+      var out = value;
+      initialValue = "";
+      omittedCloseTags.hasOwnProperty(tag)
+        ? (out += "/>")
+        : ((out += ">"), (initialValue = "</" + element.type + ">"));
+      a: {
+        textareaChildren = props.dangerouslySetInnerHTML;
+        if (null != textareaChildren) {
+          if (null != textareaChildren.__html) {
+            textareaChildren = textareaChildren.__html;
+            break a;
+          }
+        } else if (
+          ((textareaChildren = props.children),
+          "string" === typeof textareaChildren ||
+            "number" === typeof textareaChildren)
+        ) {
+          textareaChildren = escapeTextForBrowser(textareaChildren);
+          break a;
         }
-
-        out += innerMarkup;
-      } else {
-        children = toArray(props.children);
+        textareaChildren = null;
       }
-
-      var frame = {
-        domNamespace: getChildNamespace(parentNamespace, element.type),
+      null != textareaChildren
+        ? ((props = []),
+          newlineEatingTags[tag] &&
+            "\n" === textareaChildren.charAt(0) &&
+            (out += "\n"),
+          (out += textareaChildren))
+        : (props = toArray(props.children));
+      element = element.type;
+      parentNamespace =
+        null == parentNamespace ||
+        "http://www.w3.org/1999/xhtml" === parentNamespace
+          ? getIntrinsicNamespace(element)
+          : "http://www.w3.org/2000/svg" === parentNamespace &&
+            "foreignObject" === element
+            ? "http://www.w3.org/1999/xhtml"
+            : parentNamespace;
+      this.stack.push({
+        domNamespace: parentNamespace,
         type: tag,
-        children: children,
+        children: props,
         childIndex: 0,
         context: context,
-        footer: footer
-      };
-
-      this.stack.push(frame);
-      this.previousWasTextNode = false;
+        footer: initialValue
+      });
+      this.previousWasTextNode = !1;
       return out;
     };
-
     return ReactDOMServerRenderer;
-  })();
-
-/**
- * Render a ReactElement to its initial HTML. This should only be used on the
- * server.
- * See https://reactjs.org/docs/react-dom-server.html#rendertostring
- */
-
-function renderToString(element) {
-  var renderer = new ReactDOMServerRenderer(element, false);
-
-  try {
-    var markup = renderer.read(Infinity);
-    return markup;
-  } finally {
-    renderer.destroy();
-  }
-}
-/**
- * Similar to renderToString, except this doesn't create extra DOM attributes
- * such as data-react-id that React uses internally.
- * See https://reactjs.org/docs/react-dom-server.html#rendertostaticmarkup
- */
-
-function renderToStaticMarkup(element) {
-  var renderer = new ReactDOMServerRenderer(element, true);
-
-  try {
-    var markup = renderer.read(Infinity);
-    return markup;
-  } finally {
-    renderer.destroy();
-  }
-}
-
-function renderToNodeStream() {
-  (function() {
-    {
-      {
+  })(),
+  ReactDOMServerBrowser$1 = {
+    default: {
+      renderToString: function(element) {
+        element = new ReactDOMServerRenderer(element, !1);
+        try {
+          return element.read(Infinity);
+        } finally {
+          element.destroy();
+        }
+      },
+      renderToStaticMarkup: function(element) {
+        element = new ReactDOMServerRenderer(element, !0);
+        try {
+          return element.read(Infinity);
+        } finally {
+          element.destroy();
+        }
+      },
+      renderToNodeStream: function() {
         throw ReactErrorProd(Error(207));
-      }
-    }
-  })();
-}
-
-function renderToStaticNodeStream() {
-  (function() {
-    {
-      {
+      },
+      renderToStaticNodeStream: function() {
         throw ReactErrorProd(Error(208));
-      }
+      },
+      version: "16.8.6"
     }
-  })();
-} // Note: when changing this, also consider https://github.com/facebook/react/issues/11526
-
-var ReactDOMServerBrowser = {
-  renderToString: renderToString,
-  renderToStaticMarkup: renderToStaticMarkup,
-  renderToNodeStream: renderToNodeStream,
-  renderToStaticNodeStream: renderToStaticNodeStream,
-  version: ReactVersion
-};
-
-var ReactDOMServerBrowser$1 = {
-  default: ReactDOMServerBrowser
-};
-
-var ReactDOMServer =
-  (ReactDOMServerBrowser$1 && ReactDOMServerBrowser) || ReactDOMServerBrowser$1;
-
-// TODO: decide on the top-level export form.
-// This is hacky but makes it work with both Rollup and Jest
-
-var server_browser = ReactDOMServer.default || ReactDOMServer;
-
-module.exports = server_browser;
+  },
+  ReactDOMServer =
+    (ReactDOMServerBrowser$1 && ReactDOMServerBrowser$1["default"]) ||
+    ReactDOMServerBrowser$1;
+module.exports = ReactDOMServer.default || ReactDOMServer;

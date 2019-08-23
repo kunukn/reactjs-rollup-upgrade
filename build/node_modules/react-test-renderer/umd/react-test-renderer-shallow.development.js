@@ -1,15 +1,45 @@
+/** @license React vundefined
+ * react-test-renderer-shallow.development.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+'use strict';
+
 (function(global, factory) {
   typeof exports === "object" && typeof module !== "undefined"
     ? (module.exports = factory(require("react")))
     : typeof define === "function" && define.amd
       ? define(["react"], factory)
-      : (global.ReactShallowRenderer = factory(global.React));
+      : ((global = global || self),
+        (global.ReactShallowRenderer = factory(global.React)));
 })(this, function(React) {
   "use strict";
 
   // Do not require this module directly! Use normal `invariant` calls with
   // template literal strings. The messages will be converted to ReactError during
   // build, and in production they will be minified.
+  function ReactErrorProd(error) {
+    var code = error.message;
+    var url = "https://reactjs.org/docs/error-decoder.html?invariant=" + code;
+
+    for (var i = 1; i < arguments.length; i++) {
+      url += "&args[]=" + encodeURIComponent(arguments[i]);
+    }
+
+    error.message =
+      "Minified React error #" +
+      code +
+      "; visit " +
+      url +
+      " for the full message or " +
+      "use the non-minified dev environment for full errors and additional " +
+      "helpful warnings. ";
+    return error;
+  }
 
   // Do not require this module directly! Use normal `invariant` calls with
   // template literal strings. The messages will be converted to ReactError during
@@ -52,22 +82,6 @@
   var REACT_MEMO_TYPE = hasSymbol ? Symbol.for("react.memo") : 0xead3;
   var REACT_LAZY_TYPE = hasSymbol ? Symbol.for("react.lazy") : 0xead4;
 
-  /**
-   * Forked from fbjs/warning:
-   * https://github.com/facebook/fbjs/blob/e66ba20ad5be433eb54423f2b097d829324d9de6/packages/fbjs/src/__forks__/warning.js
-   *
-   * Only change is we use console.warn instead of console.error,
-   * and do nothing when 'console' is not supported.
-   * This really simplifies the code.
-   * ---
-   * Similar to invariant but only logs a warning if the condition is not met.
-   * This can be used to log issues in development environments in critical
-   * paths. Removing the logging code for production environments will keep the
-   * same logic and follow the same code paths.
-   */
-  {
-  }
-
   function typeOf(object) {
     if (typeof object === "object" && object !== null) {
       var $$typeof = object.$$typeof;
@@ -108,19 +122,16 @@
 
     return undefined;
   } // AsyncMode is deprecated along with isAsyncMode
-
   var ForwardRef = REACT_FORWARD_REF_TYPE;
-
   function isForwardRef(object) {
     return typeOf(object) === REACT_FORWARD_REF_TYPE;
   }
-
   function isMemo(object) {
     return typeOf(object) === REACT_MEMO_TYPE;
   }
 
   var BEFORE_SLASH_RE = /^(.*)[\\\/]/;
-  var describeComponentFrame = function(name, source, ownerName) {
+  function describeComponentFrame(name, source, ownerName) {
     var sourceInfo = "";
 
     if (source) {
@@ -150,7 +161,7 @@
     }
 
     return "\n    in " + (name || "Unknown") + sourceInfo;
-  };
+  }
 
   /**
    * Similar to invariant but only logs a warning if the condition is not met.
@@ -272,7 +283,6 @@
   var warning$1 = warning;
 
   var Resolved = 1;
-
   function refineResolvedLazyComponent(lazyComponent) {
     return lazyComponent._status === Resolved ? lazyComponent._result : null;
   }
@@ -412,41 +422,23 @@
   }
 
   /**
-   * Use invariant() to assert state which your program assumes to be true.
-   *
-   * Provide sprintf-style format (only %s is supported) and arguments
-   * to provide information about what broke and what you were
-   * expecting.
-   *
-   * The invariant message will be stripped in production, but the invariant
-   * will remain to ensure logic does not differ in production.
-   */
-
-  /**
    * Copyright (c) 2013-present, Facebook, Inc.
    *
    * This source code is licensed under the MIT license found in the
    * LICENSE file in the root directory of this source tree.
    */
 
-  var ReactPropTypesSecret$1 = "SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED";
+  var ReactPropTypesSecret = "SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED";
 
-  var ReactPropTypesSecret_1 = ReactPropTypesSecret$1;
+  var ReactPropTypesSecret_1 = ReactPropTypesSecret;
 
-  /**
-   * Copyright (c) 2013-present, Facebook, Inc.
-   *
-   * This source code is licensed under the MIT license found in the
-   * LICENSE file in the root directory of this source tree.
-   */
-
-  var printWarning$1 = function() {};
+  var printWarning = function() {};
 
   {
-    var ReactPropTypesSecret = ReactPropTypesSecret_1;
+    var ReactPropTypesSecret$1 = ReactPropTypesSecret_1;
     var loggedTypeFailures = {};
 
-    printWarning$1 = function(text) {
+    printWarning = function(text) {
       var message = "Warning: " + text;
       if (typeof console !== "undefined") {
         console.error(message);
@@ -509,13 +501,13 @@
               componentName,
               location,
               null,
-              ReactPropTypesSecret
+              ReactPropTypesSecret$1
             );
           } catch (ex) {
             error = ex;
           }
           if (error && !(error instanceof Error)) {
-            printWarning$1(
+            printWarning(
               (componentName || "React class") +
                 ": type specification of " +
                 location +
@@ -540,7 +532,7 @@
 
             var stack = getStack ? getStack() : "";
 
-            printWarning$1(
+            printWarning(
               "Failed " +
                 location +
                 " type: " +
@@ -1197,13 +1189,18 @@
                 if (elementType.$$typeof === ForwardRef) {
                   (function() {
                     if (!(typeof elementType.render === "function")) {
-                      {
+                      if (true) {
                         throw ReactError(
                           Error(
                             "forwardRef requires a render function but was given " +
                               typeof elementType.render +
                               "."
                           )
+                        );
+                      } else {
+                        throw ReactErrorProd(
+                          Error(322),
+                          typeof elementType.render
                         );
                       }
                     }
@@ -1445,17 +1442,10 @@
     return context;
   }
 
-  var ReactShallowRenderer$2 = Object.freeze({
-    default: ReactShallowRenderer
-  });
-
-  var ReactShallowRenderer$3 =
-    (ReactShallowRenderer$2 && ReactShallowRenderer) || ReactShallowRenderer$2;
-
   // TODO: decide on the top-level export form.
   // This is hacky but makes it work with both Rollup and Jest.
 
-  var shallow = ReactShallowRenderer$3.default || ReactShallowRenderer$3;
+  var shallow = ReactShallowRenderer.default || ReactShallowRenderer;
 
   return shallow;
 });

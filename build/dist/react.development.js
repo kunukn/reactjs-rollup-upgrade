@@ -1,13 +1,22 @@
+/** @license React vundefined
+ * react.development.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+'use strict';
+
 (function(global, factory) {
   typeof exports === "object" && typeof module !== "undefined"
     ? (module.exports = factory())
     : typeof define === "function" && define.amd
       ? define(factory)
-      : (global.React = factory());
+      : ((global = global || self), (global.React = factory()));
 })(this, function() {
   "use strict";
-
-  // TODO: this is special because it gets imported during build.
 
   var ReactVersion = "16.8.6";
 
@@ -23,8 +32,6 @@
   var REACT_PROFILER_TYPE = hasSymbol ? Symbol.for("react.profiler") : 0xead2;
   var REACT_PROVIDER_TYPE = hasSymbol ? Symbol.for("react.provider") : 0xeacd;
   var REACT_CONTEXT_TYPE = hasSymbol ? Symbol.for("react.context") : 0xeace; // TODO: We don't use AsyncMode or ConcurrentMode anymore. They were temporary
-  // (unstable) APIs that have been removed. Can we remove the symbols?
-
   var REACT_CONCURRENT_MODE_TYPE = hasSymbol
     ? Symbol.for("react.concurrent_mode")
     : 0xeacf;
@@ -60,11 +67,10 @@
   }
 
   /*
-object-assign
-(c) Sindre Sorhus
-@license MIT
-*/
-
+  object-assign
+  (c) Sindre Sorhus
+  @license MIT
+  */
   /* eslint-disable no-unused-vars */
   var getOwnPropertySymbols = Object.getOwnPropertySymbols;
   var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -158,25 +164,10 @@ object-assign
   // Do not require this module directly! Use normal `invariant` calls with
   // template literal strings. The messages will be converted to ReactError during
   // build, and in production they will be minified.
-
-  // Do not require this module directly! Use normal `invariant` calls with
-  // template literal strings. The messages will be converted to ReactError during
-  // build, and in production they will be minified.
   function ReactError(error) {
     error.name = "Invariant Violation";
     return error;
   }
-
-  /**
-   * Use invariant() to assert state which your program assumes to be true.
-   *
-   * Provide sprintf-style format (only %s is supported) and arguments
-   * to provide information about what broke and what you were
-   * expecting.
-   *
-   * The invariant message will be stripped in production, but the invariant
-   * will remain to ensure logic does not differ in production.
-   */
 
   /**
    * Forked from fbjs/warning:
@@ -615,7 +606,7 @@ object-assign
   };
 
   var BEFORE_SLASH_RE = /^(.*)[\\\/]/;
-  var describeComponentFrame = function(name, source, ownerName) {
+  function describeComponentFrame(name, source, ownerName) {
     var sourceInfo = "";
 
     if (source) {
@@ -645,10 +636,9 @@ object-assign
     }
 
     return "\n    in " + (name || "Unknown") + sourceInfo;
-  };
+  }
 
   var Resolved = 1;
-
   function refineResolvedLazyComponent(lazyComponent) {
     return lazyComponent._status === Resolved ? lazyComponent._result : null;
   }
@@ -842,8 +832,7 @@ object-assign
     __self: true,
     __source: true
   };
-  var specialPropKeyWarningShown;
-  var specialPropRefWarningShown;
+  var specialPropKeyWarningShown, specialPropRefWarningShown;
 
   function hasValidRef(config) {
     {
@@ -991,84 +980,6 @@ object-assign
     return element;
   };
   /**
-   * https://github.com/reactjs/rfcs/pull/107
-   * @param {*} type
-   * @param {object} props
-   * @param {string} key
-   */
-
-  /**
-   * https://github.com/reactjs/rfcs/pull/107
-   * @param {*} type
-   * @param {object} props
-   * @param {string} key
-   */
-
-  function jsxDEV(type, config, maybeKey, source, self) {
-    var propName; // Reserved names are extracted
-
-    var props = {};
-    var key = null;
-    var ref = null;
-
-    if (hasValidRef(config)) {
-      ref = config.ref;
-    }
-
-    if (hasValidKey(config)) {
-      key = "" + config.key;
-    } // Remaining properties are added to a new props object
-
-    for (propName in config) {
-      if (
-        hasOwnProperty$1.call(config, propName) &&
-        !RESERVED_PROPS.hasOwnProperty(propName)
-      ) {
-        props[propName] = config[propName];
-      }
-    } // intentionally not checking if key was set above
-    // this key is higher priority as it's static
-
-    if (maybeKey !== undefined) {
-      key = "" + maybeKey;
-    } // Resolve default props
-
-    if (type && type.defaultProps) {
-      var defaultProps = type.defaultProps;
-
-      for (propName in defaultProps) {
-        if (props[propName] === undefined) {
-          props[propName] = defaultProps[propName];
-        }
-      }
-    }
-
-    if (key || ref) {
-      var displayName =
-        typeof type === "function"
-          ? type.displayName || type.name || "Unknown"
-          : type;
-
-      if (key) {
-        defineKeyPropWarningGetter(props, displayName);
-      }
-
-      if (ref) {
-        defineRefPropWarningGetter(props, displayName);
-      }
-    }
-
-    return ReactElement(
-      type,
-      key,
-      ref,
-      self,
-      source,
-      ReactCurrentOwner.current,
-      props
-    );
-  }
-  /**
    * Create and return a new ReactElement of the given type.
    * See https://reactjs.org/docs/react-api.html#createelement
    */
@@ -1162,11 +1073,6 @@ object-assign
       props
     );
   }
-  /**
-   * Return a function that produces ReactElements of a given type.
-   * See https://reactjs.org/docs/react-api.html#createfactory
-   */
-
   function cloneAndReplaceKey(oldElement, newKey) {
     var newElement = ReactElement(
       oldElement.type,
@@ -2069,23 +1975,6 @@ object-assign
       return dispatcher.useDebugValue(value, formatterFn);
     }
   }
-  var emptyObject$1 = {};
-  function useResponder(responder, listenerProps) {
-    var dispatcher = resolveDispatcher();
-
-    {
-      if (responder == null || responder.$$typeof !== REACT_RESPONDER_TYPE) {
-        warning$1(
-          false,
-          "useResponder: invalid first argument. Expected an event responder, but instead got %s",
-          responder
-        );
-        return;
-      }
-    }
-
-    return dispatcher.useResponder(responder, listenerProps || emptyObject$1);
-  }
 
   function withSuspenseConfig(scope, config) {
     var previousConfig = ReactCurrentBatchConfig.suspense;
@@ -2105,21 +1994,14 @@ object-assign
    * LICENSE file in the root directory of this source tree.
    */
 
-  var ReactPropTypesSecret$1 = "SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED";
+  var ReactPropTypesSecret = "SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED";
 
-  var ReactPropTypesSecret_1 = ReactPropTypesSecret$1;
-
-  /**
-   * Copyright (c) 2013-present, Facebook, Inc.
-   *
-   * This source code is licensed under the MIT license found in the
-   * LICENSE file in the root directory of this source tree.
-   */
+  var ReactPropTypesSecret_1 = ReactPropTypesSecret;
 
   var printWarning$1 = function() {};
 
   {
-    var ReactPropTypesSecret = ReactPropTypesSecret_1;
+    var ReactPropTypesSecret$1 = ReactPropTypesSecret_1;
     var loggedTypeFailures = {};
 
     printWarning$1 = function(text) {
@@ -2185,7 +2067,7 @@ object-assign
               componentName,
               location,
               null,
-              ReactPropTypesSecret
+              ReactPropTypesSecret$1
             );
           } catch (ex) {
             error = ex;
@@ -2488,109 +2370,6 @@ object-assign
 
     setCurrentlyValidatingElement(null);
   }
-
-  function jsxWithValidation(type, props, key, isStaticChildren, source, self) {
-    var validType = isValidElementType(type); // We warn in this case but don't throw. We expect the element creation to
-    // succeed and there will likely be errors in render.
-
-    if (!validType) {
-      var info = "";
-
-      if (
-        type === undefined ||
-        (typeof type === "object" &&
-          type !== null &&
-          Object.keys(type).length === 0)
-      ) {
-        info +=
-          " You likely forgot to export your component from the file " +
-          "it's defined in, or you might have mixed up default and named imports.";
-      }
-
-      var sourceInfo = getSourceInfoErrorAddendum(source);
-
-      if (sourceInfo) {
-        info += sourceInfo;
-      } else {
-        info += getDeclarationErrorAddendum();
-      }
-
-      var typeString;
-
-      if (type === null) {
-        typeString = "null";
-      } else if (Array.isArray(type)) {
-        typeString = "array";
-      } else if (type !== undefined && type.$$typeof === REACT_ELEMENT_TYPE) {
-        typeString = "<" + (getComponentName(type.type) || "Unknown") + " />";
-        info =
-          " Did you accidentally export a JSX literal instead of a component?";
-      } else {
-        typeString = typeof type;
-      }
-
-      warning$1(
-        false,
-        "React.jsx: type is invalid -- expected a string (for " +
-          "built-in components) or a class/function (for composite " +
-          "components) but got: %s.%s",
-        typeString,
-        info
-      );
-    }
-
-    var element = jsxDEV(type, props, key, source, self); // The result can be nullish if a mock or a custom function is used.
-    // TODO: Drop this when these are no longer allowed as the type argument.
-
-    if (element == null) {
-      return element;
-    } // Skip key warning if the type isn't valid since our key validation logic
-    // doesn't expect a non-string/function type and can throw confusing errors.
-    // We don't want exception behavior to differ between dev and prod.
-    // (Rendering will throw with a helpful message and as soon as the type is
-    // fixed, the key warnings will appear.)
-
-    if (validType) {
-      var children = props.children;
-
-      if (children !== undefined) {
-        if (isStaticChildren) {
-          for (var i = 0; i < children.length; i++) {
-            validateChildKeys(children[i], type);
-          }
-        } else {
-          validateChildKeys(children, type);
-        }
-      }
-    }
-
-    if (props.key !== undefined) {
-      warning$1(
-        false,
-        "React.jsx: Spreading a key to JSX is a deprecated pattern. " +
-          "Explicitly pass a key after spreading props in your JSX call. " +
-          "E.g. <ComponentName {...props} key={key} />"
-      );
-    }
-
-    if (type === REACT_FRAGMENT_TYPE) {
-      validateFragmentProps(element);
-    } else {
-      validatePropTypes(element);
-    }
-
-    return element;
-  } // These two functions exist to still get child warnings in dev
-  // even with the prod transform. This means that jsxDEV is purely
-  // opt-in behavior for better messages but that we won't stop
-  // giving you warnings if you use production apis.
-
-  function jsxWithValidationStatic(type, props, key) {
-    return jsxWithValidation(type, props, key, true);
-  }
-  function jsxWithValidationDynamic(type, props, key) {
-    return jsxWithValidation(type, props, key, false);
-  }
   function createElementWithValidation(type, props, children) {
     var validType = isValidElementType(type); // We warn in this case but don't throw. We expect the element creation to
     // succeed and there will likely be errors in render.
@@ -2701,10 +2480,8 @@ object-assign
   }
 
   var enableSchedulerDebugging = false;
-  var enableIsInputPending = false;
   var requestIdleCallbackBeforeFirstFrame = false;
-  var requestTimerEventBeforeFirstFrame = false;
-  var enableMessageLoopImplementation = false;
+  var enableProfiling = true;
 
   // works by scheduling a requestAnimationFrame, storing the time for the start
   // of the frame, then scheduling a postMessage which gets scheduled after paint.
@@ -2714,7 +2491,6 @@ object-assign
   // The frame rate is dynamically adjusted.
 
   var requestHostCallback;
-
   var requestHostTimeout;
   var cancelHostTimeout;
   var shouldYieldToHost;
@@ -2749,8 +2525,10 @@ object-assign
       }
     };
 
+    var initialTime = Date.now();
+
     getCurrentTime = function() {
-      return Date.now();
+      return Date.now() - initialTime;
     };
 
     requestHostCallback = function(cb) {
@@ -2805,77 +2583,38 @@ object-assign
       }
     }
 
-    var requestIdleCallbackBeforeFirstFrame$1 =
-      requestIdleCallbackBeforeFirstFrame &&
-      typeof requestIdleCallback === "function" &&
-      typeof cancelIdleCallback === "function";
-    getCurrentTime =
-      typeof performance === "object" && typeof performance.now === "function"
-        ? function() {
-            return performance.now();
-          }
-        : function() {
-            return _Date.now();
-          };
+    var requestIdleCallbackBeforeFirstFrame$1 = requestIdleCallbackBeforeFirstFrame;
+
+    if (
+      typeof performance === "object" &&
+      typeof performance.now === "function"
+    ) {
+      getCurrentTime = function() {
+        return performance.now();
+      };
+    } else {
+      var _initialTime = _Date.now();
+
+      getCurrentTime = function() {
+        return _Date.now() - _initialTime;
+      };
+    }
+
     var isRAFLoopRunning = false;
-    var isMessageLoopRunning = false;
     var scheduledHostCallback = null;
     var rAFTimeoutID = -1;
     var taskTimeoutID = -1;
-    var frameLength = enableMessageLoopImplementation // We won't attempt to align with the vsync. Instead we'll yield multiple
-      ? // times per frame, often enough to keep it responsive even at really
-        // high frame rates > 120.
-        5 // Use a heuristic to measure the frame rate and yield at the end of the
-      : // frame. We start out assuming that we run at 30fps but then the
-        // heuristic tracking will adjust this value to a faster fps if we get
-        // more frequent animation frames.
-        33.33;
+    var frameLength = // Use a heuristic to measure the frame rate and yield at the end of the
+      // frame. We start out assuming that we run at 30fps but then the
+      // heuristic tracking will adjust this value to a faster fps if we get
+      // more frequent animation frames.
+      33.33;
     var prevRAFTime = -1;
     var prevRAFInterval = -1;
     var frameDeadline = 0;
     var fpsLocked = false; // TODO: Make this configurable
-    // TODO: Adjust this based on priority?
 
-    var maxFrameLength = 300;
-    var needsPaint = false;
-
-    if (
-      enableIsInputPending &&
-      navigator !== undefined &&
-      navigator.scheduling !== undefined &&
-      navigator.scheduling.isInputPending !== undefined
-    ) {
-      var scheduling = navigator.scheduling;
-
-      shouldYieldToHost = function() {
-        var currentTime = getCurrentTime();
-
-        if (currentTime >= frameDeadline) {
-          // There's no time left in the frame. We may want to yield control of
-          // the main thread, so the browser can perform high priority tasks. The
-          // main ones are painting and user input. If there's a pending paint or
-          // a pending input, then we should yield. But if there's neither, then
-          // we can yield less often while remaining responsive. We'll eventually
-          // yield regardless, since there could be a pending paint that wasn't
-          // accompanied by a call to `requestPaint`, or other main thread tasks
-          // like network events.
-          if (needsPaint || scheduling.isInputPending()) {
-            // There is either a pending paint or a pending input.
-            return true;
-          } // There's no pending input. Only yield if we've reached the max
-          // frame length.
-
-          return currentTime >= frameDeadline + maxFrameLength;
-        } else {
-          // There's still time left in the frame.
-          return false;
-        }
-      };
-
-      requestPaint = function() {
-        needsPaint = true;
-      };
-    } else {
+    {
       // `isInputPending` is not available. Since we have no way of knowing if
       // there's pending input, always yield at the end of the frame.
       shouldYieldToHost = function() {
@@ -2905,42 +2644,7 @@ object-assign
     };
 
     var performWorkUntilDeadline = function() {
-      if (enableMessageLoopImplementation) {
-        if (scheduledHostCallback !== null) {
-          var currentTime = getCurrentTime(); // Yield after `frameLength` ms, regardless of where we are in the vsync
-          // cycle. This means there's always time remaining at the beginning of
-          // the message event.
-
-          frameDeadline = currentTime + frameLength;
-          var hasTimeRemaining = true;
-
-          try {
-            var hasMoreWork = scheduledHostCallback(
-              hasTimeRemaining,
-              currentTime
-            );
-
-            if (!hasMoreWork) {
-              isMessageLoopRunning = false;
-              scheduledHostCallback = null;
-            } else {
-              // If there's more work, schedule the next message event at the end
-              // of the preceding one.
-              port.postMessage(null);
-            }
-          } catch (error) {
-            // If a scheduler task throws, exit the current browser task so the
-            // error can be observed.
-            port.postMessage(null);
-            throw error;
-          }
-        } else {
-          isMessageLoopRunning = false;
-        } // Yielding to the browser will give it a chance to paint, so we can
-        // reset this.
-
-        needsPaint = false;
-      } else {
+      {
         if (scheduledHostCallback !== null) {
           var _currentTime = getCurrentTime();
 
@@ -2963,9 +2667,6 @@ object-assign
             throw error;
           }
         } // Yielding to the browser will give it a chance to paint, so we can
-        // reset this.
-
-        needsPaint = false;
       }
     };
 
@@ -3048,22 +2749,13 @@ object-assign
     requestHostCallback = function(callback) {
       scheduledHostCallback = callback;
 
-      if (enableMessageLoopImplementation) {
-        if (!isMessageLoopRunning) {
-          isMessageLoopRunning = true;
-          port.postMessage(null);
-        }
-      } else {
+      {
         if (!isRAFLoopRunning) {
           // Start a rAF loop.
           isRAFLoopRunning = true;
           requestAnimationFrame(function(rAFTime) {
             if (requestIdleCallbackBeforeFirstFrame$1) {
               cancelIdleCallback(idleCallbackID);
-            }
-
-            if (requestTimerEventBeforeFirstFrame) {
-              _clearTimeout(idleTimeoutID);
             }
 
             onAnimationFrame(rAFTime);
@@ -3081,35 +2773,11 @@ object-assign
           if (requestIdleCallbackBeforeFirstFrame$1) {
             idleCallbackID = requestIdleCallback(
               function onIdleCallbackBeforeFirstFrame() {
-                if (requestTimerEventBeforeFirstFrame) {
-                  _clearTimeout(idleTimeoutID);
-                }
-
                 frameDeadline = getCurrentTime() + frameLength;
                 performWorkUntilDeadline();
               }
             );
           } // Alternate strategy to address the same problem. Scheduler a timer
-          // with no delay. If this fires before the rAF, that likely indicates
-          // that there's idle time before the next vsync. This isn't always the
-          // case, but we'll be aggressive and assume it is, as a trade off to
-          // prevent idle periods.
-
-          var idleTimeoutID;
-
-          if (requestTimerEventBeforeFirstFrame) {
-            idleTimeoutID = _setTimeout(
-              function onTimerEventBeforeFirstFrame() {
-                if (requestIdleCallbackBeforeFirstFrame$1) {
-                  cancelIdleCallback(idleCallbackID);
-                }
-
-                frameDeadline = getCurrentTime() + frameLength;
-                performWorkUntilDeadline();
-              },
-              0
-            );
-          }
         }
       }
     };
@@ -3209,12 +2877,166 @@ object-assign
     return diff !== 0 ? diff : a.id - b.id;
   }
 
-  /* eslint-disable no-var */
+  // TODO: Use symbols?
+  var NoPriority = 0;
   var ImmediatePriority = 1;
   var UserBlockingPriority = 2;
   var NormalPriority = 3;
   var LowPriority = 4;
-  var IdlePriority = 5; // Max 31 bit integer. The max integer size in V8 for 32-bit systems.
+  var IdlePriority = 5;
+
+  var runIdCounter = 0;
+  var mainThreadIdCounter = 0;
+  var profilingStateSize = 4;
+  var sharedProfilingBuffer = // $FlowFixMe Flow doesn't know about SharedArrayBuffer
+    typeof SharedArrayBuffer === "function"
+      ? new SharedArrayBuffer(profilingStateSize * Int32Array.BYTES_PER_ELEMENT) // $FlowFixMe Flow doesn't know about ArrayBuffer
+      : typeof ArrayBuffer === "function"
+        ? new ArrayBuffer(profilingStateSize * Int32Array.BYTES_PER_ELEMENT)
+        : null; // Don't crash the init path on IE9
+  var profilingState =
+    sharedProfilingBuffer !== null ? new Int32Array(sharedProfilingBuffer) : []; // We can't read this but it helps save bytes for null checks
+
+  var PRIORITY = 0;
+  var CURRENT_TASK_ID = 1;
+  var CURRENT_RUN_ID = 2;
+  var QUEUE_SIZE = 3;
+
+  {
+    profilingState[PRIORITY] = NoPriority; // This is maintained with a counter, because the size of the priority queue
+    // array might include canceled tasks.
+
+    profilingState[QUEUE_SIZE] = 0;
+    profilingState[CURRENT_TASK_ID] = 0;
+  }
+
+  var INITIAL_EVENT_LOG_SIZE = 1000;
+  var eventLogSize = 0;
+  var eventLogBuffer = null;
+  var eventLog = null;
+  var eventLogIndex = 0;
+  var TaskStartEvent = 1;
+  var TaskCompleteEvent = 2;
+  var TaskErrorEvent = 3;
+  var TaskCancelEvent = 4;
+  var TaskRunEvent = 5;
+  var TaskYieldEvent = 6;
+  var SchedulerSuspendEvent = 7;
+  var SchedulerResumeEvent = 8;
+
+  function logEvent(entries) {
+    if (eventLog !== null) {
+      var offset = eventLogIndex;
+      eventLogIndex += entries.length;
+
+      if (eventLogIndex + 1 > eventLogSize) {
+        eventLogSize = eventLogIndex + 1;
+        var newEventLog = new Int32Array(
+          eventLogSize * Int32Array.BYTES_PER_ELEMENT
+        );
+        newEventLog.set(eventLog);
+        eventLogBuffer = newEventLog.buffer;
+        eventLog = newEventLog;
+      }
+
+      eventLog.set(entries, offset);
+    }
+  }
+
+  function startLoggingProfilingEvents() {
+    eventLogSize = INITIAL_EVENT_LOG_SIZE;
+    eventLogBuffer = new ArrayBuffer(
+      eventLogSize * Int32Array.BYTES_PER_ELEMENT
+    );
+    eventLog = new Int32Array(eventLogBuffer);
+    eventLogIndex = 0;
+  }
+  function stopLoggingProfilingEvents() {
+    var buffer = eventLogBuffer;
+    eventLogBuffer = eventLog = null;
+    return buffer;
+  }
+  function markTaskStart(task, time) {
+    {
+      profilingState[QUEUE_SIZE]++;
+
+      if (eventLog !== null) {
+        logEvent([TaskStartEvent, time, task.id, task.priorityLevel]);
+      }
+    }
+  }
+  function markTaskCompleted(task, time) {
+    {
+      profilingState[PRIORITY] = NoPriority;
+      profilingState[CURRENT_TASK_ID] = 0;
+      profilingState[QUEUE_SIZE]--;
+
+      if (eventLog !== null) {
+        logEvent([TaskCompleteEvent, time, task.id]);
+      }
+    }
+  }
+  function markTaskCanceled(task, time) {
+    {
+      profilingState[QUEUE_SIZE]--;
+
+      if (eventLog !== null) {
+        logEvent([TaskCancelEvent, time, task.id]);
+      }
+    }
+  }
+  function markTaskErrored(task, time) {
+    {
+      profilingState[PRIORITY] = NoPriority;
+      profilingState[CURRENT_TASK_ID] = 0;
+      profilingState[QUEUE_SIZE]--;
+
+      if (eventLog !== null) {
+        logEvent([TaskErrorEvent, time, task.id]);
+      }
+    }
+  }
+  function markTaskRun(task, time) {
+    {
+      runIdCounter++;
+      profilingState[PRIORITY] = task.priorityLevel;
+      profilingState[CURRENT_TASK_ID] = task.id;
+      profilingState[CURRENT_RUN_ID] = runIdCounter;
+
+      if (eventLog !== null) {
+        logEvent([TaskRunEvent, time, task.id, runIdCounter]);
+      }
+    }
+  }
+  function markTaskYield(task, time) {
+    {
+      profilingState[PRIORITY] = NoPriority;
+      profilingState[CURRENT_TASK_ID] = 0;
+      profilingState[CURRENT_RUN_ID] = 0;
+
+      if (eventLog !== null) {
+        logEvent([TaskYieldEvent, time, task.id, runIdCounter]);
+      }
+    }
+  }
+  function markSchedulerSuspended(time) {
+    {
+      mainThreadIdCounter++;
+
+      if (eventLog !== null) {
+        logEvent([SchedulerSuspendEvent, time, mainThreadIdCounter]);
+      }
+    }
+  }
+  function markSchedulerUnsuspended(time) {
+    {
+      if (eventLog !== null) {
+        logEvent([SchedulerResumeEvent, time, mainThreadIdCounter]);
+      }
+    }
+  }
+
+  /* eslint-disable no-var */
   // Math.pow(2, 30) - 1
   // 0b111111111111111111111111111111
 
@@ -3231,24 +3053,13 @@ object-assign
   var taskQueue = [];
   var timerQueue = []; // Incrementing id counter. Used to maintain insertion order.
 
-  var taskIdCounter = 0; // Pausing the scheduler is useful for debugging.
-
-  var isSchedulerPaused = false;
+  var taskIdCounter = 1; // Pausing the scheduler is useful for debugging.
   var currentTask = null;
   var currentPriorityLevel = NormalPriority; // This is set while performing work, to prevent re-entrancy.
 
   var isPerformingWork = false;
   var isHostCallbackScheduled = false;
   var isHostTimeoutScheduled = false;
-
-  function flushTask(task, callback, currentTime) {
-    currentPriorityLevel = task.priorityLevel;
-    var didUserCallbackTimeout = task.expirationTime <= currentTime;
-    var continuationCallback = callback(didUserCallbackTimeout);
-    return typeof continuationCallback === "function"
-      ? continuationCallback
-      : null;
-  }
 
   function advanceTimers(currentTime) {
     // Check for tasks that are no longer delayed and add them to the queue.
@@ -3263,6 +3074,11 @@ object-assign
         pop(timerQueue);
         timer.sortIndex = timer.expirationTime;
         push(taskQueue, timer);
+
+        {
+          markTaskStart(timer);
+          timer.isQueued = true;
+        }
       } else {
         // Remaining timers are pending.
         return;
@@ -3291,7 +3107,10 @@ object-assign
   }
 
   function flushWork(hasTimeRemaining, initialTime) {
-    // We'll need a host callback the next time work is scheduled.
+    {
+      markSchedulerUnsuspended(initialTime);
+    } // We'll need a host callback the next time work is scheduled.
+
     isHostCallbackScheduled = false;
 
     if (isHostTimeoutScheduled) {
@@ -3304,60 +3123,91 @@ object-assign
     var previousPriorityLevel = currentPriorityLevel;
 
     try {
-      var currentTime = initialTime;
-      advanceTimers(currentTime);
-      currentTask = peek(taskQueue);
-
-      while (
-        currentTask !== null &&
-        !(enableSchedulerDebugging && isSchedulerPaused)
-      ) {
-        if (
-          currentTask.expirationTime > currentTime &&
-          (!hasTimeRemaining || shouldYieldToHost())
-        ) {
-          // This currentTask hasn't expired, and we've reached the deadline.
-          break;
-        }
-
-        var callback = currentTask.callback;
-
-        if (callback !== null) {
-          currentTask.callback = null;
-          var continuation = flushTask(currentTask, callback, currentTime);
-
-          if (continuation !== null) {
-            currentTask.callback = continuation;
-          } else {
-            if (currentTask === peek(taskQueue)) {
-              pop(taskQueue);
-            }
+      if (enableProfiling) {
+        try {
+          return workLoop(hasTimeRemaining, initialTime);
+        } catch (error) {
+          if (currentTask !== null) {
+            var currentTime = getCurrentTime();
+            markTaskErrored(currentTask, currentTime);
+            currentTask.isQueued = false;
           }
 
-          currentTime = getCurrentTime();
-          advanceTimers(currentTime);
-        } else {
-          pop(taskQueue);
+          throw error;
         }
-
-        currentTask = peek(taskQueue);
-      } // Return whether there's additional work
-
-      if (currentTask !== null) {
-        return true;
       } else {
-        var firstTimer = peek(timerQueue);
-
-        if (firstTimer !== null) {
-          requestHostTimeout(handleTimeout, firstTimer.startTime - currentTime);
-        }
-
-        return false;
+        // No catch in prod codepath.
+        return workLoop(hasTimeRemaining, initialTime);
       }
     } finally {
       currentTask = null;
       currentPriorityLevel = previousPriorityLevel;
       isPerformingWork = false;
+
+      {
+        var _currentTime = getCurrentTime();
+
+        markSchedulerSuspended(_currentTime);
+      }
+    }
+  }
+
+  function workLoop(hasTimeRemaining, initialTime) {
+    var currentTime = initialTime;
+    advanceTimers(currentTime);
+    currentTask = peek(taskQueue);
+
+    while (currentTask !== null && !enableSchedulerDebugging) {
+      if (
+        currentTask.expirationTime > currentTime &&
+        (!hasTimeRemaining || shouldYieldToHost())
+      ) {
+        // This currentTask hasn't expired, and we've reached the deadline.
+        break;
+      }
+
+      var callback = currentTask.callback;
+
+      if (callback !== null) {
+        currentTask.callback = null;
+        currentPriorityLevel = currentTask.priorityLevel;
+        var didUserCallbackTimeout = currentTask.expirationTime <= currentTime;
+        markTaskRun(currentTask, currentTime);
+        var continuationCallback = callback(didUserCallbackTimeout);
+        currentTime = getCurrentTime();
+
+        if (typeof continuationCallback === "function") {
+          currentTask.callback = continuationCallback;
+          markTaskYield(currentTask, currentTime);
+        } else {
+          {
+            markTaskCompleted(currentTask, currentTime);
+            currentTask.isQueued = false;
+          }
+
+          if (currentTask === peek(taskQueue)) {
+            pop(taskQueue);
+          }
+        }
+
+        advanceTimers(currentTime);
+      } else {
+        pop(taskQueue);
+      }
+
+      currentTask = peek(taskQueue);
+    } // Return whether there's additional work
+
+    if (currentTask !== null) {
+      return true;
+    } else {
+      var firstTimer = peek(timerQueue);
+
+      if (firstTimer !== null) {
+        requestHostTimeout(handleTimeout, firstTimer.startTime - currentTime);
+      }
+
+      return false;
     }
   }
 
@@ -3479,6 +3329,10 @@ object-assign
       sortIndex: -1
     };
 
+    {
+      newTask.isQueued = false;
+    }
+
     if (startTime > currentTime) {
       // This is a delayed task.
       newTask.sortIndex = startTime;
@@ -3497,7 +3351,12 @@ object-assign
       }
     } else {
       newTask.sortIndex = expirationTime;
-      push(taskQueue, newTask); // Schedule a host callback, if needed. If we're already performing work,
+      push(taskQueue, newTask);
+
+      {
+        markTaskStart(newTask, currentTime);
+        newTask.isQueued = true;
+      } // Schedule a host callback, if needed. If we're already performing work,
       // wait until the next time we yield.
 
       if (!isHostCallbackScheduled && !isPerformingWork) {
@@ -3509,13 +3368,9 @@ object-assign
     return newTask;
   }
 
-  function unstable_pauseExecution() {
-    isSchedulerPaused = true;
-  }
+  function unstable_pauseExecution() {}
 
   function unstable_continueExecution() {
-    isSchedulerPaused = false;
-
     if (!isHostCallbackScheduled && !isPerformingWork) {
       isHostCallbackScheduled = true;
       requestHostCallback(flushWork);
@@ -3527,9 +3382,16 @@ object-assign
   }
 
   function unstable_cancelCallback(task) {
-    // Null out the callback to indicate the task has been canceled. (Can't remove
-    // from the queue because you can't remove arbitrary nodes from an array based
-    // heap, only the first one.)
+    {
+      if (task.isQueued) {
+        var currentTime = getCurrentTime();
+        markTaskCanceled(task, currentTime);
+        task.isQueued = false;
+      }
+    } // Null out the callback to indicate the task has been canceled. (Can't
+    // remove from the queue because you can't remove arbitrary nodes from an
+    // array based heap, only the first one.)
+
     task.callback = null;
   }
 
@@ -3553,8 +3415,13 @@ object-assign
   }
 
   var unstable_requestPaint = requestPaint;
+  var unstable_Profiling = {
+    startLoggingProfilingEvents: startLoggingProfilingEvents,
+    stopLoggingProfilingEvents: stopLoggingProfilingEvents,
+    sharedProfilingBuffer: sharedProfilingBuffer
+  };
 
-  var Scheduler = Object.freeze({
+  var Scheduler = /*#__PURE__*/ Object.freeze({
     unstable_ImmediatePriority: ImmediatePriority,
     unstable_UserBlockingPriority: UserBlockingPriority,
     unstable_NormalPriority: NormalPriority,
@@ -3576,68 +3443,9 @@ object-assign
     },
     get unstable_forceFrameRate() {
       return forceFrameRate;
-    }
+    },
+    unstable_Profiling: unstable_Profiling
   });
-
-  // Helps identify side effects in begin-phase lifecycle hooks and setState reducers:
-
-  // In some cases, StrictMode should also double-render lifecycles.
-  // This can be confusing for tests though,
-  // And it can be bad for performance in production.
-  // This feature flag can be used to control the behavior:
-
-  // To preserve the "Pause on caught exceptions" behavior of the debugger, we
-  // replay the begin phase of a failed component inside invokeGuardedCallback.
-
-  // Warn about deprecated, async-unsafe lifecycles; relates to RFC #6:
-
-  // Gather advanced timing metrics for Profiler subtrees.
-
-  // Trace which interactions trigger each commit.
-
-  var enableSchedulerTracing = true; // Only used in www builds.
-
-  // TODO: true? Here it might just be false.
-  // Only used in www builds.
-
-  // Only used in www builds.
-
-  // Disable javascript: URL strings in href for XSS protection.
-
-  // React Fire: prevent the value and checked attributes from syncing
-  // with their related DOM properties
-
-  // These APIs will no longer be "unstable" in the upcoming 16.7 release,
-  // Control this behavior with a flag to support 16.6 minor releases in the meanwhile.
-
-  // See https://github.com/react-native-community/discussions-and-proposals/issues/72 for more information
-  // This is a flag so we can fix warnings in RN core before turning it on
-
-  // Experimental React Flare event system and event components support.
-
-  var enableFlareAPI = false; // Experimental Host Component support.
-
-  var enableFundamentalAPI = false; // New API for JSX transforms to target - https://github.com/reactjs/rfcs/pull/107
-
-  var enableJSXTransformAPI = false; // We will enforce mocking scheduler with scheduler/unstable_mock at some point. (v17?)
-  // Till then, we warn about the missing mock, but still fallback to a sync mode compatible version
-
-  // For tests, we flush suspense fallbacks in an act scope;
-  // *except* in some of our own tests, where we test incremental loading states.
-
-  // Changes priority of some events like mousemove to user-blocking priority,
-  // but without making them discrete. The flag exists in case it causes
-  // starvation problems.
-
-  // Add a callback property to suspense to notify which promises are currently
-  // in the update queue. This allows reporting and tracing of what is causing
-  // the user to see a loading state.
-  // Also allows hydration callbacks to fire when a dehydrated boundary gets
-  // hydrated or deleted.
-
-  // Part of the simplification of React.createElement so we can eventually move
-  // from React.createElement to React.jsx
-  // https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md
 
   var DEFAULT_THREAD_ID = 0; // Counters used to generate unique IDs.
 
@@ -3651,7 +3459,7 @@ object-assign
 
   var subscriberRef = null;
 
-  if (enableSchedulerTracing) {
+  {
     interactionsRef = {
       current: new Set()
     };
@@ -3659,12 +3467,7 @@ object-assign
       current: null
     };
   }
-
   function unstable_clear(callback) {
-    if (!enableSchedulerTracing) {
-      return callback();
-    }
-
     var prevInteractions = interactionsRef.current;
     interactionsRef.current = new Set();
 
@@ -3675,9 +3478,7 @@ object-assign
     }
   }
   function unstable_getCurrent() {
-    if (!enableSchedulerTracing) {
-      return null;
-    } else {
+    {
       return interactionsRef.current;
     }
   }
@@ -3689,10 +3490,6 @@ object-assign
       arguments.length > 3 && arguments[3] !== undefined
         ? arguments[3]
         : DEFAULT_THREAD_ID;
-
-    if (!enableSchedulerTracing) {
-      return callback();
-    }
 
     var interaction = {
       __count: 1,
@@ -3748,10 +3545,6 @@ object-assign
       arguments.length > 1 && arguments[1] !== undefined
         ? arguments[1]
         : DEFAULT_THREAD_ID;
-
-    if (!enableSchedulerTracing) {
-      return callback;
-    }
 
     var wrappedInteractions = interactionsRef.current;
     var subscriber = subscriberRef.current;
@@ -3837,12 +3630,12 @@ object-assign
 
   var subscribers = null;
 
-  if (enableSchedulerTracing) {
+  {
     subscribers = new Set();
   }
 
   function unstable_subscribe(subscriber) {
-    if (enableSchedulerTracing) {
+    {
       subscribers.add(subscriber);
 
       if (subscribers.size === 1) {
@@ -3858,7 +3651,7 @@ object-assign
     }
   }
   function unstable_unsubscribe(subscriber) {
-    if (enableSchedulerTracing) {
+    {
       subscribers.delete(subscriber);
 
       if (subscribers.size === 0) {
@@ -3981,7 +3774,7 @@ object-assign
     }
   }
 
-  var SchedulerTracing = Object.freeze({
+  var SchedulerTracing = /*#__PURE__*/ Object.freeze({
     get __interactionsRef() {
       return interactionsRef;
     },
@@ -3997,7 +3790,7 @@ object-assign
     unstable_unsubscribe: unstable_unsubscribe
   });
 
-  var ReactSharedInternals$2 = {
+  var ReactSharedInternals$1 = {
     ReactCurrentDispatcher: ReactCurrentDispatcher,
     ReactCurrentOwner: ReactCurrentOwner,
     IsSomeRendererActing: IsSomeRendererActing,
@@ -4006,7 +3799,7 @@ object-assign
   };
 
   {
-    objectAssign(ReactSharedInternals$2, {
+    objectAssign(ReactSharedInternals$1, {
       // These should not be included in production.
       ReactDebugCurrentFrame: ReactDebugCurrentFrame,
       // Shim for React DOM 16.0.0 which still destructured (but not used) this.
@@ -4019,16 +3812,12 @@ object-assign
   // This re-export is only required for UMD bundles;
   // CJS bundles use the shared NPM package.
 
-  objectAssign(ReactSharedInternals$2, {
+  objectAssign(ReactSharedInternals$1, {
     Scheduler: Scheduler,
     SchedulerTracing: SchedulerTracing
   });
 
-  var hasBadMapPolyfill;
-
   {
-    hasBadMapPolyfill = false;
-
     try {
       var frozenObject = Object.freeze({});
       var testMap = new Map([[frozenObject, null]]);
@@ -4038,59 +3827,7 @@ object-assign
 
       testMap.set(0, 0);
       testSet.add(0);
-    } catch (e) {
-      // TODO: Consider warning about bad polyfills
-      hasBadMapPolyfill = true;
-    }
-  }
-
-  function createFundamentalComponent(impl) {
-    // We use responder as a Map key later on. When we have a bad
-    // polyfill, then we can't use it as a key as the polyfill tries
-    // to add a property to the object.
-    if (true && !hasBadMapPolyfill) {
-      Object.freeze(impl);
-    }
-
-    var fundamantalComponent = {
-      $$typeof: REACT_FUNDAMENTAL_TYPE,
-      impl: impl
-    };
-
-    {
-      Object.freeze(fundamantalComponent);
-    }
-
-    return fundamantalComponent;
-  }
-
-  function createEventResponder(displayName, responderConfig) {
-    var getInitialState = responderConfig.getInitialState,
-      onEvent = responderConfig.onEvent,
-      onMount = responderConfig.onMount,
-      onUnmount = responderConfig.onUnmount,
-      onRootEvent = responderConfig.onRootEvent,
-      rootEventTypes = responderConfig.rootEventTypes,
-      targetEventTypes = responderConfig.targetEventTypes;
-    var eventResponder = {
-      $$typeof: REACT_RESPONDER_TYPE,
-      displayName: displayName,
-      getInitialState: getInitialState || null,
-      onEvent: onEvent || null,
-      onMount: onMount || null,
-      onRootEvent: onRootEvent || null,
-      onUnmount: onUnmount || null,
-      rootEventTypes: rootEventTypes || null,
-      targetEventTypes: targetEventTypes || null
-    }; // We use responder as a Map key later on. When we have a bad
-    // polyfill, then we can't use it as a key as the polyfill tries
-    // to add a property to the object.
-
-    if (true && !hasBadMapPolyfill) {
-      Object.freeze(eventResponder);
-    }
-
-    return eventResponder;
+    } catch (e) {}
   }
 
   var React = {
@@ -4129,39 +3866,13 @@ object-assign
     isValidElement: isValidElement,
     version: ReactVersion,
     unstable_withSuspenseConfig: withSuspenseConfig,
-    __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactSharedInternals$2
+    __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactSharedInternals$1
   };
-
-  if (enableFlareAPI) {
-    React.unstable_useResponder = useResponder;
-    React.unstable_createResponder = createEventResponder;
-  }
-
-  if (enableFundamentalAPI) {
-    React.unstable_createFundamental = createFundamentalComponent;
-  } // Note: some APIs are added with feature flags.
-  // Make sure that stable builds for open source
-  // don't modify the React object to avoid deopts.
-  // Also let's not expose their names in stable builds.
-
-  if (enableJSXTransformAPI) {
-    {
-      React.jsxDEV = jsxWithValidation;
-      React.jsx = jsxWithValidationDynamic;
-      React.jsxs = jsxWithValidationStatic;
-    }
-  }
-
-  var React$2 = Object.freeze({
-    default: React
-  });
-
-  var React$3 = (React$2 && React) || React$2;
 
   // TODO: decide on the top-level export form.
   // This is hacky but makes it work with both Rollup and Jest.
 
-  var react = React$3.default || React$3;
+  var react = React.default || React;
 
   return react;
 });

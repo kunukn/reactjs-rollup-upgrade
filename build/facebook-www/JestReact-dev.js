@@ -1,10 +1,21 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @noflow
+ * @preventMunge
+ * @preserve-invariant-messages
+ */
+
+'use strict';
+
+if (__DEV__) {
+  (function() {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-
-// Do not require this module directly! Use normal `invariant` calls with
-// template literal strings. The messages will be converted to ReactError during
-// build, and in production they will be minified.
 
 // Do not require this module directly! Use normal `invariant` calls with
 // template literal strings. The messages will be converted to ReactError during
@@ -18,22 +29,7 @@ function ReactError(error) {
 // nor polyfill, then a plain number is used for performance.
 var hasSymbol = typeof Symbol === "function" && Symbol.for;
 var REACT_ELEMENT_TYPE = hasSymbol ? Symbol.for("react.element") : 0xeac7;
-
 var REACT_FRAGMENT_TYPE = hasSymbol ? Symbol.for("react.fragment") : 0xeacb;
-
-// TODO: We don't use AsyncMode or ConcurrentMode anymore. They were temporary
-// (unstable) APIs that have been removed. Can we remove the symbols?
-
-/**
- * Use invariant() to assert state which your program assumes to be true.
- *
- * Provide sprintf-style format (only %s is supported) and arguments
- * to provide information about what broke and what you were
- * expecting.
- *
- * The invariant message will be stripped in production, but the invariant
- * will remain to ensure logic does not differ in production.
- */
 
 function captureAssertion(fn) {
   // Trick to use a Jest matcher inside another Jest matcher. `fn` contains an
@@ -165,3 +161,6 @@ function jsonChildrenToJSXChildren(jsonChildren) {
 }
 
 exports.unstable_toMatchRenderedOutput = unstable_toMatchRenderedOutput;
+
+  })();
+}

@@ -1,9 +1,21 @@
+/** @license React vundefined
+ * react-events-input.development.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+'use strict';
+
 (function(global, factory) {
   typeof exports === "object" && typeof module !== "undefined"
     ? (module.exports = factory(require("react")))
     : typeof define === "function" && define.amd
       ? define(["react"], factory)
-      : (global.ReactEventsInput = factory(global.React));
+      : ((global = global || self),
+        (global.ReactEventsInput = factory(global.React)));
 })(this, function(React) {
   "use strict";
 
@@ -178,13 +190,13 @@
     "Input",
     inputResponderImpl
   );
-  function useInputResponder(props) {
+  function useInput(props) {
     return React.unstable_useResponder(InputResponder, props);
   }
 
-  var Input = Object.freeze({
+  var Input = /*#__PURE__*/ Object.freeze({
     InputResponder: InputResponder,
-    useInputResponder: useInputResponder
+    useInput: useInput
   });
 
   var input = Input;

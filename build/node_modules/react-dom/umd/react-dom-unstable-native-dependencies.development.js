@@ -1,18 +1,26 @@
+/** @license React vundefined
+ * react-dom-unstable-native-dependencies.development.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+'use strict';
+
 (function(global, factory) {
   typeof exports === "object" && typeof module !== "undefined"
     ? (module.exports = factory(require("react-dom"), require("react")))
     : typeof define === "function" && define.amd
       ? define(["react-dom", "react"], factory)
-      : (global.ReactDOMUnstableNativeDependencies = factory(
+      : ((global = global || self),
+        (global.ReactDOMUnstableNativeDependencies = factory(
           global.ReactDOM,
           global.React
-        ));
+        )));
 })(this, function(ReactDOM, React) {
   "use strict";
-
-  // Do not require this module directly! Use normal `invariant` calls with
-  // template literal strings. The messages will be converted to ReactError during
-  // build, and in production they will be minified.
 
   // Do not require this module directly! Use normal `invariant` calls with
   // template literal strings. The messages will be converted to ReactError during
@@ -21,17 +29,6 @@
     error.name = "Invariant Violation";
     return error;
   }
-
-  /**
-   * Use invariant() to assert state which your program assumes to be true.
-   *
-   * Provide sprintf-style format (only %s is supported) and arguments
-   * to provide information about what broke and what you were
-   * expecting.
-   *
-   * The invariant message will be stripped in production, but the invariant
-   * will remain to ensure logic does not differ in production.
-   */
 
   {
     // In DEV mode, we swap out invokeGuardedCallback for a special version
@@ -63,36 +60,6 @@
       var fakeNode = document.createElement("react");
     }
   }
-
-  /**
-   * Call a function while guarding against errors that happens within it.
-   * Returns an error if it throws, otherwise null.
-   *
-   * In production, this is implemented using a try-catch. The reason we don't
-   * use a try-catch directly is so that we can swap out a different
-   * implementation in DEV mode.
-   *
-   * @param {String} name of the guard to use for logging or debugging
-   * @param {Function} func The function to invoke
-   * @param {*} context The context to use when calling the function
-   * @param {...*} args Arguments for function
-   */
-
-  /**
-   * Same as invokeGuardedCallback, but instead of returning an error, it stores
-   * it in a global so it can be rethrown by `rethrowCaughtError` later.
-   * TODO: See if caughtError and rethrowError can be unified.
-   *
-   * @param {String} name of the guard to use for logging or debugging
-   * @param {Function} func The function to invoke
-   * @param {*} context The context to use when calling the function
-   * @param {...*} args Arguments for function
-   */
-
-  /**
-   * During execution of guarded functions we will capture the first error which
-   * we will rethrow to be handled by the top level error handler.
-   */
 
   /**
    * Similar to invariant but only logs a warning if the condition is not met.
@@ -159,20 +126,20 @@
 
   var warningWithoutStack$1 = warningWithoutStack;
 
-  var getFiberCurrentPropsFromNode$1 = null;
-  var getInstanceFromNode$1 = null;
-  var getNodeFromInstance$1 = null;
+  var getFiberCurrentPropsFromNode = null;
+  var getInstanceFromNode = null;
+  var getNodeFromInstance = null;
   function setComponentTree(
     getFiberCurrentPropsFromNodeImpl,
     getInstanceFromNodeImpl,
     getNodeFromInstanceImpl
   ) {
-    getFiberCurrentPropsFromNode$1 = getFiberCurrentPropsFromNodeImpl;
-    getInstanceFromNode$1 = getInstanceFromNodeImpl;
-    getNodeFromInstance$1 = getNodeFromInstanceImpl;
+    getFiberCurrentPropsFromNode = getFiberCurrentPropsFromNodeImpl;
+    getInstanceFromNode = getInstanceFromNodeImpl;
+    getNodeFromInstance = getNodeFromInstanceImpl;
 
     {
-      !(getNodeFromInstance$1 && getInstanceFromNode$1)
+      !(getNodeFromInstance && getInstanceFromNode)
         ? warningWithoutStack$1(
             false,
             "EventPluginUtils.setComponentTree(...): Injected " +
@@ -204,17 +171,6 @@
         : void 0;
     };
   }
-  /**
-   * Dispatch the event to the listener.
-   * @param {SyntheticEvent} event SyntheticEvent to handle
-   * @param {function} listener Application-level callback
-   * @param {*} inst Internal component instance
-   */
-
-  /**
-   * Standard/simple iteration through an event's collected dispatches.
-   */
-
   /**
    * Standard/simple iteration through an event's collected dispatches, but stops
    * at the first dispatch execution returning true, and returns that id.
@@ -288,7 +244,7 @@
     })();
 
     event.currentTarget = dispatchListener
-      ? getNodeFromInstance$1(dispatchInstance)
+      ? getNodeFromInstance(dispatchInstance)
       : null;
     var res = dispatchListener ? dispatchListener(event) : null;
     event.currentTarget = null;
@@ -304,12 +260,6 @@
   function hasDispatches(event) {
     return !!event._dispatchListeners;
   }
-
-  // Before we know whether it is function or class
-
-  // Root of a host tree. Could be nested inside another node.
-
-  // A subtree. Could be an entry point to a different renderer.
 
   var HostComponent = 5;
 
@@ -413,65 +363,6 @@
       fn(path[i], "bubbled", arg);
     }
   }
-  /**
-   * Traverses the ID hierarchy and invokes the supplied `cb` on any IDs that
-   * should would receive a `mouseEnter` or `mouseLeave` event.
-   *
-   * Does not invoke the callback on the nearest common ancestor because nothing
-   * "entered" or "left" that element.
-   */
-
-  /**
-   * Registers plugins so that they can extract and dispatch events.
-   *
-   * @see {EventPluginHub}
-   */
-
-  /**
-   * Ordered list of injected plugins.
-   */
-
-  /**
-   * Mapping from event name to dispatch config
-   */
-
-  /**
-   * Mapping from registration name to plugin module
-   */
-
-  /**
-   * Mapping from registration name to event name
-   */
-
-  /**
-   * Mapping from lowercase registration names to the properly cased version,
-   * used to warn in the case of missing event handlers. Available
-   * only in true.
-   * @type {Object}
-   */
-
-  // Trust the developer to only use possibleRegistrationNames in true
-
-  /**
-   * Injects an ordering of plugins (by plugin name). This allows the ordering
-   * to be decoupled from injection of the actual plugins so that ordering is
-   * always deterministic regardless of packaging, on-the-fly injection, etc.
-   *
-   * @param {array} InjectedEventPluginOrder
-   * @internal
-   * @see {EventPluginHub.injection.injectEventPluginOrder}
-   */
-
-  /**
-   * Injects plugins to be used by `EventPluginHub`. The plugin names must be
-   * in the ordering injected by `injectEventPluginOrder`.
-   *
-   * Plugins can be injected as part of page initialization or on-the-fly.
-   *
-   * @param {object} injectedNamesToPlugins Map from names to plugin modules.
-   * @internal
-   * @see {EventPluginHub.injection.injectEventPluginsByName}
-   */
 
   /**
    * Accumulates items that must not be null or undefined into the first one. This
@@ -567,33 +458,6 @@
     }
   }
   /**
-   * This is a unified interface for event plugins to be installed and configured.
-   *
-   * Event plugins can implement the following properties:
-   *
-   *   `extractEvents` {function(string, DOMEventTarget, string, object): *}
-   *     Required. When a top-level event is fired, this method is expected to
-   *     extract synthetic events that will in turn be queued and dispatched.
-   *
-   *   `eventTypes` {object}
-   *     Optional, plugins that fire events must publish a mapping of registration
-   *     names that are used to register listeners. Values of this mapping must
-   *     be objects that contain `registrationName` or `phasedRegistrationNames`.
-   *
-   *   `executeDispatch` {function(object, function, string)}
-   *     Optional, allows plugins to override how an event gets dispatched. By
-   *     default, the listener is simply invoked.
-   *
-   * Each plugin that is injected into `EventsPluginHub` is immediately operable.
-   *
-   * @public
-   */
-
-  /**
-   * Methods for injecting dependencies.
-   */
-
-  /**
    * @param {object} inst The instance, which is the source of events.
    * @param {string} registrationName Name of listener (e.g. `onClick`).
    * @return {?function} The stored callback.
@@ -610,7 +474,7 @@
       return null;
     }
 
-    var props = getFiberCurrentPropsFromNode$1(stateNode);
+    var props = getFiberCurrentPropsFromNode(stateNode);
 
     if (!props) {
       // Work in progress.
@@ -754,7 +618,6 @@
   function accumulateTwoPhaseDispatchesSkipTarget(events) {
     forEachAccumulated(events, accumulateTwoPhaseDispatchesSingleSkipTarget);
   }
-
   function accumulateDirectDispatches(events) {
     forEachAccumulated(events, accumulateDirectDispatchesSingle);
   }
@@ -762,7 +625,6 @@
   var ReactInternals = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
   var _assign = ReactInternals.assign;
 
-  /* eslint valid-typeof: 0 */
   var EVENT_POOL_SIZE = 10;
   /**
    * @interface Event
@@ -1045,19 +907,16 @@
     }
 
     function warn(action, result) {
-      var warningCondition = false;
-      !warningCondition
-        ? warningWithoutStack$1(
-            false,
-            "This synthetic event is reused for performance reasons. If you're seeing this, " +
-              "you're %s `%s` on a released/nullified synthetic event. %s. " +
-              "If you must keep the original synthetic event around, use event.persist(). " +
-              "See https://fb.me/react-event-pooling for more information.",
-            action,
-            propName,
-            result
-          )
-        : void 0;
+      warningWithoutStack$1(
+        false,
+        "This synthetic event is reused for performance reasons. If you're seeing this, " +
+          "you're %s `%s` on a released/nullified synthetic event. %s. " +
+          "If you must keep the original synthetic event around, use event.persist(). " +
+          "See https://fb.me/react-event-pooling for more information.",
+        action,
+        propName,
+        result
+      );
     }
   }
 
@@ -1558,83 +1417,83 @@
    */
 
   /*                                             Negotiation Performed
-                                             +-----------------------+
-                                            /                         \
-Process low level events to    +     Current Responder      +   wantsResponderID
-determine who to perform negot-|   (if any exists at all)   |
-iation/transition              | Otherwise just pass through|
--------------------------------+----------------------------+------------------+
-Bubble to find first ID        |                            |
-to return true:wantsResponderID|                            |
-                               |                            |
-     +-------------+           |                            |
-     | onTouchStart|           |                            |
-     +------+------+     none  |                            |
-            |            return|                            |
-+-----------v-------------+true| +------------------------+ |
-|onStartShouldSetResponder|----->|onResponderStart (cur)  |<-----------+
-+-----------+-------------+    | +------------------------+ |          |
-            |                  |                            | +--------+-------+
-            | returned true for|       false:REJECT +-------->|onResponderReject
-            | wantsResponderID |                    |       | +----------------+
-            | (now attempt     | +------------------+-----+ |
-            |  handoff)        | |   onResponder          | |
-            +------------------->|      TerminationRequest| |
-                               | +------------------+-----+ |
-                               |                    |       | +----------------+
-                               |         true:GRANT +-------->|onResponderGrant|
-                               |                            | +--------+-------+
-                               | +------------------------+ |          |
-                               | |   onResponderTerminate |<-----------+
-                               | +------------------+-----+ |
-                               |                    |       | +----------------+
-                               |                    +-------->|onResponderStart|
-                               |                            | +----------------+
-Bubble to find first ID        |                            |
-to return true:wantsResponderID|                            |
-                               |                            |
-     +-------------+           |                            |
-     | onTouchMove |           |                            |
-     +------+------+     none  |                            |
-            |            return|                            |
-+-----------v-------------+true| +------------------------+ |
-|onMoveShouldSetResponder |----->|onResponderMove (cur)   |<-----------+
-+-----------+-------------+    | +------------------------+ |          |
-            |                  |                            | +--------+-------+
-            | returned true for|       false:REJECT +-------->|onResponderRejec|
-            | wantsResponderID |                    |       | +----------------+
-            | (now attempt     | +------------------+-----+ |
-            |  handoff)        | |   onResponder          | |
-            +------------------->|      TerminationRequest| |
-                               | +------------------+-----+ |
-                               |                    |       | +----------------+
-                               |         true:GRANT +-------->|onResponderGrant|
-                               |                            | +--------+-------+
-                               | +------------------------+ |          |
-                               | |   onResponderTerminate |<-----------+
-                               | +------------------+-----+ |
-                               |                    |       | +----------------+
-                               |                    +-------->|onResponderMove |
-                               |                            | +----------------+
-                               |                            |
-                               |                            |
-      Some active touch started|                            |
-      inside current responder | +------------------------+ |
-      +------------------------->|      onResponderEnd    | |
-      |                        | +------------------------+ |
-  +---+---------+              |                            |
-  | onTouchEnd  |              |                            |
-  +---+---------+              |                            |
-      |                        | +------------------------+ |
-      +------------------------->|     onResponderEnd     | |
-      No active touches started| +-----------+------------+ |
-      inside current responder |             |              |
-                               |             v              |
-                               | +------------------------+ |
-                               | |    onResponderRelease  | |
-                               | +------------------------+ |
-                               |                            |
-                               +                            + */
+                                               +-----------------------+
+                                              /                         \
+  Process low level events to    +     Current Responder      +   wantsResponderID
+  determine who to perform negot-|   (if any exists at all)   |
+  iation/transition              | Otherwise just pass through|
+  -------------------------------+----------------------------+------------------+
+  Bubble to find first ID        |                            |
+  to return true:wantsResponderID|                            |
+                                 |                            |
+       +-------------+           |                            |
+       | onTouchStart|           |                            |
+       +------+------+     none  |                            |
+              |            return|                            |
+  +-----------v-------------+true| +------------------------+ |
+  |onStartShouldSetResponder|----->|onResponderStart (cur)  |<-----------+
+  +-----------+-------------+    | +------------------------+ |          |
+              |                  |                            | +--------+-------+
+              | returned true for|       false:REJECT +-------->|onResponderReject
+              | wantsResponderID |                    |       | +----------------+
+              | (now attempt     | +------------------+-----+ |
+              |  handoff)        | |   onResponder          | |
+              +------------------->|      TerminationRequest| |
+                                 | +------------------+-----+ |
+                                 |                    |       | +----------------+
+                                 |         true:GRANT +-------->|onResponderGrant|
+                                 |                            | +--------+-------+
+                                 | +------------------------+ |          |
+                                 | |   onResponderTerminate |<-----------+
+                                 | +------------------+-----+ |
+                                 |                    |       | +----------------+
+                                 |                    +-------->|onResponderStart|
+                                 |                            | +----------------+
+  Bubble to find first ID        |                            |
+  to return true:wantsResponderID|                            |
+                                 |                            |
+       +-------------+           |                            |
+       | onTouchMove |           |                            |
+       +------+------+     none  |                            |
+              |            return|                            |
+  +-----------v-------------+true| +------------------------+ |
+  |onMoveShouldSetResponder |----->|onResponderMove (cur)   |<-----------+
+  +-----------+-------------+    | +------------------------+ |          |
+              |                  |                            | +--------+-------+
+              | returned true for|       false:REJECT +-------->|onResponderRejec|
+              | wantsResponderID |                    |       | +----------------+
+              | (now attempt     | +------------------+-----+ |
+              |  handoff)        | |   onResponder          | |
+              +------------------->|      TerminationRequest| |
+                                 | +------------------+-----+ |
+                                 |                    |       | +----------------+
+                                 |         true:GRANT +-------->|onResponderGrant|
+                                 |                            | +--------+-------+
+                                 | +------------------------+ |          |
+                                 | |   onResponderTerminate |<-----------+
+                                 | +------------------+-----+ |
+                                 |                    |       | +----------------+
+                                 |                    +-------->|onResponderMove |
+                                 |                            | +----------------+
+                                 |                            |
+                                 |                            |
+        Some active touch started|                            |
+        inside current responder | +------------------------+ |
+        +------------------------->|      onResponderEnd    | |
+        |                        | +------------------------+ |
+    +---+---------+              |                            |
+    | onTouchEnd  |              |                            |
+    +---+---------+              |                            |
+        |                        | +------------------------+ |
+        +------------------------->|     onResponderEnd     | |
+        No active touches started| +-----------+------------+ |
+        inside current responder |             |              |
+                                 |             v              |
+                                 | +------------------------+ |
+                                 | |    onResponderRelease  | |
+                                 | +------------------------+ |
+                                 |                            |
+                                 +                            + */
 
   /**
    * A note about event ordering in the `EventPluginHub`.
@@ -1841,7 +1700,7 @@ to return true:wantsResponderID|                            |
 
       if (target !== null && target !== undefined && target !== 0) {
         // Is the original touch location inside of the current responder?
-        var targetInst = getInstanceFromNode$1(target);
+        var targetInst = getInstanceFromNode(target);
 
         if (isAncestor(responderInst, targetInst)) {
           return false;
@@ -1969,18 +1828,18 @@ to return true:wantsResponderID|                            |
   // Keep in sync with ReactDOM.js, ReactTestUtils.js, and ReactTestUtilsAct.js:
 
   var _ReactDOM$__SECRET_IN =
-    ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
-  var getInstanceFromNode = _ReactDOM$__SECRET_IN[0];
-  var getNodeFromInstance = _ReactDOM$__SECRET_IN[1];
-  var getFiberCurrentPropsFromNode = _ReactDOM$__SECRET_IN[2];
-  var injectEventPluginsByName = _ReactDOM$__SECRET_IN[3];
+      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events,
+    getInstanceFromNode$1 = _ReactDOM$__SECRET_IN[0],
+    getNodeFromInstance$1 = _ReactDOM$__SECRET_IN[1],
+    getFiberCurrentPropsFromNode$1 = _ReactDOM$__SECRET_IN[2],
+    injectEventPluginsByName = _ReactDOM$__SECRET_IN[3];
   setComponentTree(
-    getFiberCurrentPropsFromNode,
-    getInstanceFromNode,
-    getNodeFromInstance
+    getFiberCurrentPropsFromNode$1,
+    getInstanceFromNode$1,
+    getNodeFromInstance$1
   );
 
-  var ReactDOMUnstableNativeDependencies = Object.freeze({
+  var ReactDOMUnstableNativeDependencies = /*#__PURE__*/ Object.freeze({
     ResponderEventPlugin: ResponderEventPlugin,
     ResponderTouchHistoryStore: ResponderTouchHistoryStore,
     injectEventPluginsByName: injectEventPluginsByName

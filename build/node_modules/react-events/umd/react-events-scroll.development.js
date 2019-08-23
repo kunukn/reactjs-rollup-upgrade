@@ -1,9 +1,21 @@
+/** @license React vundefined
+ * react-events-scroll.development.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+'use strict';
+
 (function(global, factory) {
   typeof exports === "object" && typeof module !== "undefined"
     ? (module.exports = factory(require("react")))
     : typeof define === "function" && define.amd
       ? define(["react"], factory)
-      : (global.ReactEventsScroll = factory(global.React));
+      : ((global = global || self),
+        (global.ReactEventsScroll = factory(global.React)));
 })(this, function(React) {
   "use strict";
 
@@ -250,13 +262,13 @@
     "Scroll",
     scrollResponderImpl
   );
-  function useScrollResponder(props) {
+  function useScroll(props) {
     return React.unstable_useResponder(ScrollResponder, props);
   }
 
-  var Scroll = Object.freeze({
+  var Scroll = /*#__PURE__*/ Object.freeze({
     ScrollResponder: ScrollResponder,
-    useScrollResponder: useScrollResponder
+    useScroll: useScroll
   });
 
   var scroll = Scroll;

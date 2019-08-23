@@ -1,9 +1,21 @@
+/** @license React vundefined
+ * react-events-press.development.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+'use strict';
+
 (function(global, factory) {
   typeof exports === "object" && typeof module !== "undefined"
     ? (module.exports = factory(require("react")))
     : typeof define === "function" && define.amd
       ? define(["react"], factory)
-      : (global.ReactEventsPress = factory(global.React));
+      : ((global = global || self),
+        (global.ReactEventsPress = factory(global.React)));
 })(this, function(React) {
   "use strict";
 
@@ -56,10 +68,10 @@
     pointerType,
     event,
     touchEvent,
-    defaultPrevented
+    defaultPrevented,
+    state
   ) {
     var timeStamp = context.getTimeStamp();
-    var buttons = 1;
     var clientX = null;
     var clientY = null;
     var pageX = null;
@@ -84,7 +96,6 @@
 
       if (eventObject) {
         var _eventObject = eventObject;
-        buttons = _eventObject.buttons;
         clientX = _eventObject.clientX;
         clientY = _eventObject.clientY;
         pageX = _eventObject.pageX;
@@ -96,7 +107,7 @@
 
     return {
       altKey: altKey,
-      buttons: buttons,
+      buttons: state.buttons,
       clientX: clientX,
       clientY: clientY,
       ctrlKey: ctrlKey,
@@ -130,7 +141,8 @@
       pointerType,
       event,
       touchEvent,
-      defaultPrevented
+      defaultPrevented,
+      state
     );
     context.dispatchEvent(syntheticEvent, listener, eventPriority);
   }
@@ -393,6 +405,7 @@
       return {
         activationPosition: null,
         addedRootEvents: false,
+        buttons: 0,
         isActivePressed: false,
         isActivePressStart: false,
         isPressed: false,
@@ -483,7 +496,7 @@
 
               state.touchEvent = touchEvent;
               state.activePointerId = touchEvent.identifier;
-            } // Ignore any device buttons except primary/secondary and touch/pen contact.
+            } // Ignore any device buttons except primary/middle and touch/pen contact.
             // Additionally we ignore primary-button + ctrl-key with Macs as that
             // acts like right-click and opens the contextmenu.
 
@@ -505,6 +518,7 @@
 
             state.responderRegionOnDeactivation = null;
             state.isPressWithinResponderRegion = true;
+            state.buttons = nativeEvent.buttons;
             dispatchPressStartEvents(event, context, props, state);
             addRootEventTypes(context, state);
           } else {
@@ -611,7 +625,7 @@
         case "mouseup":
         case "touchend": {
           if (isPressed) {
-            var buttons = nativeEvent.buttons;
+            var buttons = state.buttons;
             var isKeyboardEvent = false;
 
             var _touchEvent;
@@ -759,13 +773,13 @@
     "Press",
     pressResponderImpl
   );
-  function usePressResponder(props) {
+  function usePress(props) {
     return React.unstable_useResponder(PressResponder, props);
   }
 
-  var Press = Object.freeze({
+  var Press = /*#__PURE__*/ Object.freeze({
     PressResponder: PressResponder,
-    usePressResponder: usePressResponder
+    usePress: usePress
   });
 
   var press = Press;

@@ -1,9 +1,21 @@
+/** @license React vundefined
+ * react-events-keyboard.development.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+'use strict';
+
 (function(global, factory) {
   typeof exports === "object" && typeof module !== "undefined"
     ? (module.exports = factory(require("react")))
     : typeof define === "function" && define.amd
       ? define(["react"], factory)
-      : (global.ReactEventsKeyboard = factory(global.React));
+      : ((global = global || self),
+        (global.ReactEventsKeyboard = factory(global.React)));
 })(this, function(React) {
   "use strict";
 
@@ -166,13 +178,13 @@
     "Keyboard",
     keyboardResponderImpl
   );
-  function useKeyboardResponder(props) {
+  function useKeyboard(props) {
     return React.unstable_useResponder(KeyboardResponder, props);
   }
 
-  var Keyboard = Object.freeze({
+  var Keyboard = /*#__PURE__*/ Object.freeze({
     KeyboardResponder: KeyboardResponder,
-    useKeyboardResponder: useKeyboardResponder
+    useKeyboard: useKeyboard
   });
 
   var keyboard = Keyboard;
