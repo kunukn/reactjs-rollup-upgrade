@@ -186,7 +186,7 @@ var hoverResponderImpl = {
   ),
   Hover = {
     HoverResponder: HoverResponder,
-    useHoverResponder: function(props) {
+    useHover: function(props) {
       return React.unstable_useResponder(HoverResponder, props);
     }
   };

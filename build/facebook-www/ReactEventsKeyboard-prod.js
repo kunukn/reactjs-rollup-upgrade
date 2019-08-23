@@ -128,7 +128,7 @@ var KeyboardResponder = React.unstable_createResponder("Keyboard", {
   }),
   Keyboard = {
     KeyboardResponder: KeyboardResponder,
-    useKeyboardResponder: function(props) {
+    useKeyboard: function(props) {
       return React.unstable_useResponder(KeyboardResponder, props);
     }
   };

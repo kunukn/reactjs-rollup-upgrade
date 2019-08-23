@@ -283,13 +283,13 @@ var HoverResponder = React.unstable_createResponder(
   "Hover",
   hasPointerEvents ? hoverResponderImpl : hoverResponderFallbackImpl
 );
-function useHoverResponder(props) {
+function useHover(props) {
   return React.unstable_useResponder(HoverResponder, props);
 }
 
 var Hover = /*#__PURE__*/ Object.freeze({
   HoverResponder: HoverResponder,
-  useHoverResponder: useHoverResponder
+  useHover: useHover
 });
 
 function getCjsExportFromNamespace(n) {

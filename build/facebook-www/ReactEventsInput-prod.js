@@ -96,7 +96,7 @@ var InputResponder = React.unstable_createResponder("Input", {
   }),
   Input = {
     InputResponder: InputResponder,
-    useInputResponder: function(props) {
+    useInput: function(props) {
       return React.unstable_useResponder(InputResponder, props);
     }
   };

@@ -109,7 +109,7 @@ function compare(a, b) {
 }
 var taskQueue = [],
   timerQueue = [],
-  taskIdCounter = 0,
+  taskIdCounter = 1,
   isSchedulerPaused = !1,
   currentTask = null,
   currentPriorityLevel = 3,
@@ -164,33 +164,29 @@ function flushWork(hasTimeRemaining, initialTime) {
       var callback = currentTask.callback;
       if (null !== callback) {
         currentTask.callback = null;
-        var task = currentTask,
-          callback$jscomp$0 = callback,
-          currentTime$jscomp$0 = initialTime;
-        currentPriorityLevel = task.priorityLevel;
-        var continuationCallback = callback$jscomp$0(
-          task.expirationTime <= currentTime$jscomp$0
+        currentPriorityLevel = currentTask.priorityLevel;
+        var continuationCallback = callback(
+          currentTask.expirationTime <= initialTime
         );
-        var continuation =
-          "function" === typeof continuationCallback
-            ? continuationCallback
-            : null;
-        null !== continuation
-          ? (currentTask.callback = continuation)
-          : currentTask === peek(taskQueue) && pop(taskQueue);
         initialTime = currentTime;
+        "function" === typeof continuationCallback
+          ? (currentTask.callback = continuationCallback)
+          : currentTask === peek(taskQueue) && pop(taskQueue);
         advanceTimers(initialTime);
       } else pop(taskQueue);
       currentTask = peek(taskQueue);
     }
-    if (null !== currentTask) return !0;
-    var firstTimer = peek(timerQueue);
-    if (null !== firstTimer) {
-      var ms = firstTimer.startTime - initialTime;
-      scheduledTimeout = handleTimeout;
-      timeoutTime = currentTime + ms;
+    if (null !== currentTask) var JSCompiler_inline_result = !0;
+    else {
+      var firstTimer = peek(timerQueue);
+      if (null !== firstTimer) {
+        var ms = firstTimer.startTime - initialTime;
+        scheduledTimeout = handleTimeout;
+        timeoutTime = currentTime + ms;
+      }
+      JSCompiler_inline_result = !1;
     }
-    return !1;
+    return JSCompiler_inline_result;
   } finally {
     (currentTask = null),
       (currentPriorityLevel = previousPriorityLevel),
@@ -215,6 +211,7 @@ exports.unstable_IdlePriority = 5;
 exports.unstable_ImmediatePriority = 1;
 exports.unstable_LowPriority = 4;
 exports.unstable_NormalPriority = 3;
+exports.unstable_Profiling = null;
 exports.unstable_UserBlockingPriority = 2;
 exports.unstable_advanceTime = function(ms) {
   currentTime += ms;

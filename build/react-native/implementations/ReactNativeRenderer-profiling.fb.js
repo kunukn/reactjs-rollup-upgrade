@@ -1253,9 +1253,12 @@ function isFiberMountedImpl(fiber) {
   var node = fiber;
   if (fiber.alternate) for (; node.return; ) node = node.return;
   else {
-    if (0 !== (node.effectTag & 2)) return 1;
-    for (; node.return; )
-      if (((node = node.return), 0 !== (node.effectTag & 2))) return 1;
+    fiber = node;
+    do {
+      node = fiber;
+      if (0 !== (node.effectTag & 1026)) return 1;
+      fiber = node.return;
+    } while (fiber);
   }
   return 3 === node.tag ? 2 : 3;
 }
@@ -2161,7 +2164,7 @@ function getStateFromUpdate(
           : workInProgress
       );
     case 3:
-      workInProgress.effectTag = (workInProgress.effectTag & -2049) | 64;
+      workInProgress.effectTag = (workInProgress.effectTag & -4097) | 64;
     case 0:
       workInProgress = update.payload;
       nextProps =
@@ -4639,12 +4642,10 @@ function completeWork(current, workInProgress, renderExpirationTime) {
       popHostContainer();
       pop(didPerformWorkStackCursor);
       pop(contextStackCursor);
-      newProps = workInProgress.stateNode;
-      newProps.pendingContext &&
-        ((newProps.context = newProps.pendingContext),
-        (newProps.pendingContext = null));
-      if (null === current || null === current.child)
-        workInProgress.effectTag &= -3;
+      current = workInProgress.stateNode;
+      current.pendingContext &&
+        ((current.context = current.pendingContext),
+        (current.pendingContext = null));
       updateHostContainer(workInProgress);
       break;
     case 5:
@@ -4939,8 +4940,8 @@ function unwindWork(workInProgress) {
     case 1:
       isContextProvider(workInProgress.type) && popContext();
       var effectTag = workInProgress.effectTag;
-      return effectTag & 2048
-        ? ((workInProgress.effectTag = (effectTag & -2049) | 64),
+      return effectTag & 4096
+        ? ((workInProgress.effectTag = (effectTag & -4097) | 64),
           workInProgress)
         : null;
     case 3:
@@ -4954,7 +4955,7 @@ function unwindWork(workInProgress) {
             "The root failed to unmount after an error. This is likely a bug in React. Please file an issue."
           )
         );
-      workInProgress.effectTag = (effectTag & -2049) | 64;
+      workInProgress.effectTag = (effectTag & -4097) | 64;
       return workInProgress;
     case 5:
       return popHostContext(workInProgress), null;
@@ -4962,8 +4963,8 @@ function unwindWork(workInProgress) {
       return (
         pop(suspenseStackCursor),
         (effectTag = workInProgress.effectTag),
-        effectTag & 2048
-          ? ((workInProgress.effectTag = (effectTag & -2049) | 64),
+        effectTag & 4096
+          ? ((workInProgress.effectTag = (effectTag & -4097) | 64),
             workInProgress)
           : null
       );
@@ -5914,7 +5915,7 @@ function renderRoot(root$jscomp$0, expirationTime, isSync) {
             sourceFiber = currentTime,
             value = thrownValue,
             renderExpirationTime = renderExpirationTime$1;
-          sourceFiber.effectTag |= 1024;
+          sourceFiber.effectTag |= 2048;
           sourceFiber.firstEffect = sourceFiber.lastEffect = null;
           if (
             null !== value &&
@@ -5950,7 +5951,7 @@ function renderRoot(root$jscomp$0, expirationTime, isSync) {
                   : returnFiber.add(thenable);
                 if (0 === (value.mode & 2)) {
                   value.effectTag |= 64;
-                  sourceFiber.effectTag &= -1957;
+                  sourceFiber.effectTag &= -2981;
                   1 === sourceFiber.tag &&
                     (null === sourceFiber.alternate
                       ? (sourceFiber.tag = 17)
@@ -5984,7 +5985,7 @@ function renderRoot(root$jscomp$0, expirationTime, isSync) {
                   )),
                   (sourceFiber = tracing.unstable_wrap(sourceFiber)),
                   thenable.then(sourceFiber, sourceFiber));
-                value.effectTag |= 2048;
+                value.effectTag |= 4096;
                 value.expirationTime = renderExpirationTime;
                 break a;
               }
@@ -6003,7 +6004,7 @@ function renderRoot(root$jscomp$0, expirationTime, isSync) {
           do {
             switch (sourceFiber.tag) {
               case 3:
-                sourceFiber.effectTag |= 2048;
+                sourceFiber.effectTag |= 4096;
                 sourceFiber.expirationTime = renderExpirationTime;
                 renderExpirationTime = createRootErrorUpdate(
                   sourceFiber,
@@ -6026,7 +6027,7 @@ function renderRoot(root$jscomp$0, expirationTime, isSync) {
                             returnFiber
                           )))))
                 ) {
-                  sourceFiber.effectTag |= 2048;
+                  sourceFiber.effectTag |= 4096;
                   sourceFiber.expirationTime = renderExpirationTime;
                   renderExpirationTime = createClassErrorUpdate(
                     sourceFiber,
@@ -6200,7 +6201,7 @@ function completeUnitOfWork(unitOfWork) {
   do {
     var current = workInProgress.alternate;
     unitOfWork = workInProgress.return;
-    if (0 === (workInProgress.effectTag & 1024)) {
+    if (0 === (workInProgress.effectTag & 2048)) {
       if (0 === (workInProgress.mode & 8))
         current = completeWork(current, workInProgress, renderExpirationTime$1);
       else {
@@ -6251,7 +6252,7 @@ function completeUnitOfWork(unitOfWork) {
       }
       if (null !== current) return current;
       null !== unitOfWork &&
-        0 === (unitOfWork.effectTag & 1024) &&
+        0 === (unitOfWork.effectTag & 2048) &&
         (null === unitOfWork.firstEffect &&
           (unitOfWork.firstEffect = workInProgress.firstEffect),
         null !== workInProgress.lastEffect &&
@@ -6277,10 +6278,10 @@ function completeUnitOfWork(unitOfWork) {
             (newChildExpirationTime = newChildExpirationTime.sibling);
         workInProgress.actualDuration = fiber;
       }
-      if (null !== current) return (current.effectTag &= 1023), current;
+      if (null !== current) return (current.effectTag &= 2047), current;
       null !== unitOfWork &&
         ((unitOfWork.firstEffect = unitOfWork.lastEffect = null),
-        (unitOfWork.effectTag |= 1024));
+        (unitOfWork.effectTag |= 2048));
     }
     current = workInProgress.sibling;
     if (null !== current) return current;
@@ -6415,7 +6416,7 @@ function commitRootImpl(root, renderPriorityLevel) {
                   : (currentRef.current = null));
             }
           }
-          switch (effectTag & 14) {
+          switch (effectTag & 1038) {
             case 2:
               commitPlacement(nextEffect);
               nextEffect.effectTag &= -3;
@@ -6423,6 +6424,13 @@ function commitRootImpl(root, renderPriorityLevel) {
             case 6:
               commitPlacement(nextEffect);
               nextEffect.effectTag &= -3;
+              commitWork(nextEffect.alternate, nextEffect);
+              break;
+            case 1024:
+              nextEffect.effectTag &= -1025;
+              break;
+            case 1028:
+              nextEffect.effectTag &= -1025;
               commitWork(nextEffect.alternate, nextEffect);
               break;
             case 4:

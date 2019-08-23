@@ -190,13 +190,13 @@
     "Input",
     inputResponderImpl
   );
-  function useInputResponder(props) {
+  function useInput(props) {
     return React.unstable_useResponder(InputResponder, props);
   }
 
   var Input = /*#__PURE__*/ Object.freeze({
     InputResponder: InputResponder,
-    useInputResponder: useInputResponder
+    useInput: useInput
   });
 
   var input = Input;

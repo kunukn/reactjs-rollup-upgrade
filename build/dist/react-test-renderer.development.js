@@ -439,7 +439,13 @@
     256;
   var Passive =
     /*               */
-    512; // Passive & Update & Callback & Ref & Snapshot
+    512;
+  var Hydrating =
+    /*             */
+    1024;
+  var HydratingAndUpdate =
+    /*    */
+    1028; // Passive & Update & Callback & Ref & Snapshot
 
   var LifecycleEffectMask =
     /*   */
@@ -447,13 +453,13 @@
 
   var HostEffectMask =
     /*        */
-    1023;
+    2047;
   var Incomplete =
     /*            */
-    1024;
+    2048;
   var ShouldCapture =
     /*         */
-    2048;
+    4096;
 
   var enableProfilerTimer = true;
   var enableFundamentalAPI = false;
@@ -470,17 +476,17 @@
     if (!fiber.alternate) {
       // If there is no alternate, this might be a new tree that isn't inserted
       // yet. If it is, then it will have a pending insertion effect on it.
-      if ((node.effectTag & Placement) !== NoEffect) {
-        return MOUNTING;
-      }
+      var nextNode = node;
 
-      while (node.return) {
-        node = node.return;
+      do {
+        node = nextNode;
 
-        if ((node.effectTag & Placement) !== NoEffect) {
+        if ((node.effectTag & (Placement | Hydrating)) !== NoEffect) {
           return MOUNTING;
         }
-      }
+
+        nextNode = node.return;
+      } while (nextNode);
     } else {
       while (node.return) {
         node = node.return;
@@ -7878,7 +7884,7 @@
     })();
 
     {
-      !(arguments.length <= 3)
+      !(typeof arguments[3] !== "function")
         ? warning$1(
             false,
             "State updates from the useState() and useReducer() Hooks don't support the " +
@@ -9640,11 +9646,10 @@
       // We always try to hydrate. If this isn't a hydration pass there won't
       // be any children to hydrate which is effectively the same thing as
       // not hydrating.
-      // This is a bit of a hack. We track the host root as a placement to
-      // know that we're currently in a mounting state. That way isMounted
-      // works as expected. We must reset this before committing.
-      // TODO: Delete this when we delete isMounted and findDOMNode.
-      workInProgress.effectTag |= Placement; // Ensure that children mount into this root without tracking
+      // Mark the host root with a Hydrating effect to know that we're
+      // currently in a mounting state. That way isMounted, findDOMNode and
+      // event replaying works as expected.
+      workInProgress.effectTag |= Hydrating; // Ensure that children mount into this root without tracking
       // side-effects. This ensures that we don't store Placement effects on
       // nodes that will be hydrated.
 
@@ -11769,10 +11774,7 @@
         if (current === null || current.child === null) {
           // If we hydrated, pop so that we can delete any remaining children
           // that weren't hydrated.
-          popHydrationState(workInProgress); // This resets the hacky state to fix isMounted before committing.
-          // TODO: Delete this when we delete isMounted and findDOMNode.
-
-          workInProgress.effectTag &= ~Placement;
+          popHydrationState(workInProgress);
         }
 
         updateHostContainer(workInProgress);
@@ -11829,15 +11831,15 @@
               markUpdate(workInProgress);
             }
           } else {
-            var _instance6 = createInstance(
+            var _instance5 = createInstance(
               type,
               newProps,
               rootContainerInstance
             );
 
-            appendAllChildren(_instance6, workInProgress, false, false);
+            appendAllChildren(_instance5, workInProgress, false, false);
 
-            workInProgress.stateNode = _instance6;
+            workInProgress.stateNode = _instance5;
           }
 
           if (workInProgress.ref !== null) {
@@ -15844,7 +15846,8 @@
       // bitmap value, we remove the secondary effects from the effect tag and
       // switch on that value.
 
-      var primaryEffectTag = effectTag & (Placement | Update | Deletion);
+      var primaryEffectTag =
+        effectTag & (Placement | Update | Deletion | Hydrating);
 
       switch (primaryEffectTag) {
         case Placement: {
@@ -15869,9 +15872,22 @@
           break;
         }
 
-        case Update: {
+        case Hydrating: {
+          nextEffect.effectTag &= ~Hydrating;
+          break;
+        }
+
+        case HydratingAndUpdate: {
+          nextEffect.effectTag &= ~Hydrating; // Update
+
           var _current2 = nextEffect.alternate;
           commitWork(_current2, nextEffect);
+          break;
+        }
+
+        case Update: {
+          var _current3 = nextEffect.alternate;
+          commitWork(_current3, nextEffect);
           break;
         }
 

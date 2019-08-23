@@ -262,13 +262,13 @@
     "Scroll",
     scrollResponderImpl
   );
-  function useScrollResponder(props) {
+  function useScroll(props) {
     return React.unstable_useResponder(ScrollResponder, props);
   }
 
   var Scroll = /*#__PURE__*/ Object.freeze({
     ScrollResponder: ScrollResponder,
-    useScrollResponder: useScrollResponder
+    useScroll: useScroll
   });
 
   var scroll = Scroll;

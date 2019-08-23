@@ -147,9 +147,12 @@ function isFiberMountedImpl(fiber) {
   var node = fiber;
   if (fiber.alternate) for (; node.return; ) node = node.return;
   else {
-    if (0 !== (node.effectTag & 2)) return 1;
-    for (; node.return; )
-      if (((node = node.return), 0 !== (node.effectTag & 2))) return 1;
+    fiber = node;
+    do {
+      node = fiber;
+      if (0 !== (node.effectTag & 1026)) return 1;
+      fiber = node.return;
+    } while (fiber);
   }
   return 3 === node.tag ? 2 : 3;
 }
@@ -466,12 +469,18 @@ var randomKey = Math.random()
   internalInstanceKey = "__reactInternalInstance$" + randomKey,
   internalEventHandlersKey = "__reactEventHandlers$" + randomKey;
 function getClosestInstanceFromNode(node) {
-  if (node[internalInstanceKey]) return node[internalInstanceKey];
-  for (; !node[internalInstanceKey]; )
-    if (node.parentNode) node = node.parentNode;
+  var inst = node[internalInstanceKey];
+  if (inst) return inst;
+  do
+    if ((node = node.parentNode)) inst = node[internalInstanceKey];
     else return null;
-  node = node[internalInstanceKey];
-  return 5 === node.tag || 6 === node.tag ? node : null;
+  while (!inst);
+  switch (inst.tag) {
+    case 5:
+    case 6:
+      return inst;
+  }
+  return null;
 }
 function getInstanceFromNode$1(node) {
   node = node[internalInstanceKey];
@@ -1912,9 +1921,6 @@ function shallowEqual(objA, objB) {
     )
       return !1;
   return !0;
-}
-function createResponderListener(responder, props) {
-  return { responder: responder, props: props };
 }
 var UserBlockingPriority = Scheduler.unstable_UserBlockingPriority,
   runWithPriority = Scheduler.unstable_runWithPriority,
@@ -4068,7 +4074,7 @@ function getStateFromUpdate(
           : workInProgress
       );
     case 3:
-      workInProgress.effectTag = (workInProgress.effectTag & -2049) | 64;
+      workInProgress.effectTag = (workInProgress.effectTag & -4097) | 64;
     case 0:
       workInProgress = update.payload;
       nextProps =
@@ -5126,6 +5132,109 @@ function findFirstSuspended(row) {
     node = node.sibling;
   }
   return null;
+}
+var emptyObject = {},
+  isArray$1 = Array.isArray;
+function updateEventListener(
+  listener,
+  fiber,
+  visistedResponders,
+  respondersMap,
+  instance
+) {
+  if (listener) {
+    var responder = listener.responder;
+    var props = listener.props;
+  }
+  if (!responder || responder.$$typeof !== REACT_RESPONDER_TYPE)
+    throw ReactErrorProd(Error(339));
+  listener = props;
+  if (!visistedResponders.has(responder))
+    if (
+      (visistedResponders.add(responder),
+      (visistedResponders = respondersMap.get(responder)),
+      void 0 === visistedResponders)
+    ) {
+      visistedResponders = emptyObject;
+      props = responder.getInitialState;
+      null !== props && (visistedResponders = props(listener));
+      fiber = {
+        fiber: fiber,
+        props: listener,
+        responder: responder,
+        rootEventTypes: null,
+        state: visistedResponders,
+        target: instance
+      };
+      instance = instance.ownerDocument;
+      instance = instance.body || instance;
+      props = responder.rootEventTypes;
+      var targetEventTypes = responder.targetEventTypes;
+      null !== targetEventTypes &&
+        listenToEventResponderEventTypes(targetEventTypes, instance);
+      if (null !== props) {
+        for (
+          targetEventTypes = 0;
+          targetEventTypes < props.length;
+          targetEventTypes++
+        )
+          registerRootEventType(props[targetEventTypes], fiber);
+        listenToEventResponderEventTypes(props, instance);
+      }
+      mountEventResponder(responder, fiber, listener, visistedResponders);
+      respondersMap.set(responder, fiber);
+    } else
+      (visistedResponders.props = listener), (visistedResponders.fiber = fiber);
+}
+function updateEventListeners(listeners, instance, fiber) {
+  var visistedResponders = new Set(),
+    dependencies = fiber.dependencies;
+  if (null != listeners) {
+    null === dependencies &&
+      (dependencies = fiber.dependencies = {
+        expirationTime: 0,
+        firstContext: null,
+        responders: new Map()
+      });
+    var respondersMap = dependencies.responders;
+    null === respondersMap && (respondersMap = new Map());
+    if (isArray$1(listeners))
+      for (var i = 0, length = listeners.length; i < length; i++)
+        updateEventListener(
+          listeners[i],
+          fiber,
+          visistedResponders,
+          respondersMap,
+          instance
+        );
+    else
+      updateEventListener(
+        listeners,
+        fiber,
+        visistedResponders,
+        respondersMap,
+        instance
+      );
+  }
+  if (
+    null !== dependencies &&
+    ((listeners = dependencies.responders), null !== listeners)
+  )
+    for (
+      instance = Array.from(listeners.keys()),
+        fiber = 0,
+        dependencies = instance.length;
+      fiber < dependencies;
+      fiber++
+    )
+      (respondersMap = instance[fiber]),
+        visistedResponders.has(respondersMap) ||
+          ((i = listeners.get(respondersMap)),
+          unmountEventResponder(i),
+          listeners.delete(respondersMap));
+}
+function createResponderListener(responder, props) {
+  return { responder: responder, props: props };
 }
 var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher,
   renderExpirationTime = 0,
@@ -6319,52 +6428,60 @@ function updateSuspenseComponent(
         workInProgress.child = nextProps;
         return renderExpirationTime;
       }
-      0 === (workInProgress.mode & 2)
-        ? (workInProgress = retrySuspenseComponentWithoutHydrating(
+      if (0 === (workInProgress.mode & 2))
+        workInProgress = retrySuspenseComponentWithoutHydrating(
+          current,
+          workInProgress,
+          renderExpirationTime
+        );
+      else if ("$!" === JSCompiler_temp.data)
+        workInProgress = retrySuspenseComponentWithoutHydrating(
+          current,
+          workInProgress,
+          renderExpirationTime
+        );
+      else if (
+        ((mode = current.childExpirationTime >= renderExpirationTime),
+        didReceiveUpdate || mode)
+      )
+        1073741823 > renderExpirationTime &&
+          suspenseContext.retryTime <= renderExpirationTime &&
+          ((mode = renderExpirationTime + 1),
+          (suspenseContext.retryTime = mode),
+          scheduleUpdateOnFiber(current, mode)),
+          renderDidSuspendDelayIfPossible(),
+          (workInProgress = retrySuspenseComponentWithoutHydrating(
             current,
             workInProgress,
             renderExpirationTime
-          ))
-        : "$!" === JSCompiler_temp.data
-          ? (workInProgress = retrySuspenseComponentWithoutHydrating(
-              current,
-              workInProgress,
-              renderExpirationTime
-            ))
-          : ((mode = current.childExpirationTime >= renderExpirationTime),
-            didReceiveUpdate || mode
-              ? (1073741823 > renderExpirationTime &&
-                  suspenseContext.retryTime <= renderExpirationTime &&
-                  ((mode = renderExpirationTime + 1),
-                  (suspenseContext.retryTime = mode),
-                  scheduleUpdateOnFiber(current, mode)),
-                renderDidSuspendDelayIfPossible(),
-                (workInProgress = retrySuspenseComponentWithoutHydrating(
-                  current,
-                  workInProgress,
-                  renderExpirationTime
-                )))
-              : "$?" === JSCompiler_temp.data
-                ? ((workInProgress.effectTag |= 64),
-                  (workInProgress.child = current.child),
-                  (workInProgress = retryDehydratedSuspenseBoundary.bind(
-                    null,
-                    current
-                  )),
-                  (JSCompiler_temp._reactRetry = workInProgress),
-                  (workInProgress = null))
-                : ((nextHydratableInstance = getNextHydratable(
-                    JSCompiler_temp.nextSibling
-                  )),
-                  popToNextHostParent(workInProgress),
-                  (isHydrating = !0),
-                  (workInProgress.child = mountChildFibers(
-                    workInProgress,
-                    null,
-                    workInProgress.pendingProps.children,
-                    renderExpirationTime
-                  )),
-                  (workInProgress = workInProgress.child)));
+          ));
+      else if ("$?" === JSCompiler_temp.data)
+        (workInProgress.effectTag |= 64),
+          (workInProgress.child = current.child),
+          (workInProgress = retryDehydratedSuspenseBoundary.bind(
+            null,
+            current
+          )),
+          (JSCompiler_temp._reactRetry = workInProgress),
+          (workInProgress = null);
+      else {
+        nextHydratableInstance = getNextHydratable(JSCompiler_temp.nextSibling);
+        popToNextHostParent(workInProgress);
+        isHydrating = !0;
+        for (
+          mode = renderExpirationTime = mountChildFibers(
+            workInProgress,
+            null,
+            workInProgress.pendingProps.children,
+            renderExpirationTime
+          );
+          mode;
+
+        )
+          (mode.effectTag |= 1024), (mode = mode.sibling);
+        workInProgress.child = renderExpirationTime;
+        workInProgress = workInProgress.child;
+      }
       return workInProgress;
     }
     current = current.child;
@@ -6637,9 +6754,7 @@ function bailoutOnAlreadyFinishedWork(
   }
   return workInProgress.child;
 }
-var emptyObject = {},
-  isArray$1 = Array.isArray,
-  appendAllChildren,
+var appendAllChildren,
   updateHostContainer,
   updateHostComponent$1,
   updateHostText$1;
@@ -6817,8 +6932,8 @@ function completeWork(current, workInProgress, renderExpirationTime) {
       newProps.pendingContext &&
         ((newProps.context = newProps.pendingContext),
         (newProps.pendingContext = null));
-      if (null === current || null === current.child)
-        popHydrationState(workInProgress), (workInProgress.effectTag &= -3);
+      (null !== current && null !== current.child) ||
+        popHydrationState(workInProgress);
       updateHostContainer(workInProgress);
       break;
     case 5:
@@ -6833,15 +6948,8 @@ function completeWork(current, workInProgress, renderExpirationTime) {
           newProps,
           renderExpirationTime
         ),
-          (newProps = newProps.listeners),
-          (type = workInProgress.stateNode),
-          current.memoizedProps.listeners !== newProps &&
-            updateEventListeners(
-              newProps,
-              type,
-              renderExpirationTime,
-              workInProgress
-            ),
+          current.memoizedProps.listeners !== newProps.listeners &&
+            (workInProgress.effectTag |= 4),
           current.ref !== workInProgress.ref &&
             (workInProgress.effectTag |= 128);
       else if (newProps) {
@@ -6925,15 +7033,14 @@ function completeWork(current, workInProgress, renderExpirationTime) {
             default:
               "function" === typeof current.onClick && (type.onclick = noop);
           }
-          type = i;
-          workInProgress.updateQueue = type;
-          null !== type && (workInProgress.effectTag |= 4);
-          type = workInProgress.stateNode;
+          renderExpirationTime = i;
+          workInProgress.updateQueue = renderExpirationTime;
+          null !== renderExpirationTime && (workInProgress.effectTag |= 4);
+          renderExpirationTime = workInProgress.stateNode;
           newProps = newProps.listeners;
           null != newProps &&
             updateEventListeners(
               newProps,
-              type,
               renderExpirationTime,
               workInProgress
             );
@@ -6963,12 +7070,7 @@ function completeWork(current, workInProgress, renderExpirationTime) {
           appendAllChildren(current, workInProgress, !1, !1);
           propKey = newProps.listeners;
           null != propKey &&
-            updateEventListeners(
-              propKey,
-              current,
-              renderExpirationTime,
-              workInProgress
-            );
+            updateEventListeners(propKey, current, workInProgress);
           propKey = isCustomComponent(type, newProps);
           switch (type) {
             case "iframe":
@@ -7346,120 +7448,13 @@ function completeWork(current, workInProgress, renderExpirationTime) {
   }
   return null;
 }
-function updateEventListener(
-  listener,
-  fiber,
-  visistedResponders,
-  respondersMap,
-  instance,
-  rootContainerInstance
-) {
-  if (listener) {
-    var responder = listener.responder;
-    var props = listener.props;
-  }
-  if (!responder || responder.$$typeof !== REACT_RESPONDER_TYPE)
-    throw ReactErrorProd(Error(339));
-  listener = props;
-  if (!visistedResponders.has(responder))
-    if (
-      (visistedResponders.add(responder),
-      (visistedResponders = respondersMap.get(responder)),
-      void 0 === visistedResponders)
-    ) {
-      visistedResponders = emptyObject;
-      props = responder.getInitialState;
-      null !== props && (visistedResponders = props(listener));
-      fiber = {
-        fiber: fiber,
-        props: listener,
-        responder: responder,
-        rootEventTypes: null,
-        state: visistedResponders,
-        target: instance
-      };
-      instance = visistedResponders;
-      rootContainerInstance = rootContainerInstance.ownerDocument;
-      rootContainerInstance =
-        rootContainerInstance.body || rootContainerInstance;
-      visistedResponders = responder.rootEventTypes;
-      props = responder.targetEventTypes;
-      null !== props &&
-        listenToEventResponderEventTypes(props, rootContainerInstance);
-      if (null !== visistedResponders) {
-        for (props = 0; props < visistedResponders.length; props++)
-          registerRootEventType(visistedResponders[props], fiber);
-        listenToEventResponderEventTypes(
-          visistedResponders,
-          rootContainerInstance
-        );
-      }
-      mountEventResponder(responder, fiber, listener, instance);
-      respondersMap.set(responder, fiber);
-    } else
-      (visistedResponders.props = listener), (visistedResponders.fiber = fiber);
-}
-function updateEventListeners(
-  listeners,
-  instance,
-  rootContainerInstance,
-  fiber
-) {
-  var visistedResponders = new Set(),
-    dependencies = fiber.dependencies;
-  if (null != listeners) {
-    null === dependencies &&
-      (dependencies = fiber.dependencies = {
-        expirationTime: 0,
-        firstContext: null,
-        responders: new Map()
-      });
-    var respondersMap = dependencies.responders;
-    null === respondersMap && (respondersMap = new Map());
-    if (isArray$1(listeners))
-      for (var i = 0, length = listeners.length; i < length; i++)
-        updateEventListener(
-          listeners[i],
-          fiber,
-          visistedResponders,
-          respondersMap,
-          instance,
-          rootContainerInstance
-        );
-    else
-      updateEventListener(
-        listeners,
-        fiber,
-        visistedResponders,
-        respondersMap,
-        instance,
-        rootContainerInstance
-      );
-  }
-  if (
-    null !== dependencies &&
-    ((listeners = dependencies.responders), null !== listeners)
-  )
-    for (
-      instance = Array.from(listeners.keys()),
-        rootContainerInstance = 0,
-        fiber = instance.length;
-      rootContainerInstance < fiber;
-      rootContainerInstance++
-    )
-      (dependencies = instance[rootContainerInstance]),
-        visistedResponders.has(dependencies) ||
-          ((respondersMap = listeners.get(dependencies)),
-          unmountEventResponder(respondersMap),
-          listeners.delete(dependencies));
-}
 function unwindWork(workInProgress) {
   switch (workInProgress.tag) {
     case 1:
       isContextProvider(workInProgress.type) && popContext();
       var effectTag = workInProgress.effectTag;
-      return effectTag & 2048
-        ? ((workInProgress.effectTag = (effectTag & -2049) | 64),
+      return effectTag & 4096
+        ? ((workInProgress.effectTag = (effectTag & -4097) | 64),
           workInProgress)
         : null;
     case 3:
@@ -7467,7 +7462,7 @@ function unwindWork(workInProgress) {
       popTopLevelContextObject();
       effectTag = workInProgress.effectTag;
       if (0 !== (effectTag & 64)) throw ReactErrorProd(Error(285));
-      workInProgress.effectTag = (effectTag & -2049) | 64;
+      workInProgress.effectTag = (effectTag & -4097) | 64;
       return workInProgress;
     case 5:
       return popHostContext(workInProgress), null;
@@ -7479,8 +7474,8 @@ function unwindWork(workInProgress) {
         resetHydrationState();
       }
       effectTag = workInProgress.effectTag;
-      return effectTag & 2048
-        ? ((workInProgress.effectTag = (effectTag & -2049) | 64),
+      return effectTag & 4096
+        ? ((workInProgress.effectTag = (effectTag & -4097) | 64),
           workInProgress)
         : null;
     case 19:
@@ -7858,22 +7853,25 @@ function commitWork(current, finishedWork) {
     case 5:
       var instance = finishedWork.stateNode;
       if (null != instance) {
-        var newProps = finishedWork.memoizedProps,
-          oldProps = null !== current ? current.memoizedProps : newProps;
-        current = finishedWork.type;
-        var updatePayload = finishedWork.updateQueue;
+        var newProps = finishedWork.memoizedProps;
+        current = null !== current ? current.memoizedProps : newProps;
+        var type = finishedWork.type,
+          updatePayload = finishedWork.updateQueue;
         finishedWork.updateQueue = null;
         if (null !== updatePayload) {
           instance[internalEventHandlersKey] = newProps;
-          "input" === current &&
+          "input" === type &&
             "radio" === newProps.type &&
             null != newProps.name &&
             updateChecked(instance, newProps);
-          isCustomComponent(current, oldProps);
-          finishedWork = isCustomComponent(current, newProps);
-          for (oldProps = 0; oldProps < updatePayload.length; oldProps += 2) {
-            var propKey = updatePayload[oldProps],
-              propValue = updatePayload[oldProps + 1];
+          isCustomComponent(type, current);
+          for (
+            var isCustomComponentTag = isCustomComponent(type, newProps), i = 0;
+            i < updatePayload.length;
+            i += 2
+          ) {
+            var propKey = updatePayload[i],
+              propValue = updatePayload[i + 1];
             "style" === propKey
               ? setValueForStyles(instance, propValue)
               : "dangerouslySetInnerHTML" === propKey
@@ -7884,10 +7882,10 @@ function commitWork(current, finishedWork) {
                       instance,
                       propKey,
                       propValue,
-                      finishedWork
+                      isCustomComponentTag
                     );
           }
-          switch (current) {
+          switch (type) {
             case "input":
               updateWrapper(instance, newProps);
               break;
@@ -7895,12 +7893,17 @@ function commitWork(current, finishedWork) {
               updateWrapper$1(instance, newProps);
               break;
             case "select":
-              (finishedWork = instance._wrapperState.wasMultiple),
+              (type = instance._wrapperState.wasMultiple),
                 (instance._wrapperState.wasMultiple = !!newProps.multiple),
-                (current = newProps.value),
-                null != current
-                  ? updateOptions(instance, !!newProps.multiple, current, !1)
-                  : finishedWork !== !!newProps.multiple &&
+                (updatePayload = newProps.value),
+                null != updatePayload
+                  ? updateOptions(
+                      instance,
+                      !!newProps.multiple,
+                      updatePayload,
+                      !1
+                    )
+                  : type !== !!newProps.multiple &&
                     (null != newProps.defaultValue
                       ? updateOptions(
                           instance,
@@ -7916,6 +7919,9 @@ function commitWork(current, finishedWork) {
                         ));
           }
         }
+        newProps = newProps.listeners;
+        current.listeners !== newProps &&
+          updateEventListeners(newProps, instance, finishedWork);
       }
       break;
     case 6:
@@ -7935,55 +7941,49 @@ function commitWork(current, finishedWork) {
           (newProps = finishedWork.child),
           (globalMostRecentFallbackTime = now()));
       if (null !== newProps)
-        a: for (updatePayload = newProps; ; ) {
-          if (5 === updatePayload.tag)
-            (oldProps = updatePayload.stateNode),
+        a: for (type = newProps; ; ) {
+          if (5 === type.tag)
+            (updatePayload = type.stateNode),
               current
-                ? ((oldProps = oldProps.style),
-                  "function" === typeof oldProps.setProperty
-                    ? oldProps.setProperty("display", "none", "important")
-                    : (oldProps.display = "none"))
-                : ((oldProps = updatePayload.stateNode),
-                  (propKey = updatePayload.memoizedProps.style),
-                  (propKey =
-                    void 0 !== propKey &&
-                    null !== propKey &&
-                    propKey.hasOwnProperty("display")
-                      ? propKey.display
+                ? ((updatePayload = updatePayload.style),
+                  "function" === typeof updatePayload.setProperty
+                    ? updatePayload.setProperty("display", "none", "important")
+                    : (updatePayload.display = "none"))
+                : ((updatePayload = type.stateNode),
+                  (isCustomComponentTag = type.memoizedProps.style),
+                  (isCustomComponentTag =
+                    void 0 !== isCustomComponentTag &&
+                    null !== isCustomComponentTag &&
+                    isCustomComponentTag.hasOwnProperty("display")
+                      ? isCustomComponentTag.display
                       : null),
-                  (oldProps.style.display = dangerousStyleValue(
+                  (updatePayload.style.display = dangerousStyleValue(
                     "display",
-                    propKey
+                    isCustomComponentTag
                   )));
-          else if (6 === updatePayload.tag)
-            updatePayload.stateNode.nodeValue = current
-              ? ""
-              : updatePayload.memoizedProps;
+          else if (6 === type.tag)
+            type.stateNode.nodeValue = current ? "" : type.memoizedProps;
           else if (
-            13 === updatePayload.tag &&
-            null !== updatePayload.memoizedState &&
-            null === updatePayload.memoizedState.dehydrated
+            13 === type.tag &&
+            null !== type.memoizedState &&
+            null === type.memoizedState.dehydrated
           ) {
-            oldProps = updatePayload.child.sibling;
-            oldProps.return = updatePayload;
-            updatePayload = oldProps;
+            updatePayload = type.child.sibling;
+            updatePayload.return = type;
+            type = updatePayload;
             continue;
-          } else if (null !== updatePayload.child) {
-            updatePayload.child.return = updatePayload;
-            updatePayload = updatePayload.child;
+          } else if (null !== type.child) {
+            type.child.return = type;
+            type = type.child;
             continue;
           }
-          if (updatePayload === newProps) break a;
-          for (; null === updatePayload.sibling; ) {
-            if (
-              null === updatePayload.return ||
-              updatePayload.return === newProps
-            )
-              break a;
-            updatePayload = updatePayload.return;
+          if (type === newProps) break a;
+          for (; null === type.sibling; ) {
+            if (null === type.return || type.return === newProps) break a;
+            type = type.return;
           }
-          updatePayload.sibling.return = updatePayload.return;
-          updatePayload = updatePayload.sibling;
+          type.sibling.return = type.return;
+          type = type.sibling;
         }
       null !== instance &&
         ((instance = finishedWork.memoizedProps.suspenseCallback),
@@ -8450,7 +8450,7 @@ function renderRoot(root$jscomp$0, expirationTime, isSync) {
             sourceFiber = currentTime,
             value = thrownValue,
             renderExpirationTime = renderExpirationTime$1;
-          sourceFiber.effectTag |= 1024;
+          sourceFiber.effectTag |= 2048;
           sourceFiber.firstEffect = sourceFiber.lastEffect = null;
           if (
             null !== value &&
@@ -8486,7 +8486,7 @@ function renderRoot(root$jscomp$0, expirationTime, isSync) {
                   : returnFiber.add(thenable);
                 if (0 === (value.mode & 2)) {
                   value.effectTag |= 64;
-                  sourceFiber.effectTag &= -1957;
+                  sourceFiber.effectTag &= -2981;
                   1 === sourceFiber.tag &&
                     (null === sourceFiber.alternate
                       ? (sourceFiber.tag = 17)
@@ -8520,7 +8520,7 @@ function renderRoot(root$jscomp$0, expirationTime, isSync) {
                   )),
                   (sourceFiber = tracing.unstable_wrap(sourceFiber)),
                   thenable.then(sourceFiber, sourceFiber));
-                value.effectTag |= 2048;
+                value.effectTag |= 4096;
                 value.expirationTime = renderExpirationTime;
                 break a;
               }
@@ -8539,7 +8539,7 @@ function renderRoot(root$jscomp$0, expirationTime, isSync) {
           do {
             switch (sourceFiber.tag) {
               case 3:
-                sourceFiber.effectTag |= 2048;
+                sourceFiber.effectTag |= 4096;
                 sourceFiber.expirationTime = renderExpirationTime;
                 renderExpirationTime = createRootErrorUpdate(
                   sourceFiber,
@@ -8562,7 +8562,7 @@ function renderRoot(root$jscomp$0, expirationTime, isSync) {
                             returnFiber
                           )))))
                 ) {
-                  sourceFiber.effectTag |= 2048;
+                  sourceFiber.effectTag |= 4096;
                   sourceFiber.expirationTime = renderExpirationTime;
                   renderExpirationTime = createClassErrorUpdate(
                     sourceFiber,
@@ -8750,7 +8750,7 @@ function completeUnitOfWork(unitOfWork) {
   do {
     var current = workInProgress.alternate;
     unitOfWork = workInProgress.return;
-    if (0 === (workInProgress.effectTag & 1024)) {
+    if (0 === (workInProgress.effectTag & 2048)) {
       if (0 === (workInProgress.mode & 8))
         current = completeWork(current, workInProgress, renderExpirationTime$1);
       else {
@@ -8802,7 +8802,7 @@ function completeUnitOfWork(unitOfWork) {
       }
       if (null !== current) return current;
       null !== unitOfWork &&
-        0 === (unitOfWork.effectTag & 1024) &&
+        0 === (unitOfWork.effectTag & 2048) &&
         (null === unitOfWork.firstEffect &&
           (unitOfWork.firstEffect = workInProgress.firstEffect),
         null !== workInProgress.lastEffect &&
@@ -8844,13 +8844,13 @@ function completeUnitOfWork(unitOfWork) {
                   ? "Rendering was suspended"
                   : "An error was thrown inside this error boundary"
               ))),
-          (current.effectTag &= 1023),
+          (current.effectTag &= 2047),
           current
         );
       stopWorkTimer(workInProgress);
       null !== unitOfWork &&
         ((unitOfWork.firstEffect = unitOfWork.lastEffect = null),
-        (unitOfWork.effectTag |= 1024));
+        (unitOfWork.effectTag |= 2048));
     }
     current = workInProgress.sibling;
     if (null !== current) return current;
@@ -9056,7 +9056,7 @@ function commitRootImpl(root, renderPriorityLevel) {
                   : (currentRef.current = null));
             }
           }
-          switch (effectTag & 14) {
+          switch (effectTag & 1038) {
             case 2:
               commitPlacement(nextEffect);
               nextEffect.effectTag &= -3;
@@ -9064,6 +9064,13 @@ function commitRootImpl(root, renderPriorityLevel) {
             case 6:
               commitPlacement(nextEffect);
               nextEffect.effectTag &= -3;
+              commitWork(nextEffect.alternate, nextEffect);
+              break;
+            case 1024:
+              nextEffect.effectTag &= -1025;
+              break;
+            case 1028:
+              nextEffect.effectTag &= -1025;
               commitWork(nextEffect.alternate, nextEffect);
               break;
             case 4:
@@ -9819,7 +9826,7 @@ beginWork$1 = function(current, workInProgress, renderExpirationTime) {
             (hydrationParentFiber = workInProgress),
             (context = isHydrating = !0);
         context
-          ? ((workInProgress.effectTag |= 2),
+          ? ((workInProgress.effectTag |= 1024),
             (workInProgress.child = mountChildFibers(
               workInProgress,
               null,

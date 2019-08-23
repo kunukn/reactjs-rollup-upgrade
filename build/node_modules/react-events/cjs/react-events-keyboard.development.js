@@ -176,13 +176,13 @@ var KeyboardResponder = React.unstable_createResponder(
   "Keyboard",
   keyboardResponderImpl
 );
-function useKeyboardResponder(props) {
+function useKeyboard(props) {
   return React.unstable_useResponder(KeyboardResponder, props);
 }
 
 var Keyboard = /*#__PURE__*/ Object.freeze({
   KeyboardResponder: KeyboardResponder,
-  useKeyboardResponder: useKeyboardResponder
+  useKeyboard: useKeyboard
 });
 
 function getCjsExportFromNamespace(n) {

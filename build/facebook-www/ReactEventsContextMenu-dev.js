@@ -85,13 +85,13 @@ var ContextMenuResponder = React.unstable_createResponder(
   "ContextMenu",
   contextMenuImpl
 );
-function useContextMenuResponder(props) {
+function useContextMenu(props) {
   return React.unstable_useResponder(ContextMenuResponder, props);
 }
 
 var ContextMenu = /*#__PURE__*/ Object.freeze({
   ContextMenuResponder: ContextMenuResponder,
-  useContextMenuResponder: useContextMenuResponder
+  useContextMenu: useContextMenu
 });
 
 function getCjsExportFromNamespace(n) {

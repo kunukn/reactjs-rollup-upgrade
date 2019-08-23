@@ -230,11 +230,11 @@ var FocusWithinResponder = React.unstable_createResponder("FocusWithin", {
   }),
   Focus = {
     FocusResponder: FocusResponder,
-    useFocusResponder: function(props) {
+    useFocus: function(props) {
       return React.unstable_useResponder(FocusResponder, props);
     },
     FocusWithinResponder: FocusWithinResponder,
-    useFocusWithinResponder: function(props) {
+    useFocusWithin: function(props) {
       return React.unstable_useResponder(FocusWithinResponder, props);
     }
   };

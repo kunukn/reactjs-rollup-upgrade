@@ -249,13 +249,13 @@ var SwipeResponder = React.unstable_createResponder(
   "Swipe",
   swipeResponderImpl
 );
-function useSwipeListener(props) {
-  return React.unstable_useListener(SwipeResponder, props);
+function useSwipe(props) {
+  return React.unstable_useResponder(SwipeResponder, props);
 }
 
 var Swipe = /*#__PURE__*/ Object.freeze({
   SwipeResponder: SwipeResponder,
-  useSwipeListener: useSwipeListener
+  useSwipe: useSwipe
 });
 
 function getCjsExportFromNamespace(n) {
