@@ -9,17 +9,24 @@
 
 'use strict';
 
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('react-dom'), require('react')) :
-  typeof define === 'function' && define.amd ? define(['react-dom', 'react'], factory) :
-  (global = global || self, global.ReactDOMUnstableNativeDependencies = factory(global.ReactDOM, global.React));
-}(this, function (ReactDOM, React) { 'use strict';
+(function(global, factory) {
+  typeof exports === "object" && typeof module !== "undefined"
+    ? (module.exports = factory(require("react-dom"), require("react")))
+    : typeof define === "function" && define.amd
+      ? define(["react-dom", "react"], factory)
+      : ((global = global || self),
+        (global.ReactDOMUnstableNativeDependencies = factory(
+          global.ReactDOM,
+          global.React
+        )));
+})(this, function(ReactDOM, React) {
+  "use strict";
 
   // Do not require this module directly! Use normal `invariant` calls with
   // template literal strings. The messages will be converted to ReactError during
   // build, and in production they will be minified.
   function ReactError(error) {
-    error.name = 'Invariant Violation';
+    error.name = "Invariant Violation";
     return error;
   }
 
@@ -44,8 +51,13 @@
     // try-catch. Neat!
     // Check that the browser supports the APIs we need to implement our special
     // DEV version of invokeGuardedCallback
-    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && typeof document !== 'undefined' && typeof document.createEvent === 'function') {
-      var fakeNode = document.createElement('react');
+    if (
+      typeof window !== "undefined" &&
+      typeof window.dispatchEvent === "function" &&
+      typeof document !== "undefined" &&
+      typeof document.createEvent === "function"
+    ) {
+      var fakeNode = document.createElement("react");
     }
   }
 
@@ -55,32 +67,43 @@
    * paths. Removing the logging code for production environments will keep the
    * same logic and follow the same code paths.
    */
-  var warningWithoutStack = function () {};
+  var warningWithoutStack = function() {};
 
   {
-    warningWithoutStack = function (condition, format) {
-      for (var _len = arguments.length, args = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+    warningWithoutStack = function(condition, format) {
+      for (
+        var _len = arguments.length,
+          args = new Array(_len > 2 ? _len - 2 : 0),
+          _key = 2;
+        _key < _len;
+        _key++
+      ) {
         args[_key - 2] = arguments[_key];
       }
 
       if (format === undefined) {
-        throw new Error('`warningWithoutStack(condition, format, ...args)` requires a warning ' + 'message argument');
+        throw new Error(
+          "`warningWithoutStack(condition, format, ...args)` requires a warning " +
+            "message argument"
+        );
       }
 
       if (args.length > 8) {
         // Check before the condition to catch violations early.
-        throw new Error('warningWithoutStack() currently supports at most 8 arguments.');
+        throw new Error(
+          "warningWithoutStack() currently supports at most 8 arguments."
+        );
       }
 
       if (condition) {
         return;
       }
 
-      if (typeof console !== 'undefined') {
-        var argsWithFormat = args.map(function (item) {
-          return '' + item;
+      if (typeof console !== "undefined") {
+        var argsWithFormat = args.map(function(item) {
+          return "" + item;
         });
-        argsWithFormat.unshift('Warning: ' + format); // We intentionally don't use spread (or .apply) directly because it
+        argsWithFormat.unshift("Warning: " + format); // We intentionally don't use spread (or .apply) directly because it
         // breaks IE9: https://github.com/facebook/react/issues/13610
 
         Function.prototype.apply.call(console.error, console, argsWithFormat);
@@ -91,9 +114,11 @@
         // This error was thrown as a convenience so that you can use this stack
         // to find the callsite that caused this warning to fire.
         var argIndex = 0;
-        var message = 'Warning: ' + format.replace(/%s/g, function () {
-          return args[argIndex++];
-        });
+        var message =
+          "Warning: " +
+          format.replace(/%s/g, function() {
+            return args[argIndex++];
+          });
         throw new Error(message);
       } catch (x) {}
     };
@@ -104,26 +129,46 @@
   var getFiberCurrentPropsFromNode = null;
   var getInstanceFromNode = null;
   var getNodeFromInstance = null;
-  function setComponentTree(getFiberCurrentPropsFromNodeImpl, getInstanceFromNodeImpl, getNodeFromInstanceImpl) {
+  function setComponentTree(
+    getFiberCurrentPropsFromNodeImpl,
+    getInstanceFromNodeImpl,
+    getNodeFromInstanceImpl
+  ) {
     getFiberCurrentPropsFromNode = getFiberCurrentPropsFromNodeImpl;
     getInstanceFromNode = getInstanceFromNodeImpl;
     getNodeFromInstance = getNodeFromInstanceImpl;
 
     {
-       !(getNodeFromInstance && getInstanceFromNode) ? warningWithoutStack$1(false, 'EventPluginUtils.setComponentTree(...): Injected ' + 'module is missing getNodeFromInstance or getInstanceFromNode.') : void 0 ;
+      !(getNodeFromInstance && getInstanceFromNode)
+        ? warningWithoutStack$1(
+            false,
+            "EventPluginUtils.setComponentTree(...): Injected " +
+              "module is missing getNodeFromInstance or getInstanceFromNode."
+          )
+        : void 0;
     }
   }
   var validateEventDispatches;
 
   {
-    validateEventDispatches = function (event) {
+    validateEventDispatches = function(event) {
       var dispatchListeners = event._dispatchListeners;
       var dispatchInstances = event._dispatchInstances;
       var listenersIsArr = Array.isArray(dispatchListeners);
-      var listenersLen = listenersIsArr ? dispatchListeners.length : dispatchListeners ? 1 : 0;
+      var listenersLen = listenersIsArr
+        ? dispatchListeners.length
+        : dispatchListeners
+          ? 1
+          : 0;
       var instancesIsArr = Array.isArray(dispatchInstances);
-      var instancesLen = instancesIsArr ? dispatchInstances.length : dispatchInstances ? 1 : 0;
-       !(instancesIsArr === listenersIsArr && instancesLen === listenersLen) ? warningWithoutStack$1(false, 'EventPluginUtils: Invalid `event`.') : void 0 ;
+      var instancesLen = instancesIsArr
+        ? dispatchInstances.length
+        : dispatchInstances
+          ? 1
+          : 0;
+      !(instancesIsArr === listenersIsArr && instancesLen === listenersLen)
+        ? warningWithoutStack$1(false, "EventPluginUtils: Invalid `event`.")
+        : void 0;
     };
   }
   /**
@@ -148,7 +193,6 @@
           break;
         } // Listeners and Instances are two parallel arrays that are always in sync.
 
-
         if (dispatchListeners[i](event, dispatchInstances[i])) {
           return dispatchInstances[i];
         }
@@ -164,7 +208,6 @@
   /**
    * @see executeDispatchesInOrderStopAtTrueImpl
    */
-
 
   function executeDispatchesInOrderStopAtTrue(event) {
     var ret = executeDispatchesInOrderStopAtTrueImpl(event);
@@ -190,15 +233,19 @@
     var dispatchListener = event._dispatchListeners;
     var dispatchInstance = event._dispatchInstances;
 
-    (function () {
+    (function() {
       if (!!Array.isArray(dispatchListener)) {
         {
-          throw ReactError(Error("executeDirectDispatch(...): Invalid `event`."));
+          throw ReactError(
+            Error("executeDirectDispatch(...): Invalid `event`.")
+          );
         }
       }
     })();
 
-    event.currentTarget = dispatchListener ? getNodeFromInstance(dispatchInstance) : null;
+    event.currentTarget = dispatchListener
+      ? getNodeFromInstance(dispatchInstance)
+      : null;
     var res = dispatchListener ? dispatchListener(event) : null;
     event.currentTarget = null;
     event._dispatchListeners = null;
@@ -236,7 +283,6 @@
    * different trees.
    */
 
-
   function getLowestCommonAncestor(instA, instB) {
     var depthA = 0;
 
@@ -250,18 +296,15 @@
       depthB++;
     } // If A is deeper, crawl up.
 
-
     while (depthA - depthB > 0) {
       instA = getParent(instA);
       depthA--;
     } // If B is deeper, crawl up.
 
-
     while (depthB - depthA > 0) {
       instB = getParent(instB);
       depthB--;
     } // Walk in lockstep until we find a match.
-
 
     var depth = depthA;
 
@@ -312,12 +355,12 @@
 
     var i;
 
-    for (i = path.length; i-- > 0;) {
-      fn(path[i], 'captured', arg);
+    for (i = path.length; i-- > 0; ) {
+      fn(path[i], "captured", arg);
     }
 
     for (i = 0; i < path.length; i++) {
-      fn(path[i], 'bubbled', arg);
+      fn(path[i], "bubbled", arg);
     }
   }
 
@@ -335,10 +378,14 @@
    */
 
   function accumulateInto(current, next) {
-    (function () {
+    (function() {
       if (!(next != null)) {
         {
-          throw ReactError(Error("accumulateInto(...): Accumulated items must not be null or undefined."));
+          throw ReactError(
+            Error(
+              "accumulateInto(...): Accumulated items must not be null or undefined."
+            )
+          );
         }
       }
     })();
@@ -347,7 +394,6 @@
       return next;
     } // Both are not empty. Warning: Never call x.concat(y) when you are not
     // certain that x is an Array (x could be a string with concat method).
-
 
     if (Array.isArray(current)) {
       if (Array.isArray(next)) {
@@ -385,21 +431,26 @@
   }
 
   function isInteractive(tag) {
-    return tag === 'button' || tag === 'input' || tag === 'select' || tag === 'textarea';
+    return (
+      tag === "button" ||
+      tag === "input" ||
+      tag === "select" ||
+      tag === "textarea"
+    );
   }
 
   function shouldPreventMouseEvent(name, type, props) {
     switch (name) {
-      case 'onClick':
-      case 'onClickCapture':
-      case 'onDoubleClick':
-      case 'onDoubleClickCapture':
-      case 'onMouseDown':
-      case 'onMouseDownCapture':
-      case 'onMouseMove':
-      case 'onMouseMoveCapture':
-      case 'onMouseUp':
-      case 'onMouseUpCapture':
+      case "onClick":
+      case "onClickCapture":
+      case "onDoubleClick":
+      case "onDoubleClickCapture":
+      case "onMouseDown":
+      case "onMouseDownCapture":
+      case "onMouseMove":
+      case "onMouseMoveCapture":
+      case "onMouseUp":
+      case "onMouseUpCapture":
         return !!(props.disabled && isInteractive(type));
 
       default:
@@ -436,10 +487,18 @@
       return null;
     }
 
-    (function () {
-      if (!(!listener || typeof listener === 'function')) {
+    (function() {
+      if (!(!listener || typeof listener === "function")) {
         {
-          throw ReactError(Error("Expected `" + registrationName + "` listener to be a function, instead got a value of `" + typeof listener + "` type."));
+          throw ReactError(
+            Error(
+              "Expected `" +
+                registrationName +
+                "` listener to be a function, instead got a value of `" +
+                typeof listener +
+                "` type."
+            )
+          );
         }
       }
     })();
@@ -452,7 +511,8 @@
    * "phases" of propagation. This finds listeners by a given phase.
    */
   function listenerAtPhase(inst, event, propagationPhase) {
-    var registrationName = event.dispatchConfig.phasedRegistrationNames[propagationPhase];
+    var registrationName =
+      event.dispatchConfig.phasedRegistrationNames[propagationPhase];
     return getListener(inst, registrationName);
   }
   /**
@@ -472,16 +532,20 @@
    * "dispatch" object that pairs the event with the listener.
    */
 
-
   function accumulateDirectionalDispatches(inst, phase, event) {
     {
-       !inst ? warningWithoutStack$1(false, 'Dispatching inst must not be null') : void 0 ;
+      !inst
+        ? warningWithoutStack$1(false, "Dispatching inst must not be null")
+        : void 0;
     }
 
     var listener = listenerAtPhase(inst, event, phase);
 
     if (listener) {
-      event._dispatchListeners = accumulateInto(event._dispatchListeners, listener);
+      event._dispatchListeners = accumulateInto(
+        event._dispatchListeners,
+        listener
+      );
       event._dispatchInstances = accumulateInto(event._dispatchInstances, inst);
     }
   }
@@ -493,16 +557,18 @@
    * have a different target.
    */
 
-
   function accumulateTwoPhaseDispatchesSingle(event) {
     if (event && event.dispatchConfig.phasedRegistrationNames) {
-      traverseTwoPhase(event._targetInst, accumulateDirectionalDispatches, event);
+      traverseTwoPhase(
+        event._targetInst,
+        accumulateDirectionalDispatches,
+        event
+      );
     }
   }
   /**
    * Same as `accumulateTwoPhaseDispatchesSingle`, but skips over the targetID.
    */
-
 
   function accumulateTwoPhaseDispatchesSingleSkipTarget(event) {
     if (event && event.dispatchConfig.phasedRegistrationNames) {
@@ -517,15 +583,20 @@
    * requiring that the `dispatchMarker` be the same as the dispatched ID.
    */
 
-
   function accumulateDispatches(inst, ignoredDirection, event) {
     if (inst && event && event.dispatchConfig.registrationName) {
       var registrationName = event.dispatchConfig.registrationName;
       var listener = getListener(inst, registrationName);
 
       if (listener) {
-        event._dispatchListeners = accumulateInto(event._dispatchListeners, listener);
-        event._dispatchInstances = accumulateInto(event._dispatchInstances, inst);
+        event._dispatchListeners = accumulateInto(
+          event._dispatchListeners,
+          listener
+        );
+        event._dispatchInstances = accumulateInto(
+          event._dispatchInstances,
+          inst
+        );
       }
     }
   }
@@ -534,7 +605,6 @@
    * `dispatchMarker`.
    * @param {SyntheticEvent} event
    */
-
 
   function accumulateDirectDispatchesSingle(event) {
     if (event && event.dispatchConfig.registrationName) {
@@ -565,13 +635,13 @@
     type: null,
     target: null,
     // currentTarget is set when dispatching; no use in copying it here
-    currentTarget: function () {
+    currentTarget: function() {
       return null;
     },
     eventPhase: null,
     bubbles: null,
     cancelable: null,
-    timeStamp: function (event) {
+    timeStamp: function(event) {
       return event.timeStamp || Date.now();
     },
     defaultPrevented: null,
@@ -604,8 +674,12 @@
    * @param {DOMEventTarget} nativeEventTarget Target node.
    */
 
-
-  function SyntheticEvent(dispatchConfig, targetInst, nativeEvent, nativeEventTarget) {
+  function SyntheticEvent(
+    dispatchConfig,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget
+  ) {
     {
       // these have a getter/setter for warnings
       delete this.nativeEvent;
@@ -634,7 +708,7 @@
       if (normalize) {
         this[propName] = normalize(nativeEvent);
       } else {
-        if (propName === 'target') {
+        if (propName === "target") {
           this.target = nativeEventTarget;
         } else {
           this[propName] = nativeEvent[propName];
@@ -642,7 +716,10 @@
       }
     }
 
-    var defaultPrevented = nativeEvent.defaultPrevented != null ? nativeEvent.defaultPrevented : nativeEvent.returnValue === false;
+    var defaultPrevented =
+      nativeEvent.defaultPrevented != null
+        ? nativeEvent.defaultPrevented
+        : nativeEvent.returnValue === false;
 
     if (defaultPrevented) {
       this.isDefaultPrevented = functionThatReturnsTrue;
@@ -655,7 +732,7 @@
   }
 
   _assign(SyntheticEvent.prototype, {
-    preventDefault: function () {
+    preventDefault: function() {
       this.defaultPrevented = true;
       var event = this.nativeEvent;
 
@@ -665,13 +742,13 @@
 
       if (event.preventDefault) {
         event.preventDefault();
-      } else if (typeof event.returnValue !== 'unknown') {
+      } else if (typeof event.returnValue !== "unknown") {
         event.returnValue = false;
       }
 
       this.isDefaultPrevented = functionThatReturnsTrue;
     },
-    stopPropagation: function () {
+    stopPropagation: function() {
       var event = this.nativeEvent;
 
       if (!event) {
@@ -680,7 +757,7 @@
 
       if (event.stopPropagation) {
         event.stopPropagation();
-      } else if (typeof event.cancelBubble !== 'unknown') {
+      } else if (typeof event.cancelBubble !== "unknown") {
         // The ChangeEventPlugin registers a "propertychange" event for
         // IE. This event does not support bubbling or cancelling, and
         // any references to cancelBubble throw "Member not found".  A
@@ -697,7 +774,7 @@
      * them back into the pool. This allows a way to hold onto a reference that
      * won't be added back into the pool.
      */
-    persist: function () {
+    persist: function() {
       this.isPersistent = functionThatReturnsTrue;
     },
 
@@ -711,12 +788,16 @@
     /**
      * `PooledClass` looks for `destructor` on each instance it releases.
      */
-    destructor: function () {
+    destructor: function() {
       var Interface = this.constructor.Interface;
 
       for (var propName in Interface) {
         {
-          Object.defineProperty(this, propName, getPooledWarningPropertyDefinition(propName, Interface[propName]));
+          Object.defineProperty(
+            this,
+            propName,
+            getPooledWarningPropertyDefinition(propName, Interface[propName])
+          );
         }
       }
 
@@ -729,11 +810,37 @@
       this._dispatchInstances = null;
 
       {
-        Object.defineProperty(this, 'nativeEvent', getPooledWarningPropertyDefinition('nativeEvent', null));
-        Object.defineProperty(this, 'isDefaultPrevented', getPooledWarningPropertyDefinition('isDefaultPrevented', functionThatReturnsFalse));
-        Object.defineProperty(this, 'isPropagationStopped', getPooledWarningPropertyDefinition('isPropagationStopped', functionThatReturnsFalse));
-        Object.defineProperty(this, 'preventDefault', getPooledWarningPropertyDefinition('preventDefault', function () {}));
-        Object.defineProperty(this, 'stopPropagation', getPooledWarningPropertyDefinition('stopPropagation', function () {}));
+        Object.defineProperty(
+          this,
+          "nativeEvent",
+          getPooledWarningPropertyDefinition("nativeEvent", null)
+        );
+        Object.defineProperty(
+          this,
+          "isDefaultPrevented",
+          getPooledWarningPropertyDefinition(
+            "isDefaultPrevented",
+            functionThatReturnsFalse
+          )
+        );
+        Object.defineProperty(
+          this,
+          "isPropagationStopped",
+          getPooledWarningPropertyDefinition(
+            "isPropagationStopped",
+            functionThatReturnsFalse
+          )
+        );
+        Object.defineProperty(
+          this,
+          "preventDefault",
+          getPooledWarningPropertyDefinition("preventDefault", function() {})
+        );
+        Object.defineProperty(
+          this,
+          "stopPropagation",
+          getPooledWarningPropertyDefinition("stopPropagation", function() {})
+        );
       }
     }
   });
@@ -743,10 +850,10 @@
    * Helper to reduce boilerplate when creating subclasses.
    */
 
-  SyntheticEvent.extend = function (Interface) {
+  SyntheticEvent.extend = function(Interface) {
     var Super = this;
 
-    var E = function () {};
+    var E = function() {};
 
     E.prototype = Super.prototype;
     var prototype = new E();
@@ -775,7 +882,7 @@
    */
 
   function getPooledWarningPropertyDefinition(propName, getVal) {
-    var isFunction = typeof getVal === 'function';
+    var isFunction = typeof getVal === "function";
     return {
       configurable: true,
       set: set,
@@ -783,20 +890,33 @@
     };
 
     function set(val) {
-      var action = isFunction ? 'setting the method' : 'setting the property';
-      warn(action, 'This is effectively a no-op');
+      var action = isFunction ? "setting the method" : "setting the property";
+      warn(action, "This is effectively a no-op");
       return val;
     }
 
     function get() {
-      var action = isFunction ? 'accessing the method' : 'accessing the property';
-      var result = isFunction ? 'This is a no-op function' : 'This is set to null';
+      var action = isFunction
+        ? "accessing the method"
+        : "accessing the property";
+      var result = isFunction
+        ? "This is a no-op function"
+        : "This is set to null";
       warn(action, result);
       return getVal;
     }
 
     function warn(action, result) {
-        warningWithoutStack$1(false, "This synthetic event is reused for performance reasons. If you're seeing this, " + "you're %s `%s` on a released/nullified synthetic event. %s. " + 'If you must keep the original synthetic event around, use event.persist(). ' + 'See https://fb.me/react-event-pooling for more information.', action, propName, result)  ;
+      warningWithoutStack$1(
+        false,
+        "This synthetic event is reused for performance reasons. If you're seeing this, " +
+          "you're %s `%s` on a released/nullified synthetic event. %s. " +
+          "If you must keep the original synthetic event around, use event.persist(). " +
+          "See https://fb.me/react-event-pooling for more information.",
+        action,
+        propName,
+        result
+      );
     }
   }
 
@@ -805,20 +925,35 @@
 
     if (EventConstructor.eventPool.length) {
       var instance = EventConstructor.eventPool.pop();
-      EventConstructor.call(instance, dispatchConfig, targetInst, nativeEvent, nativeInst);
+      EventConstructor.call(
+        instance,
+        dispatchConfig,
+        targetInst,
+        nativeEvent,
+        nativeInst
+      );
       return instance;
     }
 
-    return new EventConstructor(dispatchConfig, targetInst, nativeEvent, nativeInst);
+    return new EventConstructor(
+      dispatchConfig,
+      targetInst,
+      nativeEvent,
+      nativeInst
+    );
   }
 
   function releasePooledEvent(event) {
     var EventConstructor = this;
 
-    (function () {
+    (function() {
       if (!(event instanceof EventConstructor)) {
         {
-          throw ReactError(Error("Trying to release an event instance into a pool of a different type."));
+          throw ReactError(
+            Error(
+              "Trying to release an event instance into a pool of a different type."
+            )
+          );
         }
       }
     })();
@@ -843,22 +978,22 @@
    */
 
   var ResponderSyntheticEvent = SyntheticEvent.extend({
-    touchHistory: function (nativeEvent) {
+    touchHistory: function(nativeEvent) {
       return null; // Actually doesn't even look at the native event.
     }
   });
 
   // Note: ideally these would be imported from DOMTopLevelEventTypes,
   // but our build system currently doesn't let us do that from a fork.
-  var TOP_TOUCH_START = 'touchstart';
-  var TOP_TOUCH_MOVE = 'touchmove';
-  var TOP_TOUCH_END = 'touchend';
-  var TOP_TOUCH_CANCEL = 'touchcancel';
-  var TOP_SCROLL = 'scroll';
-  var TOP_SELECTION_CHANGE = 'selectionchange';
-  var TOP_MOUSE_DOWN = 'mousedown';
-  var TOP_MOUSE_MOVE = 'mousemove';
-  var TOP_MOUSE_UP = 'mouseup';
+  var TOP_TOUCH_START = "touchstart";
+  var TOP_TOUCH_MOVE = "touchmove";
+  var TOP_TOUCH_END = "touchend";
+  var TOP_TOUCH_CANCEL = "touchcancel";
+  var TOP_SCROLL = "scroll";
+  var TOP_SELECTION_CHANGE = "selectionchange";
+  var TOP_MOUSE_DOWN = "mousedown";
+  var TOP_MOUSE_MOVE = "mousemove";
+  var TOP_MOUSE_UP = "mouseup";
   function isStartish(topLevelType) {
     return topLevelType === TOP_TOUCH_START || topLevelType === TOP_MOUSE_DOWN;
   }
@@ -866,7 +1001,11 @@
     return topLevelType === TOP_TOUCH_MOVE || topLevelType === TOP_MOUSE_MOVE;
   }
   function isEndish(topLevelType) {
-    return topLevelType === TOP_TOUCH_END || topLevelType === TOP_TOUCH_CANCEL || topLevelType === TOP_MOUSE_UP;
+    return (
+      topLevelType === TOP_TOUCH_END ||
+      topLevelType === TOP_TOUCH_CANCEL ||
+      topLevelType === TOP_MOUSE_UP
+    );
   }
   var startDependencies = [TOP_TOUCH_START, TOP_MOUSE_DOWN];
   var moveDependencies = [TOP_TOUCH_MOVE, TOP_MOUSE_MOVE];
@@ -901,7 +1040,6 @@
    * include a built in velocity computation that can be reused globally.
    */
 
-
   function createTouchRecord(touch) {
     return {
       touchActive: true,
@@ -933,7 +1071,7 @@
   function getTouchIdentifier(_ref) {
     var identifier = _ref.identifier;
 
-    (function () {
+    (function() {
       if (!(identifier != null)) {
         {
           throw ReactError(Error("Touch object is missing identifier."));
@@ -942,7 +1080,15 @@
     })();
 
     {
-       !(identifier <= MAX_TOUCH_BANK) ? warningWithoutStack$1(false, 'Touch identifier %s is greater than maximum supported %s which causes ' + 'performance issues backfilling array locations for all of the indices.', identifier, MAX_TOUCH_BANK) : void 0 ;
+      !(identifier <= MAX_TOUCH_BANK)
+        ? warningWithoutStack$1(
+            false,
+            "Touch identifier %s is greater than maximum supported %s which causes " +
+              "performance issues backfilling array locations for all of the indices.",
+            identifier,
+            MAX_TOUCH_BANK
+          )
+        : void 0;
     }
 
     return identifier;
@@ -974,7 +1120,13 @@
       touchRecord.currentTimeStamp = timestampForTouch(touch);
       touchHistory.mostRecentTimeStamp = timestampForTouch(touch);
     } else {
-      console.warn('Cannot record touch move without a touch start.\n' + 'Touch Move: %s\n', 'Touch Bank: %s', printTouch(touch), printTouchBank());
+      console.warn(
+        "Cannot record touch move without a touch start.\n" +
+          "Touch Move: %s\n",
+        "Touch Bank: %s",
+        printTouch(touch),
+        printTouchBank()
+      );
     }
   }
 
@@ -991,7 +1143,12 @@
       touchRecord.currentTimeStamp = timestampForTouch(touch);
       touchHistory.mostRecentTimeStamp = timestampForTouch(touch);
     } else {
-      console.warn('Cannot record touch end without a touch start.\n' + 'Touch End: %s\n', 'Touch Bank: %s', printTouch(touch), printTouchBank());
+      console.warn(
+        "Cannot record touch end without a touch start.\n" + "Touch End: %s\n",
+        "Touch Bank: %s",
+        printTouch(touch),
+        printTouchBank()
+      );
     }
   }
 
@@ -1008,14 +1165,14 @@
     var printed = JSON.stringify(touchBank.slice(0, MAX_TOUCH_BANK));
 
     if (touchBank.length > MAX_TOUCH_BANK) {
-      printed += ' (original size: ' + touchBank.length + ')';
+      printed += " (original size: " + touchBank.length + ")";
     }
 
     return printed;
   }
 
   var ResponderTouchHistoryStore = {
-    recordTouchTrack: function (topLevelType, nativeEvent) {
+    recordTouchTrack: function(topLevelType, nativeEvent) {
       if (isMoveish(topLevelType)) {
         nativeEvent.changedTouches.forEach(recordTouchMove);
       } else if (isStartish(topLevelType)) {
@@ -1023,7 +1180,8 @@
         touchHistory.numberActiveTouches = nativeEvent.touches.length;
 
         if (touchHistory.numberActiveTouches === 1) {
-          touchHistory.indexOfSingleActiveTouch = nativeEvent.touches[0].identifier;
+          touchHistory.indexOfSingleActiveTouch =
+            nativeEvent.touches[0].identifier;
         }
       } else if (isEndish(topLevelType)) {
         nativeEvent.changedTouches.forEach(recordTouchEnd);
@@ -1041,7 +1199,9 @@
 
           {
             var activeRecord = touchBank[touchHistory.indexOfSingleActiveTouch];
-             !(activeRecord != null && activeRecord.touchActive) ? warningWithoutStack$1(false, 'Cannot find single active touch.') : void 0 ;
+            !(activeRecord != null && activeRecord.touchActive)
+              ? warningWithoutStack$1(false, "Cannot find single active touch.")
+              : void 0;
           }
         }
       }
@@ -1058,10 +1218,14 @@
    */
 
   function accumulate(current, next) {
-    (function () {
+    (function() {
       if (!(next != null)) {
         {
-          throw ReactError(Error("accumulate(...): Accumulated items must not be null or undefined."));
+          throw ReactError(
+            Error(
+              "accumulate(...): Accumulated items must not be null or undefined."
+            )
+          );
         }
       }
     })();
@@ -1070,7 +1234,6 @@
       return next;
     } // Both are not empty. Warning: Never call x.concat(y) when you are not
     // certain that x is an Array (x could be a string with concat method).
-
 
     if (Array.isArray(current)) {
       return current.concat(next);
@@ -1096,12 +1259,16 @@
 
   var trackedTouchCount = 0;
 
-  var changeResponder = function (nextResponderInst, blockHostResponder) {
+  var changeResponder = function(nextResponderInst, blockHostResponder) {
     var oldResponderInst = responderInst;
     responderInst = nextResponderInst;
 
     if (ResponderEventPlugin.GlobalResponderHandler !== null) {
-      ResponderEventPlugin.GlobalResponderHandler.onChange(oldResponderInst, nextResponderInst, blockHostResponder);
+      ResponderEventPlugin.GlobalResponderHandler.onChange(
+        oldResponderInst,
+        nextResponderInst,
+        blockHostResponder
+      );
     }
   };
 
@@ -1112,8 +1279,8 @@
      */
     startShouldSetResponder: {
       phasedRegistrationNames: {
-        bubbled: 'onStartShouldSetResponder',
-        captured: 'onStartShouldSetResponderCapture'
+        bubbled: "onStartShouldSetResponder",
+        captured: "onStartShouldSetResponderCapture"
       },
       dependencies: startDependencies
     },
@@ -1129,8 +1296,8 @@
      */
     scrollShouldSetResponder: {
       phasedRegistrationNames: {
-        bubbled: 'onScrollShouldSetResponder',
-        captured: 'onScrollShouldSetResponderCapture'
+        bubbled: "onScrollShouldSetResponder",
+        captured: "onScrollShouldSetResponderCapture"
       },
       dependencies: [TOP_SCROLL]
     },
@@ -1144,8 +1311,8 @@
      */
     selectionChangeShouldSetResponder: {
       phasedRegistrationNames: {
-        bubbled: 'onSelectionChangeShouldSetResponder',
-        captured: 'onSelectionChangeShouldSetResponderCapture'
+        bubbled: "onSelectionChangeShouldSetResponder",
+        captured: "onSelectionChangeShouldSetResponderCapture"
       },
       dependencies: [TOP_SELECTION_CHANGE]
     },
@@ -1156,8 +1323,8 @@
      */
     moveShouldSetResponder: {
       phasedRegistrationNames: {
-        bubbled: 'onMoveShouldSetResponder',
-        captured: 'onMoveShouldSetResponderCapture'
+        bubbled: "onMoveShouldSetResponder",
+        captured: "onMoveShouldSetResponderCapture"
       },
       dependencies: moveDependencies
     },
@@ -1166,35 +1333,35 @@
      * Direct responder events dispatched directly to responder. Do not bubble.
      */
     responderStart: {
-      registrationName: 'onResponderStart',
+      registrationName: "onResponderStart",
       dependencies: startDependencies
     },
     responderMove: {
-      registrationName: 'onResponderMove',
+      registrationName: "onResponderMove",
       dependencies: moveDependencies
     },
     responderEnd: {
-      registrationName: 'onResponderEnd',
+      registrationName: "onResponderEnd",
       dependencies: endDependencies
     },
     responderRelease: {
-      registrationName: 'onResponderRelease',
+      registrationName: "onResponderRelease",
       dependencies: endDependencies
     },
     responderTerminationRequest: {
-      registrationName: 'onResponderTerminationRequest',
+      registrationName: "onResponderTerminationRequest",
       dependencies: []
     },
     responderGrant: {
-      registrationName: 'onResponderGrant',
+      registrationName: "onResponderGrant",
       dependencies: []
     },
     responderReject: {
-      registrationName: 'onResponderReject',
+      registrationName: "onResponderReject",
       dependencies: []
     },
     responderTerminate: {
-      registrationName: 'onResponderTerminate',
+      registrationName: "onResponderTerminate",
       dependencies: []
     }
   };
@@ -1388,16 +1555,34 @@
    * - `responderGrant/Reject`   (`EventPluginHub` dispatches as usual)
    */
 
-  function setResponderAndExtractTransfer(topLevelType, targetInst, nativeEvent, nativeEventTarget) {
-    var shouldSetEventType = isStartish(topLevelType) ? eventTypes.startShouldSetResponder : isMoveish(topLevelType) ? eventTypes.moveShouldSetResponder : topLevelType === TOP_SELECTION_CHANGE ? eventTypes.selectionChangeShouldSetResponder : eventTypes.scrollShouldSetResponder; // TODO: stop one short of the current responder.
+  function setResponderAndExtractTransfer(
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget
+  ) {
+    var shouldSetEventType = isStartish(topLevelType)
+      ? eventTypes.startShouldSetResponder
+      : isMoveish(topLevelType)
+        ? eventTypes.moveShouldSetResponder
+        : topLevelType === TOP_SELECTION_CHANGE
+          ? eventTypes.selectionChangeShouldSetResponder
+          : eventTypes.scrollShouldSetResponder; // TODO: stop one short of the current responder.
 
-    var bubbleShouldSetFrom = !responderInst ? targetInst : getLowestCommonAncestor(responderInst, targetInst); // When capturing/bubbling the "shouldSet" event, we want to skip the target
+    var bubbleShouldSetFrom = !responderInst
+      ? targetInst
+      : getLowestCommonAncestor(responderInst, targetInst); // When capturing/bubbling the "shouldSet" event, we want to skip the target
     // (deepest ID) if it happens to be the current responder. The reasoning:
     // It's strange to get an `onMoveShouldSetResponder` when you're *already*
     // the responder.
 
     var skipOverBubbleShouldSetFrom = bubbleShouldSetFrom === responderInst;
-    var shouldSetEvent = ResponderSyntheticEvent.getPooled(shouldSetEventType, bubbleShouldSetFrom, nativeEvent, nativeEventTarget);
+    var shouldSetEvent = ResponderSyntheticEvent.getPooled(
+      shouldSetEventType,
+      bubbleShouldSetFrom,
+      nativeEvent,
+      nativeEventTarget
+    );
     shouldSetEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
 
     if (skipOverBubbleShouldSetFrom) {
@@ -1417,29 +1602,52 @@
     }
 
     var extracted;
-    var grantEvent = ResponderSyntheticEvent.getPooled(eventTypes.responderGrant, wantsResponderInst, nativeEvent, nativeEventTarget);
+    var grantEvent = ResponderSyntheticEvent.getPooled(
+      eventTypes.responderGrant,
+      wantsResponderInst,
+      nativeEvent,
+      nativeEventTarget
+    );
     grantEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
     accumulateDirectDispatches(grantEvent);
     var blockHostResponder = executeDirectDispatch(grantEvent) === true;
 
     if (responderInst) {
-      var terminationRequestEvent = ResponderSyntheticEvent.getPooled(eventTypes.responderTerminationRequest, responderInst, nativeEvent, nativeEventTarget);
-      terminationRequestEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
+      var terminationRequestEvent = ResponderSyntheticEvent.getPooled(
+        eventTypes.responderTerminationRequest,
+        responderInst,
+        nativeEvent,
+        nativeEventTarget
+      );
+      terminationRequestEvent.touchHistory =
+        ResponderTouchHistoryStore.touchHistory;
       accumulateDirectDispatches(terminationRequestEvent);
-      var shouldSwitch = !hasDispatches(terminationRequestEvent) || executeDirectDispatch(terminationRequestEvent);
+      var shouldSwitch =
+        !hasDispatches(terminationRequestEvent) ||
+        executeDirectDispatch(terminationRequestEvent);
 
       if (!terminationRequestEvent.isPersistent()) {
         terminationRequestEvent.constructor.release(terminationRequestEvent);
       }
 
       if (shouldSwitch) {
-        var terminateEvent = ResponderSyntheticEvent.getPooled(eventTypes.responderTerminate, responderInst, nativeEvent, nativeEventTarget);
+        var terminateEvent = ResponderSyntheticEvent.getPooled(
+          eventTypes.responderTerminate,
+          responderInst,
+          nativeEvent,
+          nativeEventTarget
+        );
         terminateEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
         accumulateDirectDispatches(terminateEvent);
         extracted = accumulate(extracted, [grantEvent, terminateEvent]);
         changeResponder(wantsResponderInst, blockHostResponder);
       } else {
-        var rejectEvent = ResponderSyntheticEvent.getPooled(eventTypes.responderReject, wantsResponderInst, nativeEvent, nativeEventTarget);
+        var rejectEvent = ResponderSyntheticEvent.getPooled(
+          eventTypes.responderReject,
+          wantsResponderInst,
+          nativeEvent,
+          nativeEventTarget
+        );
         rejectEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
         accumulateDirectDispatches(rejectEvent);
         extracted = accumulate(extracted, rejectEvent);
@@ -1460,12 +1668,16 @@
    * @return {boolean} True if a transfer of responder could possibly occur.
    */
 
-
   function canTriggerTransfer(topLevelType, topLevelInst, nativeEvent) {
-    return topLevelInst && ( // responderIgnoreScroll: We are trying to migrate away from specifically
-    // tracking native scroll events here and responderIgnoreScroll indicates we
-    // will send topTouchCancel to handle canceling touch events instead
-    topLevelType === TOP_SCROLL && !nativeEvent.responderIgnoreScroll || trackedTouchCount > 0 && topLevelType === TOP_SELECTION_CHANGE || isStartish(topLevelType) || isMoveish(topLevelType));
+    return (
+      topLevelInst && // responderIgnoreScroll: We are trying to migrate away from specifically
+      // tracking native scroll events here and responderIgnoreScroll indicates we
+      // will send topTouchCancel to handle canceling touch events instead
+      ((topLevelType === TOP_SCROLL && !nativeEvent.responderIgnoreScroll) ||
+        (trackedTouchCount > 0 && topLevelType === TOP_SELECTION_CHANGE) ||
+        isStartish(topLevelType) ||
+        isMoveish(topLevelType))
+    );
   }
   /**
    * Returns whether or not this touch end event makes it such that there are no
@@ -1474,7 +1686,6 @@
    * @param {NativeEvent} nativeEvent Native touch end event.
    * @return {boolean} Whether or not this touch end event ends the responder.
    */
-
 
   function noResponderTouches(nativeEvent) {
     var touches = nativeEvent.touches;
@@ -1502,7 +1713,7 @@
 
   var ResponderEventPlugin = {
     /* For unit testing only */
-    _getResponder: function () {
+    _getResponder: function() {
       return responderInst;
     },
     eventTypes: eventTypes,
@@ -1512,20 +1723,34 @@
      * `touchEnd`. On certain platforms, this means that a native scroll has
      * assumed control and the original touch targets are destroyed.
      */
-    extractEvents: function (topLevelType, targetInst, nativeEvent, nativeEventTarget) {
+    extractEvents: function(
+      topLevelType,
+      targetInst,
+      nativeEvent,
+      nativeEventTarget
+    ) {
       if (isStartish(topLevelType)) {
         trackedTouchCount += 1;
       } else if (isEndish(topLevelType)) {
         if (trackedTouchCount >= 0) {
           trackedTouchCount -= 1;
         } else {
-          console.error('Ended a touch event which was not counted in `trackedTouchCount`.');
+          console.error(
+            "Ended a touch event which was not counted in `trackedTouchCount`."
+          );
           return null;
         }
       }
 
       ResponderTouchHistoryStore.recordTouchTrack(topLevelType, nativeEvent);
-      var extracted = canTriggerTransfer(topLevelType, targetInst, nativeEvent) ? setResponderAndExtractTransfer(topLevelType, targetInst, nativeEvent, nativeEventTarget) : null; // Responder may or may not have transferred on a new touch start/move.
+      var extracted = canTriggerTransfer(topLevelType, targetInst, nativeEvent)
+        ? setResponderAndExtractTransfer(
+            topLevelType,
+            targetInst,
+            nativeEvent,
+            nativeEventTarget
+          )
+        : null; // Responder may or may not have transferred on a new touch start/move.
       // Regardless, whoever is the responder after any potential transfer, we
       // direct all touch start/move/ends to them in the form of
       // `onResponderMove/Start/End`. These will be called for *every* additional
@@ -1539,21 +1764,46 @@
       var isResponderTouchStart = responderInst && isStartish(topLevelType);
       var isResponderTouchMove = responderInst && isMoveish(topLevelType);
       var isResponderTouchEnd = responderInst && isEndish(topLevelType);
-      var incrementalTouch = isResponderTouchStart ? eventTypes.responderStart : isResponderTouchMove ? eventTypes.responderMove : isResponderTouchEnd ? eventTypes.responderEnd : null;
+      var incrementalTouch = isResponderTouchStart
+        ? eventTypes.responderStart
+        : isResponderTouchMove
+          ? eventTypes.responderMove
+          : isResponderTouchEnd
+            ? eventTypes.responderEnd
+            : null;
 
       if (incrementalTouch) {
-        var gesture = ResponderSyntheticEvent.getPooled(incrementalTouch, responderInst, nativeEvent, nativeEventTarget);
+        var gesture = ResponderSyntheticEvent.getPooled(
+          incrementalTouch,
+          responderInst,
+          nativeEvent,
+          nativeEventTarget
+        );
         gesture.touchHistory = ResponderTouchHistoryStore.touchHistory;
         accumulateDirectDispatches(gesture);
         extracted = accumulate(extracted, gesture);
       }
 
-      var isResponderTerminate = responderInst && topLevelType === TOP_TOUCH_CANCEL;
-      var isResponderRelease = responderInst && !isResponderTerminate && isEndish(topLevelType) && noResponderTouches(nativeEvent);
-      var finalTouch = isResponderTerminate ? eventTypes.responderTerminate : isResponderRelease ? eventTypes.responderRelease : null;
+      var isResponderTerminate =
+        responderInst && topLevelType === TOP_TOUCH_CANCEL;
+      var isResponderRelease =
+        responderInst &&
+        !isResponderTerminate &&
+        isEndish(topLevelType) &&
+        noResponderTouches(nativeEvent);
+      var finalTouch = isResponderTerminate
+        ? eventTypes.responderTerminate
+        : isResponderRelease
+          ? eventTypes.responderRelease
+          : null;
 
       if (finalTouch) {
-        var finalEvent = ResponderSyntheticEvent.getPooled(finalTouch, responderInst, nativeEvent, nativeEventTarget);
+        var finalEvent = ResponderSyntheticEvent.getPooled(
+          finalTouch,
+          responderInst,
+          nativeEvent,
+          nativeEventTarget
+        );
         finalEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
         accumulateDirectDispatches(finalEvent);
         extracted = accumulate(extracted, finalEvent);
@@ -1569,7 +1819,7 @@
        * Object that handles any change in responder. Use this to inject
        * integration with an existing touch handling system etc.
        */
-      injectGlobalResponderHandler: function (GlobalResponderHandler) {
+      injectGlobalResponderHandler: function(GlobalResponderHandler) {
         ResponderEventPlugin.GlobalResponderHandler = GlobalResponderHandler;
       }
     }
@@ -1577,14 +1827,19 @@
 
   // Keep in sync with ReactDOM.js, ReactTestUtils.js, and ReactTestUtilsAct.js:
 
-  var _ReactDOM$__SECRET_IN = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events,
-      getInstanceFromNode$1 = _ReactDOM$__SECRET_IN[0],
-      getNodeFromInstance$1 = _ReactDOM$__SECRET_IN[1],
-      getFiberCurrentPropsFromNode$1 = _ReactDOM$__SECRET_IN[2],
-      injectEventPluginsByName = _ReactDOM$__SECRET_IN[3];
-  setComponentTree(getFiberCurrentPropsFromNode$1, getInstanceFromNode$1, getNodeFromInstance$1);
+  var _ReactDOM$__SECRET_IN =
+      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events,
+    getInstanceFromNode$1 = _ReactDOM$__SECRET_IN[0],
+    getNodeFromInstance$1 = _ReactDOM$__SECRET_IN[1],
+    getFiberCurrentPropsFromNode$1 = _ReactDOM$__SECRET_IN[2],
+    injectEventPluginsByName = _ReactDOM$__SECRET_IN[3];
+  setComponentTree(
+    getFiberCurrentPropsFromNode$1,
+    getInstanceFromNode$1,
+    getNodeFromInstance$1
+  );
 
-  var ReactDOMUnstableNativeDependencies = /*#__PURE__*/Object.freeze({
+  var ReactDOMUnstableNativeDependencies = /*#__PURE__*/ Object.freeze({
     ResponderEventPlugin: ResponderEventPlugin,
     ResponderTouchHistoryStore: ResponderTouchHistoryStore,
     injectEventPluginsByName: injectEventPluginsByName
@@ -1593,5 +1848,4 @@
   var unstableNativeDependencies = ReactDOMUnstableNativeDependencies;
 
   return unstableNativeDependencies;
-
-}));
+});

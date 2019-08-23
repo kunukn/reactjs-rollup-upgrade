@@ -9,11 +9,14 @@
 
 'use strict';
 
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-  typeof define === 'function' && define.amd ? define(['exports'], factory) :
-  (global = global || self, factory(global.SchedulerMock = {}));
-}(this, function (exports) { 'use strict';
+(function(global, factory) {
+  typeof exports === "object" && typeof module !== "undefined"
+    ? factory(exports)
+    : typeof define === "function" && define.amd
+      ? define(["exports"], factory)
+      : ((global = global || self), factory((global.SchedulerMock = {})));
+})(this, function(exports) {
+  "use strict";
 
   var enableSchedulerDebugging = false;
 
@@ -39,7 +42,12 @@
     timeoutTime = -1;
   }
   function shouldYieldToHost() {
-    if (expectedNumberOfYields !== -1 && yieldedValues !== null && yieldedValues.length >= expectedNumberOfYields || shouldYieldForPaint && needsPaint) {
+    if (
+      (expectedNumberOfYields !== -1 &&
+        yieldedValues !== null &&
+        yieldedValues.length >= expectedNumberOfYields) ||
+      (shouldYieldForPaint && needsPaint)
+    ) {
       // We yielded at least as many values as expected. Stop flushing.
       didStop = true;
       return true;
@@ -50,12 +58,13 @@
   function getCurrentTime() {
     return currentTime;
   }
-  function forceFrameRate() {// No-op
+  function forceFrameRate() {
+    // No-op
   }
 
   function unstable_flushNumberOfYields(count) {
     if (isFlushing) {
-      throw new Error('Already flushing work.');
+      throw new Error("Already flushing work.");
     }
 
     if (scheduledCallback !== null) {
@@ -82,7 +91,7 @@
   }
   function unstable_flushUntilNextPaint() {
     if (isFlushing) {
-      throw new Error('Already flushing work.');
+      throw new Error("Already flushing work.");
     }
 
     if (scheduledCallback !== null) {
@@ -110,7 +119,7 @@
   }
   function unstable_flushExpired() {
     if (isFlushing) {
-      throw new Error('Already flushing work.');
+      throw new Error("Already flushing work.");
     }
 
     if (scheduledCallback !== null) {
@@ -130,7 +139,7 @@
   function unstable_flushAllWithoutAsserting() {
     // Returns false if no work was flushed.
     if (isFlushing) {
-      throw new Error('Already flushing work.');
+      throw new Error("Already flushing work.");
     }
 
     if (scheduledCallback !== null) {
@@ -167,13 +176,20 @@
   }
   function unstable_flushAll() {
     if (yieldedValues !== null) {
-      throw new Error('Log is not empty. Assert on the log of yielded values before ' + 'flushing additional work.');
+      throw new Error(
+        "Log is not empty. Assert on the log of yielded values before " +
+          "flushing additional work."
+      );
     }
 
     unstable_flushAllWithoutAsserting();
 
     if (yieldedValues !== null) {
-      throw new Error('While flushing work, something yielded a value. Use an ' + 'assertion helper to assert on the log of yielded values, e.g. ' + 'expect(Scheduler).toFlushAndYield([...])');
+      throw new Error(
+        "While flushing work, something yielded a value. Use an " +
+          "assertion helper to assert on the log of yielded values, e.g. " +
+          "expect(Scheduler).toFlushAndYield([...])"
+      );
     }
   }
   function unstable_yieldValue(value) {
@@ -319,7 +335,9 @@
     currentPriorityLevel = task.priorityLevel;
     var didUserCallbackTimeout = task.expirationTime <= currentTime;
     var continuationCallback = callback(didUserCallbackTimeout);
-    return typeof continuationCallback === 'function' ? continuationCallback : null;
+    return typeof continuationCallback === "function"
+      ? continuationCallback
+      : null;
   }
 
   function advanceTimers(currentTime) {
@@ -380,8 +398,14 @@
       advanceTimers(currentTime);
       currentTask = peek(taskQueue);
 
-      while (currentTask !== null && !(enableSchedulerDebugging && isSchedulerPaused)) {
-        if (currentTask.expirationTime > currentTime && (!hasTimeRemaining || shouldYieldToHost())) {
+      while (
+        currentTask !== null &&
+        !(enableSchedulerDebugging && isSchedulerPaused)
+      ) {
+        if (
+          currentTask.expirationTime > currentTime &&
+          (!hasTimeRemaining || shouldYieldToHost())
+        ) {
           // This currentTask hasn't expired, and we've reached the deadline.
           break;
         }
@@ -408,7 +432,6 @@
 
         currentTask = peek(taskQueue);
       } // Return whether there's additional work
-
 
       if (currentTask !== null) {
         return true;
@@ -480,7 +503,7 @@
 
   function unstable_wrapCallback(callback) {
     var parentPriorityLevel = currentPriorityLevel;
-    return function () {
+    return function() {
       // This is a fork of runWithPriority, inlined for performance.
       var previousPriorityLevel = currentPriorityLevel;
       currentPriorityLevel = parentPriorityLevel;
@@ -518,16 +541,19 @@
     var startTime;
     var timeout;
 
-    if (typeof options === 'object' && options !== null) {
+    if (typeof options === "object" && options !== null) {
       var delay = options.delay;
 
-      if (typeof delay === 'number' && delay > 0) {
+      if (typeof delay === "number" && delay > 0) {
         startTime = currentTime + delay;
       } else {
         startTime = currentTime;
       }
 
-      timeout = typeof options.timeout === 'number' ? options.timeout : timeoutForPriorityLevel(priorityLevel);
+      timeout =
+        typeof options.timeout === "number"
+          ? options.timeout
+          : timeoutForPriorityLevel(priorityLevel);
     } else {
       timeout = timeoutForPriorityLevel(priorityLevel);
       startTime = currentTime;
@@ -556,7 +582,6 @@
         } else {
           isHostTimeoutScheduled = true;
         } // Schedule a timeout.
-
 
         requestHostTimeout(handleTimeout, startTime - currentTime);
       }
@@ -606,7 +631,15 @@
     var currentTime = getCurrentTime();
     advanceTimers(currentTime);
     var firstTask = peek(taskQueue);
-    return firstTask !== currentTask && currentTask !== null && firstTask !== null && firstTask.callback !== null && firstTask.startTime <= currentTime && firstTask.expirationTime < currentTask.expirationTime || shouldYieldToHost();
+    return (
+      (firstTask !== currentTask &&
+        currentTask !== null &&
+        firstTask !== null &&
+        firstTask.callback !== null &&
+        firstTask.startTime <= currentTime &&
+        firstTask.expirationTime < currentTask.expirationTime) ||
+      shouldYieldToHost()
+    );
   }
 
   var unstable_requestPaint = requestPaint;
@@ -638,6 +671,5 @@
   exports.unstable_wrapCallback = unstable_wrapCallback;
   exports.unstable_yieldValue = unstable_yieldValue;
 
-  Object.defineProperty(exports, '__esModule', { value: true });
-
-}));
+  Object.defineProperty(exports, "__esModule", { value: true });
+});

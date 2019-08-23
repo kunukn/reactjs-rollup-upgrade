@@ -9,11 +9,15 @@
 
 'use strict';
 
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('react'), require('scheduler')) :
-  typeof define === 'function' && define.amd ? define(['exports', 'react', 'scheduler'], factory) :
-  (global = global || self, factory(global.ReactCache = {}, global.React, global.Scheduler));
-}(this, function (exports, React, Scheduler) { 'use strict';
+(function(global, factory) {
+  typeof exports === "object" && typeof module !== "undefined"
+    ? factory(exports, require("react"), require("scheduler"))
+    : typeof define === "function" && define.amd
+      ? define(["exports", "react", "scheduler"], factory)
+      : ((global = global || self),
+        factory((global.ReactCache = {}), global.React, global.Scheduler));
+})(this, function(exports, React, Scheduler) {
+  "use strict";
 
   /**
    * Similar to invariant but only logs a warning if the condition is not met.
@@ -21,32 +25,43 @@
    * paths. Removing the logging code for production environments will keep the
    * same logic and follow the same code paths.
    */
-  var warningWithoutStack = function () {};
+  var warningWithoutStack = function() {};
 
   {
-    warningWithoutStack = function (condition, format) {
-      for (var _len = arguments.length, args = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+    warningWithoutStack = function(condition, format) {
+      for (
+        var _len = arguments.length,
+          args = new Array(_len > 2 ? _len - 2 : 0),
+          _key = 2;
+        _key < _len;
+        _key++
+      ) {
         args[_key - 2] = arguments[_key];
       }
 
       if (format === undefined) {
-        throw new Error('`warningWithoutStack(condition, format, ...args)` requires a warning ' + 'message argument');
+        throw new Error(
+          "`warningWithoutStack(condition, format, ...args)` requires a warning " +
+            "message argument"
+        );
       }
 
       if (args.length > 8) {
         // Check before the condition to catch violations early.
-        throw new Error('warningWithoutStack() currently supports at most 8 arguments.');
+        throw new Error(
+          "warningWithoutStack() currently supports at most 8 arguments."
+        );
       }
 
       if (condition) {
         return;
       }
 
-      if (typeof console !== 'undefined') {
-        var argsWithFormat = args.map(function (item) {
-          return '' + item;
+      if (typeof console !== "undefined") {
+        var argsWithFormat = args.map(function(item) {
+          return "" + item;
         });
-        argsWithFormat.unshift('Warning: ' + format); // We intentionally don't use spread (or .apply) directly because it
+        argsWithFormat.unshift("Warning: " + format); // We intentionally don't use spread (or .apply) directly because it
         // breaks IE9: https://github.com/facebook/react/issues/13610
 
         Function.prototype.apply.call(console.error, console, argsWithFormat);
@@ -57,9 +72,11 @@
         // This error was thrown as a convenience so that you can use this stack
         // to find the callsite that caused this warning to fire.
         var argIndex = 0;
-        var message = 'Warning: ' + format.replace(/%s/g, function () {
-          return args[argIndex++];
-        });
+        var message =
+          "Warning: " +
+          format.replace(/%s/g, function() {
+            return args[argIndex++];
+          });
         throw new Error(message);
       } catch (x) {}
     };
@@ -70,7 +87,7 @@
   // use dynamic dispatch for CommonJS interop named imports.
 
   var scheduleCallback = Scheduler.unstable_scheduleCallback,
-      IdlePriority = Scheduler.unstable_IdlePriority;
+    IdlePriority = Scheduler.unstable_IdlePriority;
   function createLRU(limit) {
     var LIMIT = limit; // Circular, doubly-linked list
 
@@ -194,13 +211,19 @@
   var Pending = 0;
   var Resolved = 1;
   var Rejected = 2;
-  var ReactCurrentDispatcher = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentDispatcher;
+  var ReactCurrentDispatcher =
+    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+      .ReactCurrentDispatcher;
 
   function readContext(Context, observedBits) {
     var dispatcher = ReactCurrentDispatcher.current;
 
     if (dispatcher === null) {
-      throw new Error('react-cache: read and preload may only be called from within a ' + "component's render. They are not supported in event handlers or " + 'lifecycle methods.');
+      throw new Error(
+        "react-cache: read and preload may only be called from within a " +
+          "component's render. They are not supported in event handlers or " +
+          "lifecycle methods."
+      );
     }
 
     return dispatcher.readContext(Context, observedBits);
@@ -208,7 +231,22 @@
 
   function identityHashFn(input) {
     {
-       !(typeof input === 'string' || typeof input === 'number' || typeof input === 'boolean' || input === undefined || input === null) ? warningWithoutStack$1(false, 'Invalid key type. Expected a string, number, symbol, or boolean, ' + 'but instead received: %s' + '\n\nTo use non-primitive values as keys, you must pass a hash ' + 'function as the second argument to createResource().', input) : void 0 ;
+      !(
+        typeof input === "string" ||
+        typeof input === "number" ||
+        typeof input === "boolean" ||
+        input === undefined ||
+        input === null
+      )
+        ? warningWithoutStack$1(
+            false,
+            "Invalid key type. Expected a string, number, symbol, or boolean, " +
+              "but instead received: %s" +
+              "\n\nTo use non-primitive values as keys, you must pass a hash " +
+              "function as the second argument to createResource().",
+            input
+          )
+        : void 0;
     }
 
     return input;
@@ -231,19 +269,22 @@
 
     if (entry === undefined) {
       var thenable = fetch(input);
-      thenable.then(function (value) {
-        if (newResult.status === Pending) {
-          var resolvedResult = newResult;
-          resolvedResult.status = Resolved;
-          resolvedResult.value = value;
+      thenable.then(
+        function(value) {
+          if (newResult.status === Pending) {
+            var resolvedResult = newResult;
+            resolvedResult.status = Resolved;
+            resolvedResult.value = value;
+          }
+        },
+        function(error) {
+          if (newResult.status === Pending) {
+            var rejectedResult = newResult;
+            rejectedResult.status = Rejected;
+            rejectedResult.value = error;
+          }
         }
-      }, function (error) {
-        if (newResult.status === Pending) {
-          var rejectedResult = newResult;
-          rejectedResult.status = Rejected;
-          rejectedResult.value = error;
-        }
-      });
+      );
       var newResult = {
         status: Pending,
         value: thenable
@@ -269,9 +310,10 @@
   }
 
   function unstable_createResource(fetch, maybeHashInput) {
-    var hashInput = maybeHashInput !== undefined ? maybeHashInput : identityHashFn;
+    var hashInput =
+      maybeHashInput !== undefined ? maybeHashInput : identityHashFn;
     var resource = {
-      read: function (input) {
+      read: function(input) {
         // react-cache currently doesn't rely on context, but it may in the
         // future, so we read anyway to prevent access outside of render.
         readContext(CacheContext);
@@ -279,30 +321,27 @@
         var result = accessResult(resource, fetch, input, key);
 
         switch (result.status) {
-          case Pending:
-            {
-              var suspender = result.value;
-              throw suspender;
-            }
+          case Pending: {
+            var suspender = result.value;
+            throw suspender;
+          }
 
-          case Resolved:
-            {
-              var value = result.value;
-              return value;
-            }
+          case Resolved: {
+            var value = result.value;
+            return value;
+          }
 
-          case Rejected:
-            {
-              var error = result.value;
-              throw error;
-            }
+          case Rejected: {
+            var error = result.value;
+            throw error;
+          }
 
           default:
             // Should be unreachable
             return undefined;
         }
       },
-      preload: function (input) {
+      preload: function(input) {
         // react-cache currently doesn't rely on context, but it may in the
         // future, so we read anyway to prevent access outside of render.
         readContext(CacheContext);
@@ -319,6 +358,5 @@
   exports.unstable_createResource = unstable_createResource;
   exports.unstable_setGlobalCacheLimit = unstable_setGlobalCacheLimit;
 
-  Object.defineProperty(exports, '__esModule', { value: true });
-
-}));
+  Object.defineProperty(exports, "__esModule", { value: true });
+});

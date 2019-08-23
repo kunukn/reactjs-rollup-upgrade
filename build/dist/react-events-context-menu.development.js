@@ -9,15 +9,20 @@
 
 'use strict';
 
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('react')) :
-  typeof define === 'function' && define.amd ? define(['react'], factory) :
-  (global = global || self, global.ReactEventsContextMenu = factory(global.React));
-}(this, function (React) { 'use strict';
+(function(global, factory) {
+  typeof exports === "object" && typeof module !== "undefined"
+    ? (module.exports = factory(require("react")))
+    : typeof define === "function" && define.amd
+      ? define(["react"], factory)
+      : ((global = global || self),
+        (global.ReactEventsContextMenu = factory(global.React)));
+})(this, function(React) {
+  "use strict";
 
   var DiscreteEvent = 0;
 
-  var hasPointerEvents = typeof window !== 'undefined' && window.PointerEvent != null;
+  var hasPointerEvents =
+    typeof window !== "undefined" && window.PointerEvent != null;
 
   function dispatchContextMenuEvent(event, context, props, state) {
     var nativeEvent = event.nativeEvent;
@@ -35,7 +40,7 @@
       shiftKey: nativeEvent.shiftKey,
       target: target,
       timeStamp: timeStamp,
-      type: 'contextmenu',
+      type: "contextmenu",
       x: nativeEvent.clientX,
       y: nativeEvent.clientY
     };
@@ -43,13 +48,15 @@
   }
 
   var contextMenuImpl = {
-    targetEventTypes: hasPointerEvents ? ['contextmenu_active', 'pointerdown'] : ['contextmenu_active', 'touchstart', 'mousedown'],
-    getInitialState: function () {
+    targetEventTypes: hasPointerEvents
+      ? ["contextmenu_active", "pointerdown"]
+      : ["contextmenu_active", "touchstart", "mousedown"],
+    getInitialState: function() {
       return {
-        pointerType: ''
+        pointerType: ""
       };
     },
-    onEvent: function (event, context, props, state) {
+    onEvent: function(event, context, props, state) {
       var nativeEvent = event.nativeEvent;
       var pointerType = event.pointerType;
       var type = event.type;
@@ -58,7 +65,7 @@
         return;
       }
 
-      if (type === 'contextmenu') {
+      if (type === "contextmenu") {
         var onContextMenu = props.onContextMenu;
         var preventDefault = props.preventDefault;
 
@@ -66,22 +73,25 @@
           nativeEvent.preventDefault();
         }
 
-        if (typeof onContextMenu === 'function') {
+        if (typeof onContextMenu === "function") {
           dispatchContextMenuEvent(event, context, props, state);
         }
 
-        state.pointerType = '';
+        state.pointerType = "";
       } else {
         state.pointerType = pointerType;
       }
     }
   };
-  var ContextMenuResponder = React.unstable_createResponder('ContextMenu', contextMenuImpl);
+  var ContextMenuResponder = React.unstable_createResponder(
+    "ContextMenu",
+    contextMenuImpl
+  );
   function useContextMenuResponder(props) {
     return React.unstable_useResponder(ContextMenuResponder, props);
   }
 
-  var ContextMenu = /*#__PURE__*/Object.freeze({
+  var ContextMenu = /*#__PURE__*/ Object.freeze({
     ContextMenuResponder: ContextMenuResponder,
     useContextMenuResponder: useContextMenuResponder
   });
@@ -89,5 +99,4 @@
   var contextMenu = ContextMenu;
 
   return contextMenu;
-
-}));
+});
