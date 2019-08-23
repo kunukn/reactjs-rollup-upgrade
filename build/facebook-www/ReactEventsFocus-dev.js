@@ -276,7 +276,7 @@ var FocusResponder = React.unstable_createResponder(
   "Focus",
   focusResponderImpl
 );
-function useFocusResponder(props) {
+function useFocus(props) {
   return React.unstable_useResponder(FocusResponder, props);
 }
 /**
@@ -389,15 +389,15 @@ var FocusWithinResponder = React.unstable_createResponder(
   "FocusWithin",
   focusWithinResponderImpl
 );
-function useFocusWithinResponder(props) {
+function useFocusWithin(props) {
   return React.unstable_useResponder(FocusWithinResponder, props);
 }
 
 var Focus = (Object.freeze || Object)({
   FocusResponder: FocusResponder,
-  useFocusResponder: useFocusResponder,
+  useFocus: useFocus,
   FocusWithinResponder: FocusWithinResponder,
-  useFocusWithinResponder: useFocusWithinResponder
+  useFocusWithin: useFocusWithin
 });
 
 var focus = Focus;

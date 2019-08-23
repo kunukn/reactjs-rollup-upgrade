@@ -58,7 +58,7 @@ var React = require("react"),
   });
 module.exports = {
   ContextMenuResponder: ContextMenuResponder,
-  useContextMenuResponder: function(props) {
+  useContextMenu: function(props) {
     return React.unstable_useResponder(ContextMenuResponder, props);
   }
 };

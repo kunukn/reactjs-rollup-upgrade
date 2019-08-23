@@ -66,10 +66,10 @@ function createPressEvent(
   pointerType,
   event,
   touchEvent,
-  defaultPrevented
+  defaultPrevented,
+  state
 ) {
   var timeStamp = context.getTimeStamp();
-  var buttons = 1;
   var clientX = null;
   var clientY = null;
   var pageX = null;
@@ -94,7 +94,6 @@ function createPressEvent(
 
     if (eventObject) {
       var _eventObject = eventObject;
-      buttons = _eventObject.buttons;
       clientX = _eventObject.clientX;
       clientY = _eventObject.clientY;
       pageX = _eventObject.pageX;
@@ -106,7 +105,7 @@ function createPressEvent(
 
   return {
     altKey: altKey,
-    buttons: buttons,
+    buttons: state.buttons,
     clientX: clientX,
     clientY: clientY,
     ctrlKey: ctrlKey,
@@ -140,7 +139,8 @@ function dispatchEvent(event, listener, context, state, name, eventPriority) {
     pointerType,
     event,
     touchEvent,
-    defaultPrevented
+    defaultPrevented,
+    state
   );
   context.dispatchEvent(syntheticEvent, listener, eventPriority);
 }
@@ -403,6 +403,7 @@ var pressResponderImpl = {
     return {
       activationPosition: null,
       addedRootEvents: false,
+      buttons: 0,
       isActivePressed: false,
       isActivePressStart: false,
       isPressed: false,
@@ -493,7 +494,7 @@ var pressResponderImpl = {
 
             state.touchEvent = touchEvent;
             state.activePointerId = touchEvent.identifier;
-          } // Ignore any device buttons except primary/secondary and touch/pen contact.
+          } // Ignore any device buttons except primary/middle and touch/pen contact.
           // Additionally we ignore primary-button + ctrl-key with Macs as that
           // acts like right-click and opens the contextmenu.
 
@@ -515,6 +516,7 @@ var pressResponderImpl = {
 
           state.responderRegionOnDeactivation = null;
           state.isPressWithinResponderRegion = true;
+          state.buttons = nativeEvent.buttons;
           dispatchPressStartEvents(event, context, props, state);
           addRootEventTypes(context, state);
         } else {
@@ -621,7 +623,7 @@ var pressResponderImpl = {
       case "mouseup":
       case "touchend": {
         if (isPressed) {
-          var buttons = nativeEvent.buttons;
+          var buttons = state.buttons;
           var isKeyboardEvent = false;
 
           var _touchEvent;
@@ -769,13 +771,13 @@ var PressResponder = React.unstable_createResponder(
   "Press",
   pressResponderImpl
 );
-function usePressResponder(props) {
+function usePress(props) {
   return React.unstable_useResponder(PressResponder, props);
 }
 
 var Press = (Object.freeze || Object)({
   PressResponder: PressResponder,
-  usePressResponder: usePressResponder
+  usePress: usePress
 });
 
 var press = Press;

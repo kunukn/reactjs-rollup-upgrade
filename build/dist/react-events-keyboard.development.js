@@ -177,13 +177,13 @@
     "Keyboard",
     keyboardResponderImpl
   );
-  function useKeyboardResponder(props) {
+  function useKeyboard(props) {
     return React.unstable_useResponder(KeyboardResponder, props);
   }
 
   var Keyboard = Object.freeze({
     KeyboardResponder: KeyboardResponder,
-    useKeyboardResponder: useKeyboardResponder
+    useKeyboard: useKeyboard
   });
 
   var keyboard = Keyboard;

@@ -250,13 +250,13 @@
     "Swipe",
     swipeResponderImpl
   );
-  function useSwipeListener(props) {
-    return React.unstable_useListener(SwipeResponder, props);
+  function useSwipe(props) {
+    return React.unstable_useResponder(SwipeResponder, props);
   }
 
   var Swipe = Object.freeze({
     SwipeResponder: SwipeResponder,
-    useSwipeListener: useSwipeListener
+    useSwipe: useSwipe
   });
 
   var swipe = Swipe;

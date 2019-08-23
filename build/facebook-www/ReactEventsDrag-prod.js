@@ -124,7 +124,7 @@ var DragResponder = React.unstable_createResponder("Drag", {
 });
 module.exports = {
   DragResponder: DragResponder,
-  useDragResponder: function(props) {
+  useDrag: function(props) {
     return React.unstable_useResponder(DragResponder, props);
   }
 };

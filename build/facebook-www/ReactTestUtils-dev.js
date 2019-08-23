@@ -111,6 +111,9 @@ var Placement =
   /*             */
   2;
 
+var Hydrating =
+  /*             */
+  1024;
 // Passive & Update & Callback & Ref & Snapshot
 
 // Union of all host effects
@@ -148,17 +151,17 @@ function isFiberMountedImpl(fiber) {
   if (!fiber.alternate) {
     // If there is no alternate, this might be a new tree that isn't inserted
     // yet. If it is, then it will have a pending insertion effect on it.
-    if ((node.effectTag & Placement) !== NoEffect) {
-      return MOUNTING;
-    }
+    var nextNode = node;
 
-    while (node.return) {
-      node = node.return;
+    do {
+      node = nextNode;
 
-      if ((node.effectTag & Placement) !== NoEffect) {
+      if ((node.effectTag & (Placement | Hydrating)) !== NoEffect) {
         return MOUNTING;
       }
-    }
+
+      nextNode = node.return;
+    } while (nextNode);
   } else {
     while (node.return) {
       node = node.return;

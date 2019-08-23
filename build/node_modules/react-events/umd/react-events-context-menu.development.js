@@ -86,13 +86,13 @@
     "ContextMenu",
     contextMenuImpl
   );
-  function useContextMenuResponder(props) {
+  function useContextMenu(props) {
     return React.unstable_useResponder(ContextMenuResponder, props);
   }
 
   var ContextMenu = Object.freeze({
     ContextMenuResponder: ContextMenuResponder,
-    useContextMenuResponder: useContextMenuResponder
+    useContextMenu: useContextMenu
   });
 
   var contextMenu = ContextMenu;

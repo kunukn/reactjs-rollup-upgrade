@@ -1253,9 +1253,12 @@ function isFiberMountedImpl(fiber) {
   var node = fiber;
   if (fiber.alternate) for (; node.return; ) node = node.return;
   else {
-    if (0 !== (node.effectTag & 2)) return 1;
-    for (; node.return; )
-      if (((node = node.return), 0 !== (node.effectTag & 2))) return 1;
+    fiber = node;
+    do {
+      node = fiber;
+      if (0 !== (node.effectTag & 1026)) return 1;
+      fiber = node.return;
+    } while (fiber);
   }
   return 3 === node.tag ? 2 : 3;
 }
@@ -2162,7 +2165,7 @@ function getStateFromUpdate(
           : workInProgress
       );
     case 3:
-      workInProgress.effectTag = (workInProgress.effectTag & -2049) | 64;
+      workInProgress.effectTag = (workInProgress.effectTag & -4097) | 64;
     case 0:
       workInProgress = update.payload;
       nextProps =
@@ -4641,8 +4644,8 @@ function unwindWork(workInProgress) {
     case 1:
       isContextProvider(workInProgress.type) && popContext(workInProgress);
       var effectTag = workInProgress.effectTag;
-      return effectTag & 2048
-        ? ((workInProgress.effectTag = (effectTag & -2049) | 64),
+      return effectTag & 4096
+        ? ((workInProgress.effectTag = (effectTag & -4097) | 64),
           workInProgress)
         : null;
     case 3:
@@ -4655,7 +4658,7 @@ function unwindWork(workInProgress) {
             "The root failed to unmount after an error. This is likely a bug in React. Please file an issue."
           )
         );
-      workInProgress.effectTag = (effectTag & -2049) | 64;
+      workInProgress.effectTag = (effectTag & -4097) | 64;
       return workInProgress;
     case 5:
       return popHostContext(workInProgress), null;
@@ -4663,8 +4666,8 @@ function unwindWork(workInProgress) {
       return (
         pop(suspenseStackCursor, workInProgress),
         (effectTag = workInProgress.effectTag),
-        effectTag & 2048
-          ? ((workInProgress.effectTag = (effectTag & -2049) | 64),
+        effectTag & 4096
+          ? ((workInProgress.effectTag = (effectTag & -4097) | 64),
             workInProgress)
           : null
       );
@@ -5602,7 +5605,7 @@ function renderRoot(root$jscomp$0, expirationTime, isSync) {
             sourceFiber = currentTime,
             value = thrownValue,
             renderExpirationTime$jscomp$0 = renderExpirationTime;
-          sourceFiber.effectTag |= 1024;
+          sourceFiber.effectTag |= 2048;
           sourceFiber.firstEffect = sourceFiber.lastEffect = null;
           if (
             null !== value &&
@@ -5638,7 +5641,7 @@ function renderRoot(root$jscomp$0, expirationTime, isSync) {
                   : returnFiber.add(thenable);
                 if (0 === (value.mode & 2)) {
                   value.effectTag |= 64;
-                  sourceFiber.effectTag &= -1957;
+                  sourceFiber.effectTag &= -2981;
                   1 === sourceFiber.tag &&
                     (null === sourceFiber.alternate
                       ? (sourceFiber.tag = 17)
@@ -5674,7 +5677,7 @@ function renderRoot(root$jscomp$0, expirationTime, isSync) {
                     root
                   )),
                   thenable.then(sourceFiber, sourceFiber));
-                value.effectTag |= 2048;
+                value.effectTag |= 4096;
                 value.expirationTime = renderExpirationTime$jscomp$0;
                 break a;
               }
@@ -5693,7 +5696,7 @@ function renderRoot(root$jscomp$0, expirationTime, isSync) {
           do {
             switch (sourceFiber.tag) {
               case 3:
-                sourceFiber.effectTag |= 2048;
+                sourceFiber.effectTag |= 4096;
                 sourceFiber.expirationTime = renderExpirationTime$jscomp$0;
                 renderExpirationTime$jscomp$0 = createRootErrorUpdate(
                   sourceFiber,
@@ -5719,7 +5722,7 @@ function renderRoot(root$jscomp$0, expirationTime, isSync) {
                             returnFiber
                           )))))
                 ) {
-                  sourceFiber.effectTag |= 2048;
+                  sourceFiber.effectTag |= 4096;
                   sourceFiber.expirationTime = renderExpirationTime$jscomp$0;
                   renderExpirationTime$jscomp$0 = createClassErrorUpdate(
                     sourceFiber,
@@ -5893,7 +5896,7 @@ function completeUnitOfWork(unitOfWork) {
   do {
     var current$$1 = workInProgress.alternate;
     unitOfWork = workInProgress.return;
-    if (0 === (workInProgress.effectTag & 1024)) {
+    if (0 === (workInProgress.effectTag & 2048)) {
       a: {
         var current = current$$1;
         current$$1 = workInProgress;
@@ -5917,8 +5920,6 @@ function completeUnitOfWork(unitOfWork) {
             newProps.pendingContext &&
               ((newProps.context = newProps.pendingContext),
               (newProps.pendingContext = null));
-            if (null === current || null === current.child)
-              current$$1.effectTag &= -3;
             updateHostContainer(current$$1);
             break;
           case 5:
@@ -5939,7 +5940,7 @@ function completeUnitOfWork(unitOfWork) {
             else if (newProps) {
               current = requiredContext(contextStackCursor$1.current);
               var type$jscomp$0 = type;
-              var _instance6 = newProps;
+              var _instance5 = newProps;
               var rootContainerInstance = renderExpirationTime$jscomp$0,
                 internalInstanceHandle = current$$1,
                 tag = allocateTag();
@@ -5947,7 +5948,7 @@ function completeUnitOfWork(unitOfWork) {
               var updatePayload = diffProperties(
                 null,
                 emptyObject,
-                _instance6,
+                _instance5,
                 type$jscomp$0.validAttributes
               );
               ReactNativePrivateInterface.UIManager.createView(
@@ -5961,17 +5962,17 @@ function completeUnitOfWork(unitOfWork) {
                 type$jscomp$0
               );
               instanceCache.set(tag, internalInstanceHandle);
-              instanceProps.set(tag, _instance6);
-              _instance6 = rootContainerInstance;
-              appendAllChildren(_instance6, current$$1, !1, !1);
+              instanceProps.set(tag, _instance5);
+              _instance5 = rootContainerInstance;
+              appendAllChildren(_instance5, current$$1, !1, !1);
               finalizeInitialChildren(
-                _instance6,
+                _instance5,
                 type,
                 newProps,
                 renderExpirationTime$jscomp$0,
                 current
               ) && (current$$1.effectTag |= 4);
-              current$$1.stateNode = _instance6;
+              current$$1.stateNode = _instance5;
               null !== current$$1.ref && (current$$1.effectTag |= 128);
             } else if (null === current$$1.stateNode)
               throw ReactError(
@@ -6035,10 +6036,10 @@ function completeUnitOfWork(unitOfWork) {
                 null === type ||
                 ((type = current.child.sibling),
                 null !== type &&
-                  ((_instance6 = current$$1.firstEffect),
-                  null !== _instance6
+                  ((_instance5 = current$$1.firstEffect),
+                  null !== _instance5
                     ? ((current$$1.firstEffect = type),
-                      (type.nextEffect = _instance6))
+                      (type.nextEffect = _instance5))
                     : ((current$$1.firstEffect = current$$1.lastEffect = type),
                       (type.nextEffect = null)),
                   (type.effectTag = 8))));
@@ -6087,8 +6088,8 @@ function completeUnitOfWork(unitOfWork) {
             newProps = current$$1.memoizedState;
             if (null === newProps) break;
             type = 0 !== (current$$1.effectTag & 64);
-            _instance6 = newProps.rendering;
-            if (null === _instance6)
+            _instance5 = newProps.rendering;
+            if (null === _instance5)
               if (type) cutOffTailIfNeeded(newProps, !1);
               else {
                 if (
@@ -6096,11 +6097,11 @@ function completeUnitOfWork(unitOfWork) {
                   (null !== current && 0 !== (current.effectTag & 64))
                 )
                   for (current = current$$1.child; null !== current; ) {
-                    _instance6 = findFirstSuspended(current);
-                    if (null !== _instance6) {
+                    _instance5 = findFirstSuspended(current);
+                    if (null !== _instance5) {
                       current$$1.effectTag |= 64;
                       cutOffTailIfNeeded(newProps, !1);
-                      newProps = _instance6.updateQueue;
+                      newProps = _instance5.updateQueue;
                       null !== newProps &&
                         ((current$$1.updateQueue = newProps),
                         (current$$1.effectTag |= 4));
@@ -6113,9 +6114,9 @@ function completeUnitOfWork(unitOfWork) {
                           (renderExpirationTime$jscomp$0.nextEffect = null),
                           (renderExpirationTime$jscomp$0.firstEffect = null),
                           (renderExpirationTime$jscomp$0.lastEffect = null),
-                          (_instance6 =
+                          (_instance5 =
                             renderExpirationTime$jscomp$0.alternate),
-                          null === _instance6
+                          null === _instance5
                             ? ((renderExpirationTime$jscomp$0.childExpirationTime = 0),
                               (renderExpirationTime$jscomp$0.expirationTime = type),
                               (renderExpirationTime$jscomp$0.child = null),
@@ -6124,18 +6125,18 @@ function completeUnitOfWork(unitOfWork) {
                               (renderExpirationTime$jscomp$0.updateQueue = null),
                               (renderExpirationTime$jscomp$0.dependencies = null))
                             : ((renderExpirationTime$jscomp$0.childExpirationTime =
-                                _instance6.childExpirationTime),
+                                _instance5.childExpirationTime),
                               (renderExpirationTime$jscomp$0.expirationTime =
-                                _instance6.expirationTime),
+                                _instance5.expirationTime),
                               (renderExpirationTime$jscomp$0.child =
-                                _instance6.child),
+                                _instance5.child),
                               (renderExpirationTime$jscomp$0.memoizedProps =
-                                _instance6.memoizedProps),
+                                _instance5.memoizedProps),
                               (renderExpirationTime$jscomp$0.memoizedState =
-                                _instance6.memoizedState),
+                                _instance5.memoizedState),
                               (renderExpirationTime$jscomp$0.updateQueue =
-                                _instance6.updateQueue),
-                              (type = _instance6.dependencies),
+                                _instance5.updateQueue),
+                              (type = _instance5.dependencies),
                               (renderExpirationTime$jscomp$0.dependencies =
                                 null === type
                                   ? null
@@ -6159,7 +6160,7 @@ function completeUnitOfWork(unitOfWork) {
             else {
               if (!type)
                 if (
-                  ((current = findFirstSuspended(_instance6)), null !== current)
+                  ((current = findFirstSuspended(_instance5)), null !== current)
                 ) {
                   if (
                     ((current$$1.effectTag |= 64),
@@ -6184,13 +6185,13 @@ function completeUnitOfWork(unitOfWork) {
                     (current$$1.expirationTime = current$$1.childExpirationTime =
                       renderExpirationTime$jscomp$0 - 1));
               newProps.isBackwards
-                ? ((_instance6.sibling = current$$1.child),
-                  (current$$1.child = _instance6))
+                ? ((_instance5.sibling = current$$1.child),
+                  (current$$1.child = _instance5))
                 : ((current = newProps.last),
                   null !== current
-                    ? (current.sibling = _instance6)
-                    : (current$$1.child = _instance6),
-                  (newProps.last = _instance6));
+                    ? (current.sibling = _instance5)
+                    : (current$$1.child = _instance5),
+                  (newProps.last = _instance5));
             }
             if (null !== newProps.tail) {
               0 === newProps.tailExpiration &&
@@ -6227,16 +6228,16 @@ function completeUnitOfWork(unitOfWork) {
 
         )
           (type = renderExpirationTime$jscomp$0.expirationTime),
-            (_instance6 = renderExpirationTime$jscomp$0.childExpirationTime),
+            (_instance5 = renderExpirationTime$jscomp$0.childExpirationTime),
             type > current && (current = type),
-            _instance6 > current && (current = _instance6),
+            _instance5 > current && (current = _instance5),
             (renderExpirationTime$jscomp$0 =
               renderExpirationTime$jscomp$0.sibling);
         newProps.childExpirationTime = current;
       }
       if (null !== current$$1) return current$$1;
       null !== unitOfWork &&
-        0 === (unitOfWork.effectTag & 1024) &&
+        0 === (unitOfWork.effectTag & 2048) &&
         (null === unitOfWork.firstEffect &&
           (unitOfWork.firstEffect = workInProgress.firstEffect),
         null !== workInProgress.lastEffect &&
@@ -6251,10 +6252,10 @@ function completeUnitOfWork(unitOfWork) {
     } else {
       current$$1 = unwindWork(workInProgress, renderExpirationTime);
       if (null !== current$$1)
-        return (current$$1.effectTag &= 1023), current$$1;
+        return (current$$1.effectTag &= 2047), current$$1;
       null !== unitOfWork &&
         ((unitOfWork.firstEffect = unitOfWork.lastEffect = null),
-        (unitOfWork.effectTag |= 1024));
+        (unitOfWork.effectTag |= 2048));
     }
     current$$1 = workInProgress.sibling;
     if (null !== current$$1) return current$$1;
@@ -6388,7 +6389,7 @@ function commitRootImpl(root, renderPriorityLevel) {
                   : (currentRef.current = null));
             }
           }
-          switch (effectTag & 14) {
+          switch (effectTag & 1038) {
             case 2:
               commitPlacement(nextEffect);
               nextEffect.effectTag &= -3;
@@ -6396,6 +6397,13 @@ function commitRootImpl(root, renderPriorityLevel) {
             case 6:
               commitPlacement(nextEffect);
               nextEffect.effectTag &= -3;
+              commitWork(nextEffect.alternate, nextEffect);
+              break;
+            case 1024:
+              nextEffect.effectTag &= -1025;
+              break;
+            case 1028:
+              nextEffect.effectTag &= -1025;
               commitWork(nextEffect.alternate, nextEffect);
               break;
             case 4:

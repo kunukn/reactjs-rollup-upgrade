@@ -406,7 +406,13 @@ var Snapshot =
   256;
 var Passive =
   /*               */
-  512; // Passive & Update & Callback & Ref & Snapshot
+  512;
+var Hydrating =
+  /*             */
+  1024;
+var HydratingAndUpdate =
+  /*    */
+  1028; // Passive & Update & Callback & Ref & Snapshot
 
 var LifecycleEffectMask =
   /*   */
@@ -414,13 +420,13 @@ var LifecycleEffectMask =
 
 var HostEffectMask =
   /*        */
-  1023;
+  2047;
 var Incomplete =
   /*            */
-  1024;
+  2048;
 var ShouldCapture =
   /*         */
-  2048;
+  4096;
 
 // Re-export dynamic flags from the www version.
 var _require = require("ReactFeatureFlags");
@@ -466,17 +472,17 @@ function isFiberMountedImpl(fiber) {
   if (!fiber.alternate) {
     // If there is no alternate, this might be a new tree that isn't inserted
     // yet. If it is, then it will have a pending insertion effect on it.
-    if ((node.effectTag & Placement) !== NoEffect) {
-      return MOUNTING;
-    }
+    var nextNode = node;
 
-    while (node.return) {
-      node = node.return;
+    do {
+      node = nextNode;
 
-      if ((node.effectTag & Placement) !== NoEffect) {
+      if ((node.effectTag & (Placement | Hydrating)) !== NoEffect) {
         return MOUNTING;
       }
-    }
+
+      nextNode = node.return;
+    } while (nextNode);
   } else {
     while (node.return) {
       node = node.return;
@@ -1259,8 +1265,7 @@ function mountResponderInstance(
   responderInstance,
   props,
   state,
-  instance,
-  rootContainerInstance
+  instance
 ) {
   throw new Error("Not yet implemented.");
 }
@@ -7252,19 +7257,8 @@ function findFirstSuspended(row) {
   return null;
 }
 
-function createResponderListener(responder, props) {
-  var eventResponderListener = {
-    responder: responder,
-    props: props
-  };
-
-  {
-    Object.freeze(eventResponderListener);
-  }
-
-  return eventResponderListener;
-}
-
+var emptyObject = {};
+var isArray$2 = Array.isArray;
 function createResponderInstance(
   responder,
   responderProps,
@@ -7280,6 +7274,174 @@ function createResponderInstance(
     state: responderState,
     target: target
   };
+}
+
+function mountEventResponder(
+  responder,
+  responderProps,
+  instance,
+  fiber,
+  respondersMap
+) {
+  var responderState = emptyObject;
+  var getInitialState = responder.getInitialState;
+
+  if (getInitialState !== null) {
+    responderState = getInitialState(responderProps);
+  }
+
+  var responderInstance = createResponderInstance(
+    responder,
+    responderProps,
+    responderState,
+    instance,
+    fiber
+  );
+  mountResponderInstance(
+    responder,
+    responderInstance,
+    responderProps,
+    responderState,
+    instance
+  );
+  respondersMap.set(responder, responderInstance);
+}
+
+function updateEventListener(
+  listener,
+  fiber,
+  visistedResponders,
+  respondersMap,
+  instance
+) {
+  var responder;
+  var props;
+
+  if (listener) {
+    responder = listener.responder;
+    props = listener.props;
+  }
+
+  (function() {
+    if (!(responder && responder.$$typeof === REACT_RESPONDER_TYPE)) {
+      {
+        throw ReactError(
+          Error(
+            "An invalid value was used as an event listener. Expect one or many event listeners created via React.unstable_useResponder()."
+          )
+        );
+      }
+    }
+  })();
+
+  var listenerProps = props;
+
+  if (visistedResponders.has(responder)) {
+    // show warning
+    {
+      warning$1(
+        false,
+        'Duplicate event responder "%s" found in event listeners. ' +
+          "Event listeners passed to elements cannot use the same event responder more than once.",
+        responder.displayName
+      );
+    }
+
+    return;
+  }
+
+  visistedResponders.add(responder);
+  var responderInstance = respondersMap.get(responder);
+
+  if (responderInstance === undefined) {
+    // Mount (happens in either complete or commit phase)
+    mountEventResponder(
+      responder,
+      listenerProps,
+      instance,
+      fiber,
+      respondersMap
+    );
+  } else {
+    // Update (happens during commit phase only)
+    responderInstance.props = listenerProps;
+    responderInstance.fiber = fiber;
+  }
+}
+
+function updateEventListeners(listeners, instance, fiber) {
+  var visistedResponders = new Set();
+  var dependencies = fiber.dependencies;
+
+  if (listeners != null) {
+    if (dependencies === null) {
+      dependencies = fiber.dependencies = {
+        expirationTime: NoWork,
+        firstContext: null,
+        responders: new Map()
+      };
+    }
+
+    var respondersMap = dependencies.responders;
+
+    if (respondersMap === null) {
+      respondersMap = new Map();
+    }
+
+    if (isArray$2(listeners)) {
+      for (var i = 0, length = listeners.length; i < length; i++) {
+        var listener = listeners[i];
+        updateEventListener(
+          listener,
+          fiber,
+          visistedResponders,
+          respondersMap,
+          instance
+        );
+      }
+    } else {
+      updateEventListener(
+        listeners,
+        fiber,
+        visistedResponders,
+        respondersMap,
+        instance
+      );
+    }
+  }
+
+  if (dependencies !== null) {
+    var _respondersMap = dependencies.responders;
+
+    if (_respondersMap !== null) {
+      // Unmount
+      var mountedResponders = Array.from(_respondersMap.keys());
+
+      for (var _i = 0, _length = mountedResponders.length; _i < _length; _i++) {
+        var mountedResponder = mountedResponders[_i];
+
+        if (!visistedResponders.has(mountedResponder)) {
+          var responderInstance = _respondersMap.get(mountedResponder);
+
+          unmountResponderInstance(responderInstance);
+
+          _respondersMap.delete(mountedResponder);
+        }
+      }
+    }
+  }
+}
+function createResponderListener(responder, props) {
+  var eventResponderListener = {
+    responder: responder,
+    props: props
+  };
+
+  {
+    Object.freeze(eventResponderListener);
+  }
+
+  return eventResponderListener;
 }
 
 var NoEffect$1 =
@@ -8221,7 +8383,7 @@ function dispatchAction(fiber, queue, action) {
   })();
 
   {
-    !(arguments.length <= 3)
+    !(typeof arguments[3] !== "function")
       ? warning$1(
           false,
           "State updates from the useState() and useReducer() Hooks don't support the " +
@@ -10138,11 +10300,10 @@ function updateHostRoot(current$$1, workInProgress, renderExpirationTime) {
     // We always try to hydrate. If this isn't a hydration pass there won't
     // be any children to hydrate which is effectively the same thing as
     // not hydrating.
-    // This is a bit of a hack. We track the host root as a placement to
-    // know that we're currently in a mounting state. That way isMounted
-    // works as expected. We must reset this before committing.
-    // TODO: Delete this when we delete isMounted and findDOMNode.
-    workInProgress.effectTag |= Placement; // Ensure that children mount into this root without tracking
+    // Mark the host root with a Hydrating effect to know that we're
+    // currently in a mounting state. That way isMounted, findDOMNode and
+    // event replaying works as expected.
+    workInProgress.effectTag |= Hydrating; // Ensure that children mount into this root without tracking
     // side-effects. This ensures that we don't store Placement effects on
     // nodes that will be hydrated.
 
@@ -11303,12 +11464,26 @@ function updateDehydratedSuspenseComponent(
     );
     var nextProps = workInProgress.pendingProps;
     var nextChildren = nextProps.children;
-    workInProgress.child = mountChildFibers(
+    var child = mountChildFibers(
       workInProgress,
       null,
       nextChildren,
       renderExpirationTime
     );
+    var node = child;
+
+    while (node) {
+      // Mark each child as hydrating. This is a fast path to know whether this
+      // tree is part of a hydrating tree. This is used to determine if a child
+      // node has fully mounted yet, and for scheduling event replaying.
+      // Conceptually this is similar to Placement in that a new subtree is
+      // inserted into the React tree here. It just happens to not need DOM
+      // mutations because it already exists.
+      node.effectTag |= Hydrating;
+      node = node.sibling;
+    }
+
+    workInProgress.child = child;
     return workInProgress.child;
   }
 }
@@ -12452,9 +12627,6 @@ function createFundamentalStateInstance(currentFiber, props, impl, state) {
   };
 }
 
-var emptyObject = {};
-var isArray$2 = Array.isArray;
-
 function markUpdate(workInProgress) {
   // Tag the fiber with an update effect. This turns a Placement into
   // a PlacementAndUpdate.
@@ -13026,10 +13198,7 @@ function completeWork(current, workInProgress, renderExpirationTime) {
       if (current === null || current.child === null) {
         // If we hydrated, pop so that we can delete any remaining children
         // that weren't hydrated.
-        popHydrationState(workInProgress); // This resets the hacky state to fix isMounted before committing.
-        // TODO: Delete this when we delete isMounted and findDOMNode.
-
-        workInProgress.effectTag &= ~Placement;
+        popHydrationState(workInProgress);
       }
 
       updateHostContainer(workInProgress);
@@ -13053,15 +13222,9 @@ function completeWork(current, workInProgress, renderExpirationTime) {
         if (enableFlareAPI) {
           var prevListeners = current.memoizedProps.listeners;
           var nextListeners = newProps.listeners;
-          var instance = workInProgress.stateNode;
 
           if (prevListeners !== nextListeners) {
-            updateEventListeners(
-              nextListeners,
-              instance,
-              rootContainerInstance,
-              workInProgress
-            );
+            markUpdate(workInProgress);
           }
         }
 
@@ -13108,20 +13271,15 @@ function completeWork(current, workInProgress, renderExpirationTime) {
           }
 
           if (enableFlareAPI) {
-            var _instance5 = workInProgress.stateNode;
+            var instance = workInProgress.stateNode;
             var listeners = newProps.listeners;
 
             if (listeners != null) {
-              updateEventListeners(
-                listeners,
-                _instance5,
-                rootContainerInstance,
-                workInProgress
-              );
+              updateEventListeners(listeners, instance, workInProgress);
             }
           }
         } else {
-          var _instance6 = createInstance(
+          var _instance5 = createInstance(
             type,
             newProps,
             rootContainerInstance,
@@ -13129,18 +13287,13 @@ function completeWork(current, workInProgress, renderExpirationTime) {
             workInProgress
           );
 
-          appendAllChildren(_instance6, workInProgress, false, false);
+          appendAllChildren(_instance5, workInProgress, false, false);
 
           if (enableFlareAPI) {
             var _listeners = newProps.listeners;
 
             if (_listeners != null) {
-              updateEventListeners(
-                _listeners,
-                _instance6,
-                rootContainerInstance,
-                workInProgress
-              );
+              updateEventListeners(_listeners, _instance5, workInProgress);
             }
           } // Certain renderers require commit-time effects for initial mount.
           // (eg DOM renderer supports auto-focus for certain elements).
@@ -13148,7 +13301,7 @@ function completeWork(current, workInProgress, renderExpirationTime) {
 
           if (
             finalizeInitialChildren(
-              _instance6,
+              _instance5,
               type,
               newProps,
               rootContainerInstance,
@@ -13158,7 +13311,7 @@ function completeWork(current, workInProgress, renderExpirationTime) {
             markUpdate(workInProgress);
           }
 
-          workInProgress.stateNode = _instance6;
+          workInProgress.stateNode = _instance5;
         }
 
         if (workInProgress.ref !== null) {
@@ -13255,16 +13408,13 @@ function completeWork(current, workInProgress, renderExpirationTime) {
             if ((workInProgress.effectTag & DidCapture) === NoEffect) {
               // This boundary did not suspend so it's now hydrated and unsuspended.
               workInProgress.memoizedState = null;
+            } // If nothing suspended, we need to schedule an effect to mark this boundary
+            // as having hydrated so events know that they're free be invoked.
+            // It's also a signal to replay events and the suspense callback.
+            // If something suspended, schedule an effect to attach retry listeners.
+            // So we might as well always mark this.
 
-              if (enableSuspenseCallback) {
-                // Notify the callback.
-                workInProgress.effectTag |= Update;
-              }
-            } else {
-              // Something suspended. Schedule an effect to attach retry listeners.
-              workInProgress.effectTag |= Update;
-            }
-
+            workInProgress.effectTag |= Update;
             return null;
           }
         }
@@ -13636,15 +13786,15 @@ function completeWork(current, workInProgress, renderExpirationTime) {
             fundamentalState || {}
           );
 
-          var _instance7 = getFundamentalComponentInstance(fundamentalInstance);
+          var _instance6 = getFundamentalComponentInstance(fundamentalInstance);
 
-          fundamentalInstance.instance = _instance7;
+          fundamentalInstance.instance = _instance6;
 
           if (fundamentalImpl.reconcileChildren === false) {
             return null;
           }
 
-          appendAllChildren(_instance7, workInProgress, false, false);
+          appendAllChildren(_instance6, workInProgress, false, false);
           mountFundamentalComponent(fundamentalInstance);
         } else {
           // We fire update in commit phase
@@ -13654,10 +13804,10 @@ function completeWork(current, workInProgress, renderExpirationTime) {
           fundamentalInstance.currentFiber = workInProgress;
 
           if (supportsPersistence) {
-            var _instance8 = cloneFundamentalInstance(fundamentalInstance);
+            var _instance7 = cloneFundamentalInstance(fundamentalInstance);
 
-            fundamentalInstance.instance = _instance8;
-            appendAllChildren(_instance8, workInProgress, false, false);
+            fundamentalInstance.instance = _instance7;
+            appendAllChildren(_instance7, workInProgress, false, false);
           }
 
           var shouldUpdate = shouldUpdateFundamentalComponent(
@@ -13688,173 +13838,6 @@ function completeWork(current, workInProgress, renderExpirationTime) {
   }
 
   return null;
-}
-
-function mountEventResponder(
-  responder,
-  responderProps,
-  instance,
-  rootContainerInstance,
-  fiber,
-  respondersMap
-) {
-  var responderState = emptyObject;
-  var getInitialState = responder.getInitialState;
-
-  if (getInitialState !== null) {
-    responderState = getInitialState(responderProps);
-  }
-
-  var responderInstance = createResponderInstance(
-    responder,
-    responderProps,
-    responderState,
-    instance,
-    fiber
-  );
-  mountResponderInstance(
-    responder,
-    responderInstance,
-    responderProps,
-    responderState,
-    instance,
-    rootContainerInstance
-  );
-  respondersMap.set(responder, responderInstance);
-}
-
-function updateEventListener(
-  listener,
-  fiber,
-  visistedResponders,
-  respondersMap,
-  instance,
-  rootContainerInstance
-) {
-  var responder;
-  var props;
-
-  if (listener) {
-    responder = listener.responder;
-    props = listener.props;
-  }
-
-  (function() {
-    if (!(responder && responder.$$typeof === REACT_RESPONDER_TYPE)) {
-      {
-        throw ReactError(
-          Error(
-            "An invalid value was used as an event listener. Expect one or many event listeners created via React.unstable_useResponder()."
-          )
-        );
-      }
-    }
-  })();
-
-  var listenerProps = props;
-
-  if (visistedResponders.has(responder)) {
-    // show warning
-    {
-      warning$1(
-        false,
-        'Duplicate event responder "%s" found in event listeners. ' +
-          "Event listeners passed to elements cannot use the same event responder more than once.",
-        responder.displayName
-      );
-    }
-
-    return;
-  }
-
-  visistedResponders.add(responder);
-  var responderInstance = respondersMap.get(responder);
-
-  if (responderInstance === undefined) {
-    // Mount
-    mountEventResponder(
-      responder,
-      listenerProps,
-      instance,
-      rootContainerInstance,
-      fiber,
-      respondersMap
-    );
-  } else {
-    // Update
-    responderInstance.props = listenerProps;
-    responderInstance.fiber = fiber;
-  }
-}
-
-function updateEventListeners(
-  listeners,
-  instance,
-  rootContainerInstance,
-  fiber
-) {
-  var visistedResponders = new Set();
-  var dependencies = fiber.dependencies;
-
-  if (listeners != null) {
-    if (dependencies === null) {
-      dependencies = fiber.dependencies = {
-        expirationTime: NoWork,
-        firstContext: null,
-        responders: new Map()
-      };
-    }
-
-    var respondersMap = dependencies.responders;
-
-    if (respondersMap === null) {
-      respondersMap = new Map();
-    }
-
-    if (isArray$2(listeners)) {
-      for (var i = 0, length = listeners.length; i < length; i++) {
-        var listener = listeners[i];
-        updateEventListener(
-          listener,
-          fiber,
-          visistedResponders,
-          respondersMap,
-          instance,
-          rootContainerInstance
-        );
-      }
-    } else {
-      updateEventListener(
-        listeners,
-        fiber,
-        visistedResponders,
-        respondersMap,
-        instance,
-        rootContainerInstance
-      );
-    }
-  }
-
-  if (dependencies !== null) {
-    var _respondersMap = dependencies.responders;
-
-    if (_respondersMap !== null) {
-      // Unmount
-      var mountedResponders = Array.from(_respondersMap.keys());
-
-      for (var _i = 0, _length = mountedResponders.length; _i < _length; _i++) {
-        var mountedResponder = mountedResponders[_i];
-
-        if (!visistedResponders.has(mountedResponder)) {
-          var responderInstance = _respondersMap.get(mountedResponder);
-
-          unmountResponderInstance(responderInstance);
-
-          _respondersMap.delete(mountedResponder);
-        }
-      }
-    }
-  }
 }
 
 function unwindWork(workInProgress, renderExpirationTime) {
@@ -15514,6 +15497,15 @@ function commitWork(current$$1, finishedWork) {
             newProps,
             finishedWork
           );
+        }
+
+        if (enableFlareAPI) {
+          var prevListeners = oldProps.listeners;
+          var nextListeners = newProps.listeners;
+
+          if (prevListeners !== nextListeners) {
+            updateEventListeners(nextListeners, instance, finishedWork);
+          }
         }
       }
 
@@ -17580,7 +17572,8 @@ function commitMutationEffects(root, renderPriorityLevel) {
     // bitmap value, we remove the secondary effects from the effect tag and
     // switch on that value.
 
-    var primaryEffectTag = effectTag & (Placement | Update | Deletion);
+    var primaryEffectTag =
+      effectTag & (Placement | Update | Deletion | Hydrating);
 
     switch (primaryEffectTag) {
       case Placement: {
@@ -17605,9 +17598,22 @@ function commitMutationEffects(root, renderPriorityLevel) {
         break;
       }
 
-      case Update: {
+      case Hydrating: {
+        nextEffect.effectTag &= ~Hydrating;
+        break;
+      }
+
+      case HydratingAndUpdate: {
+        nextEffect.effectTag &= ~Hydrating; // Update
+
         var _current2 = nextEffect.alternate;
         commitWork(_current2, nextEffect);
+        break;
+      }
+
+      case Update: {
+        var _current3 = nextEffect.alternate;
+        commitWork(_current3, nextEffect);
         break;
       }
 

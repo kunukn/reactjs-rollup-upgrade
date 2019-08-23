@@ -217,13 +217,13 @@
     }
   };
   var DragResponder = React.unstable_createResponder("Drag", dragResponderImpl);
-  function useDragResponder(props) {
+  function useDrag(props) {
     return React.unstable_useResponder(DragResponder, props);
   }
 
   var Drag = Object.freeze({
     DragResponder: DragResponder,
-    useDragResponder: useDragResponder
+    useDrag: useDrag
   });
 
   var drag = Drag;

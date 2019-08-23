@@ -160,7 +160,7 @@ var SwipeResponder = React.unstable_createResponder("Swipe", {
 });
 module.exports = {
   SwipeResponder: SwipeResponder,
-  useSwipeListener: function(props) {
-    return React.unstable_useListener(SwipeResponder, props);
+  useSwipe: function(props) {
+    return React.unstable_useResponder(SwipeResponder, props);
   }
 };

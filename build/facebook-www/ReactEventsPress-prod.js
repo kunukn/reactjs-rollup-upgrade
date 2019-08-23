@@ -29,12 +29,11 @@ function isFunction(obj) {
 function dispatchEvent(event, listener, context, state, name, eventPriority) {
   var target = state.pressTarget,
     pointerType = state.pointerType,
-    touchEvent = state.touchEvent;
-  state =
-    (null != event && !0 === event.nativeEvent.defaultPrevented) ||
-    ("press" === name && state.shouldPreventClick);
-  var timeStamp = context.getTimeStamp(),
-    buttons = 1,
+    touchEvent = state.touchEvent,
+    defaultPrevented =
+      (null != event && !0 === event.nativeEvent.defaultPrevented) ||
+      ("press" === name && state.shouldPreventClick),
+    timeStamp = context.getTimeStamp(),
     clientX = null,
     clientY = null,
     pageX = null,
@@ -52,8 +51,7 @@ function dispatchEvent(event, listener, context, state, name, eventPriority) {
     (metaKey = event.metaKey),
     (shiftKey = event.shiftKey),
     (touchEvent = touchEvent || event)) &&
-    ((buttons = touchEvent.buttons),
-    (clientX = touchEvent.clientX),
+    ((clientX = touchEvent.clientX),
     (clientY = touchEvent.clientY),
     (pageX = touchEvent.pageX),
     (pageY = touchEvent.pageY),
@@ -62,11 +60,11 @@ function dispatchEvent(event, listener, context, state, name, eventPriority) {
   context.dispatchEvent(
     {
       altKey: altKey,
-      buttons: buttons,
+      buttons: state.buttons,
       clientX: clientX,
       clientY: clientY,
       ctrlKey: ctrlKey,
-      defaultPrevented: state,
+      defaultPrevented: defaultPrevented,
       metaKey: metaKey,
       pageX: pageX,
       pageY: pageY,
@@ -214,6 +212,7 @@ var PressResponder = React.unstable_createResponder("Press", {
     return {
       activationPosition: null,
       addedRootEvents: !1,
+      buttons: 0,
       isActivePressed: !1,
       isActivePressStart: !1,
       isPressed: !1,
@@ -294,6 +293,7 @@ var PressResponder = React.unstable_createResponder("Press", {
                   )),
                 (state.responderRegionOnDeactivation = null),
                 (state.isPressWithinResponderRegion = !0),
+                (state.buttons = nativeEvent.buttons),
                 dispatchPressStartEvents(event, context, props, state),
                 state.addedRootEvents ||
                   ((state.addedRootEvents = !0),
@@ -354,7 +354,7 @@ var PressResponder = React.unstable_createResponder("Press", {
       case "touchend":
         if (isPressed) {
           if (
-            ((isPressed = nativeEvent.buttons),
+            ((isPressed = state.buttons),
             (touchEvent = !1),
             "pointerup" !== type || activePointerId === pointerId)
           ) {
@@ -443,7 +443,7 @@ var PressResponder = React.unstable_createResponder("Press", {
 });
 module.exports = {
   PressResponder: PressResponder,
-  usePressResponder: function(props) {
+  usePress: function(props) {
     return React.unstable_useResponder(PressResponder, props);
   }
 };

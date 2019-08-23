@@ -146,9 +146,12 @@ function isFiberMountedImpl(fiber) {
   var node = fiber;
   if (fiber.alternate) for (; node.return; ) node = node.return;
   else {
-    if (0 !== (node.effectTag & 2)) return 1;
-    for (; node.return; )
-      if (((node = node.return), 0 !== (node.effectTag & 2))) return 1;
+    fiber = node;
+    do {
+      node = fiber;
+      if (0 !== (node.effectTag & 1026)) return 1;
+      fiber = node.return;
+    } while (fiber);
   }
   return 3 === node.tag ? 2 : 3;
 }
@@ -465,12 +468,18 @@ var randomKey = Math.random()
   internalInstanceKey = "__reactInternalInstance$" + randomKey,
   internalEventHandlersKey = "__reactEventHandlers$" + randomKey;
 function getClosestInstanceFromNode(node) {
-  if (node[internalInstanceKey]) return node[internalInstanceKey];
-  for (; !node[internalInstanceKey]; )
-    if (node.parentNode) node = node.parentNode;
+  var inst = node[internalInstanceKey];
+  if (inst) return inst;
+  do
+    if ((node = node.parentNode)) inst = node[internalInstanceKey];
     else return null;
-  node = node[internalInstanceKey];
-  return 5 === node.tag || 6 === node.tag ? node : null;
+  while (!inst);
+  switch (inst.tag) {
+    case 5:
+    case 6:
+      return inst;
+  }
+  return null;
 }
 function getInstanceFromNode$1(node) {
   node = node[internalInstanceKey];
@@ -1911,9 +1920,6 @@ function shallowEqual(objA, objB) {
     )
       return !1;
   return !0;
-}
-function createResponderListener(responder, props) {
-  return { responder: responder, props: props };
 }
 var UserBlockingPriority$1 = Scheduler.unstable_UserBlockingPriority,
   runWithPriority$1 = Scheduler.unstable_runWithPriority,
@@ -4067,7 +4073,7 @@ function getStateFromUpdate(
           : workInProgress
       );
     case 3:
-      workInProgress.effectTag = (workInProgress.effectTag & -2049) | 64;
+      workInProgress.effectTag = (workInProgress.effectTag & -4097) | 64;
     case 0:
       workInProgress = update.payload;
       nextProps =
@@ -5142,6 +5148,109 @@ function findFirstSuspended(row) {
     node = node.sibling;
   }
   return null;
+}
+var emptyObject = {},
+  isArray$2 = Array.isArray;
+function updateEventListener(
+  listener,
+  fiber,
+  visistedResponders,
+  respondersMap,
+  instance
+) {
+  if (listener) {
+    var responder = listener.responder;
+    var props = listener.props;
+  }
+  if (!responder || responder.$$typeof !== REACT_RESPONDER_TYPE)
+    throw ReactErrorProd(Error(339));
+  listener = props;
+  if (!visistedResponders.has(responder))
+    if (
+      (visistedResponders.add(responder),
+      (visistedResponders = respondersMap.get(responder)),
+      void 0 === visistedResponders)
+    ) {
+      visistedResponders = emptyObject;
+      props = responder.getInitialState;
+      null !== props && (visistedResponders = props(listener));
+      fiber = {
+        fiber: fiber,
+        props: listener,
+        responder: responder,
+        rootEventTypes: null,
+        state: visistedResponders,
+        target: instance
+      };
+      instance = instance.ownerDocument;
+      instance = instance.body || instance;
+      props = responder.rootEventTypes;
+      var targetEventTypes = responder.targetEventTypes;
+      null !== targetEventTypes &&
+        listenToEventResponderEventTypes(targetEventTypes, instance);
+      if (null !== props) {
+        for (
+          targetEventTypes = 0;
+          targetEventTypes < props.length;
+          targetEventTypes++
+        )
+          registerRootEventType(props[targetEventTypes], fiber);
+        listenToEventResponderEventTypes(props, instance);
+      }
+      mountEventResponder(responder, fiber, listener, visistedResponders);
+      respondersMap.set(responder, fiber);
+    } else
+      (visistedResponders.props = listener), (visistedResponders.fiber = fiber);
+}
+function updateEventListeners(listeners, instance, fiber) {
+  var visistedResponders = new Set(),
+    dependencies = fiber.dependencies;
+  if (null != listeners) {
+    null === dependencies &&
+      (dependencies = fiber.dependencies = {
+        expirationTime: 0,
+        firstContext: null,
+        responders: new Map()
+      });
+    var respondersMap = dependencies.responders;
+    null === respondersMap && (respondersMap = new Map());
+    if (isArray$2(listeners))
+      for (var i = 0, length = listeners.length; i < length; i++)
+        updateEventListener(
+          listeners[i],
+          fiber,
+          visistedResponders,
+          respondersMap,
+          instance
+        );
+    else
+      updateEventListener(
+        listeners,
+        fiber,
+        visistedResponders,
+        respondersMap,
+        instance
+      );
+  }
+  if (
+    null !== dependencies &&
+    ((listeners = dependencies.responders), null !== listeners)
+  )
+    for (
+      instance = Array.from(listeners.keys()),
+        fiber = 0,
+        dependencies = instance.length;
+      fiber < dependencies;
+      fiber++
+    )
+      (respondersMap = instance[fiber]),
+        visistedResponders.has(respondersMap) ||
+          ((i = listeners.get(respondersMap)),
+          unmountEventResponder(i),
+          listeners.delete(respondersMap));
+}
+function createResponderListener(responder, props) {
+  return { responder: responder, props: props };
 }
 var ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher,
   renderExpirationTime$1 = 0,
@@ -6328,52 +6437,60 @@ function updateSuspenseComponent(
         workInProgress.child = nextProps;
         return renderExpirationTime;
       }
-      0 === (workInProgress.mode & 2)
-        ? (workInProgress = retrySuspenseComponentWithoutHydrating(
+      if (0 === (workInProgress.mode & 2))
+        workInProgress = retrySuspenseComponentWithoutHydrating(
+          current$$1,
+          workInProgress,
+          renderExpirationTime
+        );
+      else if ("$!" === JSCompiler_temp.data)
+        workInProgress = retrySuspenseComponentWithoutHydrating(
+          current$$1,
+          workInProgress,
+          renderExpirationTime
+        );
+      else if (
+        ((mode = current$$1.childExpirationTime >= renderExpirationTime),
+        didReceiveUpdate || mode)
+      )
+        1073741823 > renderExpirationTime &&
+          suspenseContext.retryTime <= renderExpirationTime &&
+          ((mode = renderExpirationTime + 1),
+          (suspenseContext.retryTime = mode),
+          scheduleUpdateOnFiber(current$$1, mode)),
+          renderDidSuspendDelayIfPossible(),
+          (workInProgress = retrySuspenseComponentWithoutHydrating(
             current$$1,
             workInProgress,
             renderExpirationTime
-          ))
-        : "$!" === JSCompiler_temp.data
-          ? (workInProgress = retrySuspenseComponentWithoutHydrating(
-              current$$1,
-              workInProgress,
-              renderExpirationTime
-            ))
-          : ((mode = current$$1.childExpirationTime >= renderExpirationTime),
-            didReceiveUpdate || mode
-              ? (1073741823 > renderExpirationTime &&
-                  suspenseContext.retryTime <= renderExpirationTime &&
-                  ((mode = renderExpirationTime + 1),
-                  (suspenseContext.retryTime = mode),
-                  scheduleUpdateOnFiber(current$$1, mode)),
-                renderDidSuspendDelayIfPossible(),
-                (workInProgress = retrySuspenseComponentWithoutHydrating(
-                  current$$1,
-                  workInProgress,
-                  renderExpirationTime
-                )))
-              : "$?" === JSCompiler_temp.data
-                ? ((workInProgress.effectTag |= 64),
-                  (workInProgress.child = current$$1.child),
-                  (workInProgress = retryDehydratedSuspenseBoundary.bind(
-                    null,
-                    current$$1
-                  )),
-                  (JSCompiler_temp._reactRetry = workInProgress),
-                  (workInProgress = null))
-                : ((nextHydratableInstance = getNextHydratable(
-                    JSCompiler_temp.nextSibling
-                  )),
-                  popToNextHostParent(workInProgress),
-                  (isHydrating = !0),
-                  (workInProgress.child = mountChildFibers(
-                    workInProgress,
-                    null,
-                    workInProgress.pendingProps.children,
-                    renderExpirationTime
-                  )),
-                  (workInProgress = workInProgress.child)));
+          ));
+      else if ("$?" === JSCompiler_temp.data)
+        (workInProgress.effectTag |= 64),
+          (workInProgress.child = current$$1.child),
+          (workInProgress = retryDehydratedSuspenseBoundary.bind(
+            null,
+            current$$1
+          )),
+          (JSCompiler_temp._reactRetry = workInProgress),
+          (workInProgress = null);
+      else {
+        nextHydratableInstance = getNextHydratable(JSCompiler_temp.nextSibling);
+        popToNextHostParent(workInProgress);
+        isHydrating = !0;
+        for (
+          mode = renderExpirationTime = mountChildFibers(
+            workInProgress,
+            null,
+            workInProgress.pendingProps.children,
+            renderExpirationTime
+          );
+          mode;
+
+        )
+          (mode.effectTag |= 1024), (mode = mode.sibling);
+        workInProgress.child = renderExpirationTime;
+        workInProgress = workInProgress.child;
+      }
       return workInProgress;
     }
     current$$1 = current$$1.child;
@@ -6636,8 +6753,6 @@ function bailoutOnAlreadyFinishedWork(
   }
   return workInProgress.child;
 }
-var emptyObject = {},
-  isArray$2 = Array.isArray;
 function markUpdate(workInProgress) {
   workInProgress.effectTag |= 4;
 }
@@ -6799,120 +6914,13 @@ function cutOffTailIfNeeded(renderState, hasRenderedATailFallback) {
         : (_lastTailNode.sibling = null);
   }
 }
-function updateEventListener(
-  listener,
-  fiber,
-  visistedResponders,
-  respondersMap,
-  instance,
-  rootContainerInstance
-) {
-  if (listener) {
-    var responder = listener.responder;
-    var props = listener.props;
-  }
-  if (!responder || responder.$$typeof !== REACT_RESPONDER_TYPE)
-    throw ReactErrorProd(Error(339));
-  listener = props;
-  if (!visistedResponders.has(responder))
-    if (
-      (visistedResponders.add(responder),
-      (visistedResponders = respondersMap.get(responder)),
-      void 0 === visistedResponders)
-    ) {
-      visistedResponders = emptyObject;
-      props = responder.getInitialState;
-      null !== props && (visistedResponders = props(listener));
-      fiber = {
-        fiber: fiber,
-        props: listener,
-        responder: responder,
-        rootEventTypes: null,
-        state: visistedResponders,
-        target: instance
-      };
-      instance = visistedResponders;
-      rootContainerInstance = rootContainerInstance.ownerDocument;
-      rootContainerInstance =
-        rootContainerInstance.body || rootContainerInstance;
-      visistedResponders = responder.rootEventTypes;
-      props = responder.targetEventTypes;
-      null !== props &&
-        listenToEventResponderEventTypes(props, rootContainerInstance);
-      if (null !== visistedResponders) {
-        for (props = 0; props < visistedResponders.length; props++)
-          registerRootEventType(visistedResponders[props], fiber);
-        listenToEventResponderEventTypes(
-          visistedResponders,
-          rootContainerInstance
-        );
-      }
-      mountEventResponder(responder, fiber, listener, instance);
-      respondersMap.set(responder, fiber);
-    } else
-      (visistedResponders.props = listener), (visistedResponders.fiber = fiber);
-}
-function updateEventListeners(
-  listeners,
-  instance,
-  rootContainerInstance,
-  fiber
-) {
-  var visistedResponders = new Set(),
-    dependencies = fiber.dependencies;
-  if (null != listeners) {
-    null === dependencies &&
-      (dependencies = fiber.dependencies = {
-        expirationTime: 0,
-        firstContext: null,
-        responders: new Map()
-      });
-    var respondersMap = dependencies.responders;
-    null === respondersMap && (respondersMap = new Map());
-    if (isArray$2(listeners))
-      for (var i = 0, length = listeners.length; i < length; i++)
-        updateEventListener(
-          listeners[i],
-          fiber,
-          visistedResponders,
-          respondersMap,
-          instance,
-          rootContainerInstance
-        );
-    else
-      updateEventListener(
-        listeners,
-        fiber,
-        visistedResponders,
-        respondersMap,
-        instance,
-        rootContainerInstance
-      );
-  }
-  if (
-    null !== dependencies &&
-    ((listeners = dependencies.responders), null !== listeners)
-  )
-    for (
-      instance = Array.from(listeners.keys()),
-        rootContainerInstance = 0,
-        fiber = instance.length;
-      rootContainerInstance < fiber;
-      rootContainerInstance++
-    )
-      (dependencies = instance[rootContainerInstance]),
-        visistedResponders.has(dependencies) ||
-          ((respondersMap = listeners.get(dependencies)),
-          unmountEventResponder(respondersMap),
-          listeners.delete(dependencies));
-}
 function unwindWork(workInProgress) {
   switch (workInProgress.tag) {
     case 1:
       isContextProvider(workInProgress.type) && popContext(workInProgress);
       var effectTag = workInProgress.effectTag;
-      return effectTag & 2048
-        ? ((workInProgress.effectTag = (effectTag & -2049) | 64),
+      return effectTag & 4096
+        ? ((workInProgress.effectTag = (effectTag & -4097) | 64),
           workInProgress)
         : null;
     case 3:
@@ -6920,7 +6928,7 @@ function unwindWork(workInProgress) {
       popTopLevelContextObject(workInProgress);
       effectTag = workInProgress.effectTag;
       if (0 !== (effectTag & 64)) throw ReactErrorProd(Error(285));
-      workInProgress.effectTag = (effectTag & -2049) | 64;
+      workInProgress.effectTag = (effectTag & -4097) | 64;
       return workInProgress;
     case 5:
       return popHostContext(workInProgress), null;
@@ -6932,8 +6940,8 @@ function unwindWork(workInProgress) {
         resetHydrationState();
       }
       effectTag = workInProgress.effectTag;
-      return effectTag & 2048
-        ? ((workInProgress.effectTag = (effectTag & -2049) | 64),
+      return effectTag & 4096
+        ? ((workInProgress.effectTag = (effectTag & -4097) | 64),
           workInProgress)
         : null;
     case 19:
@@ -7314,22 +7322,25 @@ function commitWork(current$$1, finishedWork) {
     case 5:
       var instance = finishedWork.stateNode;
       if (null != instance) {
-        var newProps = finishedWork.memoizedProps,
-          oldProps = null !== current$$1 ? current$$1.memoizedProps : newProps;
-        current$$1 = finishedWork.type;
-        var updatePayload = finishedWork.updateQueue;
+        var newProps = finishedWork.memoizedProps;
+        current$$1 = null !== current$$1 ? current$$1.memoizedProps : newProps;
+        var type = finishedWork.type,
+          updatePayload = finishedWork.updateQueue;
         finishedWork.updateQueue = null;
         if (null !== updatePayload) {
           instance[internalEventHandlersKey] = newProps;
-          "input" === current$$1 &&
+          "input" === type &&
             "radio" === newProps.type &&
             null != newProps.name &&
             updateChecked(instance, newProps);
-          isCustomComponent(current$$1, oldProps);
-          finishedWork = isCustomComponent(current$$1, newProps);
-          for (oldProps = 0; oldProps < updatePayload.length; oldProps += 2) {
-            var propKey = updatePayload[oldProps],
-              propValue = updatePayload[oldProps + 1];
+          isCustomComponent(type, current$$1);
+          for (
+            var isCustomComponentTag = isCustomComponent(type, newProps), i = 0;
+            i < updatePayload.length;
+            i += 2
+          ) {
+            var propKey = updatePayload[i],
+              propValue = updatePayload[i + 1];
             "style" === propKey
               ? setValueForStyles(instance, propValue)
               : "dangerouslySetInnerHTML" === propKey
@@ -7340,10 +7351,10 @@ function commitWork(current$$1, finishedWork) {
                       instance,
                       propKey,
                       propValue,
-                      finishedWork
+                      isCustomComponentTag
                     );
           }
-          switch (current$$1) {
+          switch (type) {
             case "input":
               updateWrapper(instance, newProps);
               break;
@@ -7351,12 +7362,17 @@ function commitWork(current$$1, finishedWork) {
               updateWrapper$1(instance, newProps);
               break;
             case "select":
-              (finishedWork = instance._wrapperState.wasMultiple),
+              (type = instance._wrapperState.wasMultiple),
                 (instance._wrapperState.wasMultiple = !!newProps.multiple),
-                (current$$1 = newProps.value),
-                null != current$$1
-                  ? updateOptions(instance, !!newProps.multiple, current$$1, !1)
-                  : finishedWork !== !!newProps.multiple &&
+                (updatePayload = newProps.value),
+                null != updatePayload
+                  ? updateOptions(
+                      instance,
+                      !!newProps.multiple,
+                      updatePayload,
+                      !1
+                    )
+                  : type !== !!newProps.multiple &&
                     (null != newProps.defaultValue
                       ? updateOptions(
                           instance,
@@ -7372,6 +7388,9 @@ function commitWork(current$$1, finishedWork) {
                         ));
           }
         }
+        newProps = newProps.listeners;
+        current$$1.listeners !== newProps &&
+          updateEventListeners(newProps, instance, finishedWork);
       }
       break;
     case 6:
@@ -7391,55 +7410,49 @@ function commitWork(current$$1, finishedWork) {
           (newProps = finishedWork.child),
           (globalMostRecentFallbackTime = now()));
       if (null !== newProps)
-        a: for (updatePayload = newProps; ; ) {
-          if (5 === updatePayload.tag)
-            (oldProps = updatePayload.stateNode),
+        a: for (type = newProps; ; ) {
+          if (5 === type.tag)
+            (updatePayload = type.stateNode),
               current$$1
-                ? ((oldProps = oldProps.style),
-                  "function" === typeof oldProps.setProperty
-                    ? oldProps.setProperty("display", "none", "important")
-                    : (oldProps.display = "none"))
-                : ((oldProps = updatePayload.stateNode),
-                  (propKey = updatePayload.memoizedProps.style),
-                  (propKey =
-                    void 0 !== propKey &&
-                    null !== propKey &&
-                    propKey.hasOwnProperty("display")
-                      ? propKey.display
+                ? ((updatePayload = updatePayload.style),
+                  "function" === typeof updatePayload.setProperty
+                    ? updatePayload.setProperty("display", "none", "important")
+                    : (updatePayload.display = "none"))
+                : ((updatePayload = type.stateNode),
+                  (isCustomComponentTag = type.memoizedProps.style),
+                  (isCustomComponentTag =
+                    void 0 !== isCustomComponentTag &&
+                    null !== isCustomComponentTag &&
+                    isCustomComponentTag.hasOwnProperty("display")
+                      ? isCustomComponentTag.display
                       : null),
-                  (oldProps.style.display = dangerousStyleValue(
+                  (updatePayload.style.display = dangerousStyleValue(
                     "display",
-                    propKey
+                    isCustomComponentTag
                   )));
-          else if (6 === updatePayload.tag)
-            updatePayload.stateNode.nodeValue = current$$1
-              ? ""
-              : updatePayload.memoizedProps;
+          else if (6 === type.tag)
+            type.stateNode.nodeValue = current$$1 ? "" : type.memoizedProps;
           else if (
-            13 === updatePayload.tag &&
-            null !== updatePayload.memoizedState &&
-            null === updatePayload.memoizedState.dehydrated
+            13 === type.tag &&
+            null !== type.memoizedState &&
+            null === type.memoizedState.dehydrated
           ) {
-            oldProps = updatePayload.child.sibling;
-            oldProps.return = updatePayload;
-            updatePayload = oldProps;
+            updatePayload = type.child.sibling;
+            updatePayload.return = type;
+            type = updatePayload;
             continue;
-          } else if (null !== updatePayload.child) {
-            updatePayload.child.return = updatePayload;
-            updatePayload = updatePayload.child;
+          } else if (null !== type.child) {
+            type.child.return = type;
+            type = type.child;
             continue;
           }
-          if (updatePayload === newProps) break a;
-          for (; null === updatePayload.sibling; ) {
-            if (
-              null === updatePayload.return ||
-              updatePayload.return === newProps
-            )
-              break a;
-            updatePayload = updatePayload.return;
+          if (type === newProps) break a;
+          for (; null === type.sibling; ) {
+            if (null === type.return || type.return === newProps) break a;
+            type = type.return;
           }
-          updatePayload.sibling.return = updatePayload.return;
-          updatePayload = updatePayload.sibling;
+          type.sibling.return = type.return;
+          type = type.sibling;
         }
       null !== instance &&
         ((instance = finishedWork.memoizedProps.suspenseCallback),
@@ -7890,7 +7903,7 @@ function renderRoot(root$jscomp$0, expirationTime, isSync) {
             sourceFiber = currentTime,
             value = thrownValue,
             renderExpirationTime$jscomp$0 = renderExpirationTime;
-          sourceFiber.effectTag |= 1024;
+          sourceFiber.effectTag |= 2048;
           sourceFiber.firstEffect = sourceFiber.lastEffect = null;
           if (
             null !== value &&
@@ -7926,7 +7939,7 @@ function renderRoot(root$jscomp$0, expirationTime, isSync) {
                   : returnFiber.add(thenable);
                 if (0 === (value.mode & 2)) {
                   value.effectTag |= 64;
-                  sourceFiber.effectTag &= -1957;
+                  sourceFiber.effectTag &= -2981;
                   1 === sourceFiber.tag &&
                     (null === sourceFiber.alternate
                       ? (sourceFiber.tag = 17)
@@ -7962,7 +7975,7 @@ function renderRoot(root$jscomp$0, expirationTime, isSync) {
                     root
                   )),
                   thenable.then(sourceFiber, sourceFiber));
-                value.effectTag |= 2048;
+                value.effectTag |= 4096;
                 value.expirationTime = renderExpirationTime$jscomp$0;
                 break a;
               }
@@ -7981,7 +7994,7 @@ function renderRoot(root$jscomp$0, expirationTime, isSync) {
           do {
             switch (sourceFiber.tag) {
               case 3:
-                sourceFiber.effectTag |= 2048;
+                sourceFiber.effectTag |= 4096;
                 sourceFiber.expirationTime = renderExpirationTime$jscomp$0;
                 renderExpirationTime$jscomp$0 = createRootErrorUpdate(
                   sourceFiber,
@@ -8007,7 +8020,7 @@ function renderRoot(root$jscomp$0, expirationTime, isSync) {
                             returnFiber
                           )))))
                 ) {
-                  sourceFiber.effectTag |= 2048;
+                  sourceFiber.effectTag |= 4096;
                   sourceFiber.expirationTime = renderExpirationTime$jscomp$0;
                   renderExpirationTime$jscomp$0 = createClassErrorUpdate(
                     sourceFiber,
@@ -8192,7 +8205,7 @@ function completeUnitOfWork(unitOfWork) {
   do {
     var current$$1 = workInProgress.alternate;
     unitOfWork = workInProgress.return;
-    if (0 === (workInProgress.effectTag & 1024)) {
+    if (0 === (workInProgress.effectTag & 2048)) {
       a: {
         var current = current$$1;
         current$$1 = workInProgress;
@@ -8216,8 +8229,8 @@ function completeUnitOfWork(unitOfWork) {
             newProps.pendingContext &&
               ((newProps.context = newProps.pendingContext),
               (newProps.pendingContext = null));
-            if (null === current || null === current.child)
-              popHydrationState(current$$1), (current$$1.effectTag &= -3);
+            (null !== current && null !== current.child) ||
+              popHydrationState(current$$1);
             updateHostContainer(current$$1);
             break;
           case 5:
@@ -8234,15 +8247,8 @@ function completeUnitOfWork(unitOfWork) {
                 newProps,
                 renderExpirationTime$jscomp$0
               ),
-                (newProps = newProps.listeners),
-                (type = current$$1.stateNode),
-                current.memoizedProps.listeners !== newProps &&
-                  updateEventListeners(
-                    newProps,
-                    type,
-                    renderExpirationTime$jscomp$0,
-                    current$$1
-                  ),
+                current.memoizedProps.listeners !== newProps.listeners &&
+                  markUpdate(current$$1),
                 current.ref !== current$$1.ref && (current$$1.effectTag |= 128);
             else if (newProps) {
               var currentHostContext = requiredContext(
@@ -8254,7 +8260,6 @@ function completeUnitOfWork(unitOfWork) {
                 var instance = current.stateNode,
                   type$jscomp$0 = current.type,
                   props = current.memoizedProps;
-                currentHostContext = renderExpirationTime$jscomp$0;
                 instance[internalInstanceKey] = current;
                 instance[internalEventHandlersKey] = props;
                 switch (type$jscomp$0) {
@@ -8265,8 +8270,15 @@ function completeUnitOfWork(unitOfWork) {
                     break;
                   case "video":
                   case "audio":
-                    for (var i = 0; i < mediaEventTypes.length; i++)
-                      trapBubbledEvent(mediaEventTypes[i], instance);
+                    for (
+                      currentHostContext = 0;
+                      currentHostContext < mediaEventTypes.length;
+                      currentHostContext++
+                    )
+                      trapBubbledEvent(
+                        mediaEventTypes[currentHostContext],
+                        instance
+                      );
                     break;
                   case "source":
                     trapBubbledEvent("error", instance);
@@ -8287,33 +8299,42 @@ function completeUnitOfWork(unitOfWork) {
                   case "input":
                     initWrapperState(instance, props);
                     trapBubbledEvent("invalid", instance);
-                    ensureListeningTo(currentHostContext, "onChange");
+                    ensureListeningTo(
+                      renderExpirationTime$jscomp$0,
+                      "onChange"
+                    );
                     break;
                   case "select":
                     instance._wrapperState = { wasMultiple: !!props.multiple };
                     trapBubbledEvent("invalid", instance);
-                    ensureListeningTo(currentHostContext, "onChange");
+                    ensureListeningTo(
+                      renderExpirationTime$jscomp$0,
+                      "onChange"
+                    );
                     break;
                   case "textarea":
                     initWrapperState$2(instance, props),
                       trapBubbledEvent("invalid", instance),
-                      ensureListeningTo(currentHostContext, "onChange");
+                      ensureListeningTo(
+                        renderExpirationTime$jscomp$0,
+                        "onChange"
+                      );
                 }
                 assertValidProps(type$jscomp$0, props);
-                i = null;
+                currentHostContext = null;
                 for (type in props)
                   if (props.hasOwnProperty(type)) {
                     var nextProp = props[type];
                     "children" === type
                       ? "string" === typeof nextProp
                         ? instance.textContent !== nextProp &&
-                          (i = ["children", nextProp])
+                          (currentHostContext = ["children", nextProp])
                         : "number" === typeof nextProp &&
                           instance.textContent !== "" + nextProp &&
-                          (i = ["children", "" + nextProp])
+                          (currentHostContext = ["children", "" + nextProp])
                       : registrationNameModules.hasOwnProperty(type) &&
                         null != nextProp &&
-                        ensureListeningTo(currentHostContext, type);
+                        ensureListeningTo(renderExpirationTime$jscomp$0, type);
                   }
                 switch (type$jscomp$0) {
                   case "input":
@@ -8331,15 +8352,15 @@ function completeUnitOfWork(unitOfWork) {
                     "function" === typeof props.onClick &&
                       (instance.onclick = noop);
                 }
-                type = i;
-                current.updateQueue = type;
-                null !== type && markUpdate(current$$1);
-                current = current$$1.stateNode;
+                renderExpirationTime$jscomp$0 = currentHostContext;
+                current.updateQueue = renderExpirationTime$jscomp$0;
+                null !== renderExpirationTime$jscomp$0 &&
+                  markUpdate(current$$1);
+                renderExpirationTime$jscomp$0 = current$$1.stateNode;
                 newProps = newProps.listeners;
                 null != newProps &&
                   updateEventListeners(
                     newProps,
-                    current,
                     renderExpirationTime$jscomp$0,
                     current$$1
                   );
@@ -8382,14 +8403,9 @@ function completeUnitOfWork(unitOfWork) {
                 appendAllChildren(current, current$$1, !1, !1);
                 instance = newProps.listeners;
                 null != instance &&
-                  updateEventListeners(
-                    instance,
-                    current,
-                    renderExpirationTime$jscomp$0,
-                    current$$1
-                  );
+                  updateEventListeners(instance, current, current$$1);
                 instance = current;
-                i = renderExpirationTime$jscomp$0;
+                nextProp = renderExpirationTime$jscomp$0;
                 var isCustomComponentTag = isCustomComponent(type, newProps);
                 switch (type) {
                   case "iframe":
@@ -8438,7 +8454,7 @@ function completeUnitOfWork(unitOfWork) {
                       newProps
                     );
                     trapBubbledEvent("invalid", instance);
-                    ensureListeningTo(i, "onChange");
+                    ensureListeningTo(nextProp, "onChange");
                     break;
                   case "option":
                     renderExpirationTime$jscomp$0 = getHostProps$1(
@@ -8456,7 +8472,7 @@ function completeUnitOfWork(unitOfWork) {
                       { value: void 0 }
                     );
                     trapBubbledEvent("invalid", instance);
-                    ensureListeningTo(i, "onChange");
+                    ensureListeningTo(nextProp, "onChange");
                     break;
                   case "textarea":
                     initWrapperState$2(instance, newProps);
@@ -8465,7 +8481,7 @@ function completeUnitOfWork(unitOfWork) {
                       newProps
                     );
                     trapBubbledEvent("invalid", instance);
-                    ensureListeningTo(i, "onChange");
+                    ensureListeningTo(nextProp, "onChange");
                     break;
                   default:
                     renderExpirationTime$jscomp$0 = newProps;
@@ -8474,10 +8490,10 @@ function completeUnitOfWork(unitOfWork) {
                 type$jscomp$0 = void 0;
                 props = type;
                 currentHostContext = instance;
-                nextProp = renderExpirationTime$jscomp$0;
-                for (type$jscomp$0 in nextProp)
-                  if (nextProp.hasOwnProperty(type$jscomp$0)) {
-                    var nextProp$jscomp$0 = nextProp[type$jscomp$0];
+                var nextProps = renderExpirationTime$jscomp$0;
+                for (type$jscomp$0 in nextProps)
+                  if (nextProps.hasOwnProperty(type$jscomp$0)) {
+                    var nextProp$jscomp$0 = nextProps[type$jscomp$0];
                     "style" === type$jscomp$0
                       ? setValueForStyles(currentHostContext, nextProp$jscomp$0)
                       : "dangerouslySetInnerHTML" === type$jscomp$0
@@ -8508,7 +8524,7 @@ function completeUnitOfWork(unitOfWork) {
                               type$jscomp$0
                             )
                               ? null != nextProp$jscomp$0 &&
-                                ensureListeningTo(i, type$jscomp$0)
+                                ensureListeningTo(nextProp, type$jscomp$0)
                               : null != nextProp$jscomp$0 &&
                                 setValueForProperty(
                                   currentHostContext,
@@ -8814,7 +8830,7 @@ function completeUnitOfWork(unitOfWork) {
       }
       if (null !== current$$1) return current$$1;
       null !== unitOfWork &&
-        0 === (unitOfWork.effectTag & 1024) &&
+        0 === (unitOfWork.effectTag & 2048) &&
         (null === unitOfWork.firstEffect &&
           (unitOfWork.firstEffect = workInProgress.firstEffect),
         null !== workInProgress.lastEffect &&
@@ -8844,13 +8860,13 @@ function completeUnitOfWork(unitOfWork) {
                   ? "Rendering was suspended"
                   : "An error was thrown inside this error boundary"
               ))),
-          (current$$1.effectTag &= 1023),
+          (current$$1.effectTag &= 2047),
           current$$1
         );
       stopWorkTimer(workInProgress);
       null !== unitOfWork &&
         ((unitOfWork.firstEffect = unitOfWork.lastEffect = null),
-        (unitOfWork.effectTag |= 1024));
+        (unitOfWork.effectTag |= 2048));
     }
     current$$1 = workInProgress.sibling;
     if (null !== current$$1) return current$$1;
@@ -9057,7 +9073,7 @@ function commitRootImpl(root, renderPriorityLevel) {
                   : (currentRef.current = null));
             }
           }
-          switch (effectTag & 14) {
+          switch (effectTag & 1038) {
             case 2:
               commitPlacement(nextEffect);
               nextEffect.effectTag &= -3;
@@ -9065,6 +9081,13 @@ function commitRootImpl(root, renderPriorityLevel) {
             case 6:
               commitPlacement(nextEffect);
               nextEffect.effectTag &= -3;
+              commitWork(nextEffect.alternate, nextEffect);
+              break;
+            case 1024:
+              nextEffect.effectTag &= -1025;
+              break;
+            case 1028:
+              nextEffect.effectTag &= -1025;
               commitWork(nextEffect.alternate, nextEffect);
               break;
             case 4:
@@ -9814,7 +9837,7 @@ beginWork$$1 = function(current$$1, workInProgress, renderExpirationTime) {
             (hydrationParentFiber = workInProgress),
             (renderState = isHydrating = !0);
         renderState
-          ? ((workInProgress.effectTag |= 2),
+          ? ((workInProgress.effectTag |= 1024),
             (workInProgress.child = mountChildFibers(
               workInProgress,
               null,

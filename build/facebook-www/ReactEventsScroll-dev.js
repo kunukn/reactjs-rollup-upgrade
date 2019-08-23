@@ -260,13 +260,13 @@ var ScrollResponder = React.unstable_createResponder(
   "Scroll",
   scrollResponderImpl
 );
-function useScrollResponder(props) {
+function useScroll(props) {
   return React.unstable_useResponder(ScrollResponder, props);
 }
 
 var Scroll = (Object.freeze || Object)({
   ScrollResponder: ScrollResponder,
-  useScrollResponder: useScrollResponder
+  useScroll: useScroll
 });
 
 var scroll = Scroll;
