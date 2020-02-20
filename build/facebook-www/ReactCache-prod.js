@@ -12,9 +12,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: !0 });
 var React = require("react"),
-  Scheduler = require("scheduler");
-require("warning");
-var scheduleCallback = Scheduler.unstable_scheduleCallback,
+  Scheduler = require("scheduler"),
+  scheduleCallback = Scheduler.unstable_scheduleCallback,
   IdlePriority = Scheduler.unstable_IdlePriority,
   ReactCurrentDispatcher =
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED

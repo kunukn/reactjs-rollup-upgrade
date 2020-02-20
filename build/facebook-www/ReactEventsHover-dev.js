@@ -78,7 +78,7 @@ function dispatchHoverStartEvents(event, context, props, state) {
     var nativeEvent = event.nativeEvent;
 
     if (context.isTargetWithinResponderScope(nativeEvent.relatedTarget)) {
-      return;
+      return false;
     }
   }
 
@@ -100,6 +100,8 @@ function dispatchHoverStartEvents(event, context, props, state) {
 
     dispatchHoverChangeEvent(event, context, props, state);
   }
+
+  return true;
 }
 
 function dispatchHoverMoveEvent(event, context, props, state) {
@@ -119,7 +121,7 @@ function dispatchHoverEndEvents(event, context, props, state) {
     var nativeEvent = event.nativeEvent;
 
     if (context.isTargetWithinResponderScope(nativeEvent.relatedTarget)) {
-      return;
+      return false;
     }
   }
 
@@ -138,6 +140,8 @@ function dispatchHoverEndEvents(event, context, props, state) {
     state.hoverTarget = null;
     state.isTouched = false;
   }
+
+  return true;
 }
 
 function unmountResponder(context, props, state) {
@@ -146,13 +150,9 @@ function unmountResponder(context, props, state) {
   }
 }
 
+var rootPointerEventTypes = ["pointerout", "pointermove", "pointercancel"];
 var hoverResponderImpl = {
-  targetEventTypes: [
-    "pointerover",
-    "pointermove",
-    "pointerout",
-    "pointercancel"
-  ],
+  targetEventTypes: ["pointerover"],
   getInitialState: function() {
     return {
       isActiveHovered: false,
@@ -161,12 +161,42 @@ var hoverResponderImpl = {
   },
   allowMultipleHostChildren: false,
   allowEventHooks: true,
+  onRootEvent: function(event, context, props, state) {
+    var type = event.type;
+
+    switch (type) {
+      // MOVE
+      case "pointermove": {
+        if (state.isHovered && state.hoverTarget !== null) {
+          dispatchHoverMoveEvent(event, context, props, state);
+        }
+
+        break;
+      }
+      // END
+
+      case "pointercancel":
+      case "pointerout": {
+        if (state.isHovered) {
+          if (
+            dispatchHoverEndEvents(event, context, props, state) ||
+            type === "pointercancel"
+          ) {
+            context.removeRootEventTypes(rootPointerEventTypes);
+          }
+        }
+
+        break;
+      }
+    }
+  },
   onEvent: function(event, context, props, state) {
     var pointerType = event.pointerType,
       type = event.type;
 
     if (props.disabled) {
       if (state.isHovered) {
+        context.removeRootEventTypes(rootPointerEventTypes);
         dispatchHoverEndEvents(event, context, props, state);
       }
 
@@ -177,27 +207,11 @@ var hoverResponderImpl = {
       // START
       case "pointerover": {
         if (!state.isHovered && pointerType !== "touch") {
-          state.hoverTarget = event.responderTarget;
-          dispatchHoverStartEvents(event, context, props, state);
-        }
+          state.hoverTarget = context.getResponderNode();
 
-        break;
-      }
-      // MOVE
-
-      case "pointermove": {
-        if (state.isHovered && state.hoverTarget !== null) {
-          dispatchHoverMoveEvent(event, context, props, state);
-        }
-
-        break;
-      }
-      // END
-
-      case "pointerout":
-      case "pointercancel": {
-        if (state.isHovered) {
-          dispatchHoverEndEvents(event, context, props, state);
+          if (dispatchHoverStartEvents(event, context, props, state)) {
+            context.addRootEventTypes(rootPointerEventTypes);
+          }
         }
 
         break;
@@ -206,8 +220,9 @@ var hoverResponderImpl = {
   },
   onUnmount: unmountResponder
 };
+var rootMouseEventTypes = ["mousemove", "mouseout"];
 var hoverResponderFallbackImpl = {
-  targetEventTypes: ["mouseover", "mousemove", "mouseout", "touchstart"],
+  targetEventTypes: ["mouseover", "mousemove", "touchstart"],
   getInitialState: function() {
     return {
       isActiveHovered: false,
@@ -218,11 +233,41 @@ var hoverResponderFallbackImpl = {
   },
   allowMultipleHostChildren: false,
   allowEventHooks: true,
+  onRootEvent: function(event, context, props, state) {
+    var type = event.type;
+
+    switch (type) {
+      // MOVE
+      case "mousemove": {
+        if (
+          state.isHovered &&
+          state.hoverTarget !== null &&
+          !state.ignoreEmulatedMouseEvents
+        ) {
+          dispatchHoverMoveEvent(event, context, props, state);
+        }
+
+        break;
+      }
+      // END
+
+      case "mouseout": {
+        if (state.isHovered) {
+          if (dispatchHoverEndEvents(event, context, props, state)) {
+            context.removeRootEventTypes(rootMouseEventTypes);
+          }
+        }
+
+        break;
+      }
+    }
+  },
   onEvent: function(event, context, props, state) {
     var type = event.type;
 
     if (props.disabled) {
       if (state.isHovered) {
+        context.removeRootEventTypes(rootMouseEventTypes);
         dispatchHoverEndEvents(event, context, props, state);
         state.ignoreEmulatedMouseEvents = false;
       }
@@ -235,8 +280,11 @@ var hoverResponderFallbackImpl = {
       // START
       case "mouseover": {
         if (!state.isHovered && !state.ignoreEmulatedMouseEvents) {
-          state.hoverTarget = event.responderTarget;
-          dispatchHoverStartEvents(event, context, props, state);
+          state.hoverTarget = context.getResponderNode();
+
+          if (dispatchHoverStartEvents(event, context, props, state)) {
+            context.addRootEventTypes(rootMouseEventTypes);
+          }
         }
 
         break;
@@ -244,24 +292,9 @@ var hoverResponderFallbackImpl = {
       // MOVE
 
       case "mousemove": {
-        if (
-          state.isHovered &&
-          state.hoverTarget !== null &&
-          !state.ignoreEmulatedMouseEvents
-        ) {
-          dispatchHoverMoveEvent(event, context, props, state);
-        } else if (!state.isHovered && type === "mousemove") {
+        if (!state.isHovered && type === "mousemove") {
           state.ignoreEmulatedMouseEvents = false;
           state.isTouched = false;
-        }
-
-        break;
-      }
-      // END
-
-      case "mouseout": {
-        if (state.isHovered) {
-          dispatchHoverEndEvents(event, context, props, state);
         }
 
         break;
@@ -279,15 +312,15 @@ var hoverResponderFallbackImpl = {
   },
   onUnmount: unmountResponder
 };
-var HoverResponder = React.unstable_createResponder(
+var HoverResponder = React.DEPRECATED_createResponder(
   "Hover",
   hasPointerEvents ? hoverResponderImpl : hoverResponderFallbackImpl
 );
 function useHover(props) {
-  return React.unstable_useResponder(HoverResponder, props);
+  return React.DEPRECATED_useResponder(HoverResponder, props);
 }
 
-var Hover = (Object.freeze || Object)({
+var Hover = Object.freeze({
   HoverResponder: HoverResponder,
   useHover: useHover
 });

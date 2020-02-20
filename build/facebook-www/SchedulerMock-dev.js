@@ -20,13 +20,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var _require = require("SchedulerFeatureFlags");
 var enableIsInputPending = _require.enableIsInputPending;
 var enableSchedulerDebugging = _require.enableSchedulerDebugging;
-var requestIdleCallbackBeforeFirstFrame =
-  _require.requestIdleCallbackBeforeFirstFrame;
-var requestTimerEventBeforeFirstFrame =
-  _require.requestTimerEventBeforeFirstFrame;
-var enableMessageLoopImplementation = _require.enableMessageLoopImplementation;
+var enableProfilingFeatureFlag = _require.enableProfiling;
 
-var enableProfiling = true;
+var enableProfiling = true && enableProfilingFeatureFlag;
 
 var currentTime = 0;
 var scheduledCallback = null;
@@ -212,14 +208,10 @@ function unstable_yieldValue(value) {
 function unstable_advanceTime(ms) {
   currentTime += ms;
 
-  if (!isFlushing) {
-    if (scheduledTimeout !== null && timeoutTime <= currentTime) {
-      scheduledTimeout(currentTime);
-      timeoutTime = -1;
-      scheduledTimeout = null;
-    }
-
-    unstable_flushExpired();
+  if (scheduledTimeout !== null && timeoutTime <= currentTime) {
+    scheduledTimeout(currentTime);
+    timeoutTime = -1;
+    scheduledTimeout = null;
   }
 }
 function requestPaint() {
@@ -256,7 +248,7 @@ function siftUp(heap, node, i) {
   var index = i;
 
   while (true) {
-    var parentIndex = Math.floor((index - 1) / 2);
+    var parentIndex = (index - 1) >>> 1;
     var parent = heap[parentIndex];
 
     if (parent !== undefined && compare(parent, node) > 0) {
@@ -323,8 +315,8 @@ var sharedProfilingBuffer = enableProfiling // $FlowFixMe Flow doesn't know abou
   ? typeof SharedArrayBuffer === "function"
     ? new SharedArrayBuffer(profilingStateSize * Int32Array.BYTES_PER_ELEMENT) // $FlowFixMe Flow doesn't know about ArrayBuffer
     : typeof ArrayBuffer === "function"
-      ? new ArrayBuffer(profilingStateSize * Int32Array.BYTES_PER_ELEMENT)
-      : null // Don't crash the init path on IE9
+    ? new ArrayBuffer(profilingStateSize * Int32Array.BYTES_PER_ELEMENT)
+    : null // Don't crash the init path on IE9
   : null;
 var profilingState =
   enableProfiling && sharedProfilingBuffer !== null
@@ -342,9 +334,11 @@ if (enableProfiling) {
 
   profilingState[QUEUE_SIZE] = 0;
   profilingState[CURRENT_TASK_ID] = 0;
-}
+} // Bytes per element is 4
 
-var INITIAL_EVENT_LOG_SIZE = 1000;
+var INITIAL_EVENT_LOG_SIZE = 131072;
+var MAX_EVENT_LOG_SIZE = 524288; // Equivalent to 2 megabytes
+
 var eventLogSize = 0;
 var eventLogBuffer = null;
 var eventLog = null;
@@ -364,10 +358,19 @@ function logEvent(entries) {
     eventLogIndex += entries.length;
 
     if (eventLogIndex + 1 > eventLogSize) {
-      eventLogSize = eventLogIndex + 1;
-      var newEventLog = new Int32Array(
-        eventLogSize * Int32Array.BYTES_PER_ELEMENT
-      );
+      eventLogSize *= 2;
+
+      if (eventLogSize > MAX_EVENT_LOG_SIZE) {
+        // Using console['error'] to evade Babel and ESLint
+        console["error"](
+          "Scheduler Profiling: Event log exceeded maximum size. Don't " +
+            "forget to call `stopLoggingProfilingEvents()`."
+        );
+        stopLoggingProfilingEvents();
+        return;
+      }
+
+      var newEventLog = new Int32Array(eventLogSize * 4);
       newEventLog.set(eventLog);
       eventLogBuffer = newEventLog.buffer;
       eventLog = newEventLog;
@@ -379,56 +382,62 @@ function logEvent(entries) {
 
 function startLoggingProfilingEvents() {
   eventLogSize = INITIAL_EVENT_LOG_SIZE;
-  eventLogBuffer = new ArrayBuffer(eventLogSize * Int32Array.BYTES_PER_ELEMENT);
+  eventLogBuffer = new ArrayBuffer(eventLogSize * 4);
   eventLog = new Int32Array(eventLogBuffer);
   eventLogIndex = 0;
 }
 function stopLoggingProfilingEvents() {
   var buffer = eventLogBuffer;
-  eventLogBuffer = eventLog = null;
+  eventLogSize = 0;
+  eventLogBuffer = null;
+  eventLog = null;
+  eventLogIndex = 0;
   return buffer;
 }
-function markTaskStart(task, time) {
+function markTaskStart(task, ms) {
   if (enableProfiling) {
     profilingState[QUEUE_SIZE]++;
 
     if (eventLog !== null) {
-      logEvent([TaskStartEvent, time, task.id, task.priorityLevel]);
+      // performance.now returns a float, representing milliseconds. When the
+      // event is logged, it's coerced to an int. Convert to microseconds to
+      // maintain extra degrees of precision.
+      logEvent([TaskStartEvent, ms * 1000, task.id, task.priorityLevel]);
     }
   }
 }
-function markTaskCompleted(task, time) {
+function markTaskCompleted(task, ms) {
   if (enableProfiling) {
     profilingState[PRIORITY] = NoPriority;
     profilingState[CURRENT_TASK_ID] = 0;
     profilingState[QUEUE_SIZE]--;
 
     if (eventLog !== null) {
-      logEvent([TaskCompleteEvent, time, task.id]);
+      logEvent([TaskCompleteEvent, ms * 1000, task.id]);
     }
   }
 }
-function markTaskCanceled(task, time) {
+function markTaskCanceled(task, ms) {
   if (enableProfiling) {
     profilingState[QUEUE_SIZE]--;
 
     if (eventLog !== null) {
-      logEvent([TaskCancelEvent, time, task.id]);
+      logEvent([TaskCancelEvent, ms * 1000, task.id]);
     }
   }
 }
-function markTaskErrored(task, time) {
+function markTaskErrored(task, ms) {
   if (enableProfiling) {
     profilingState[PRIORITY] = NoPriority;
     profilingState[CURRENT_TASK_ID] = 0;
     profilingState[QUEUE_SIZE]--;
 
     if (eventLog !== null) {
-      logEvent([TaskErrorEvent, time, task.id]);
+      logEvent([TaskErrorEvent, ms * 1000, task.id]);
     }
   }
 }
-function markTaskRun(task, time) {
+function markTaskRun(task, ms) {
   if (enableProfiling) {
     runIdCounter++;
     profilingState[PRIORITY] = task.priorityLevel;
@@ -436,34 +445,34 @@ function markTaskRun(task, time) {
     profilingState[CURRENT_RUN_ID] = runIdCounter;
 
     if (eventLog !== null) {
-      logEvent([TaskRunEvent, time, task.id, runIdCounter]);
+      logEvent([TaskRunEvent, ms * 1000, task.id, runIdCounter]);
     }
   }
 }
-function markTaskYield(task, time) {
+function markTaskYield(task, ms) {
   if (enableProfiling) {
     profilingState[PRIORITY] = NoPriority;
     profilingState[CURRENT_TASK_ID] = 0;
     profilingState[CURRENT_RUN_ID] = 0;
 
     if (eventLog !== null) {
-      logEvent([TaskYieldEvent, time, task.id, runIdCounter]);
+      logEvent([TaskYieldEvent, ms * 1000, task.id, runIdCounter]);
     }
   }
 }
-function markSchedulerSuspended(time) {
+function markSchedulerSuspended(ms) {
   if (enableProfiling) {
     mainThreadIdCounter++;
 
     if (eventLog !== null) {
-      logEvent([SchedulerSuspendEvent, time, mainThreadIdCounter]);
+      logEvent([SchedulerSuspendEvent, ms * 1000, mainThreadIdCounter]);
     }
   }
 }
-function markSchedulerUnsuspended(time) {
+function markSchedulerUnsuspended(ms) {
   if (enableProfiling) {
     if (eventLog !== null) {
-      logEvent([SchedulerResumeEvent, time, mainThreadIdCounter]);
+      logEvent([SchedulerResumeEvent, ms * 1000, mainThreadIdCounter]);
     }
   }
 }
@@ -510,7 +519,7 @@ function advanceTimers(currentTime) {
       push(taskQueue, timer);
 
       if (enableProfiling) {
-        markTaskStart(timer);
+        markTaskStart(timer, currentTime);
         timer.isQueued = true;
       }
     } else {

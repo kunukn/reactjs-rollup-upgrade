@@ -44,10 +44,12 @@ var REACT_SUSPENSE_LIST_TYPE = hasSymbol
   : 0xead8;
 var REACT_MEMO_TYPE = hasSymbol ? Symbol.for("react.memo") : 0xead3;
 var REACT_LAZY_TYPE = hasSymbol ? Symbol.for("react.lazy") : 0xead4;
+var REACT_CHUNK_TYPE = hasSymbol ? Symbol.for("react.chunk") : 0xead9;
 var REACT_FUNDAMENTAL_TYPE = hasSymbol
   ? Symbol.for("react.fundamental")
   : 0xead5;
 var REACT_RESPONDER_TYPE = hasSymbol ? Symbol.for("react.responder") : 0xead6;
+var REACT_SCOPE_TYPE = hasSymbol ? Symbol.for("react.scope") : 0xead7;
 
 function isValidElementType(type) {
   return (
@@ -67,11 +69,11 @@ function isValidElementType(type) {
         type.$$typeof === REACT_CONTEXT_TYPE ||
         type.$$typeof === REACT_FORWARD_REF_TYPE ||
         type.$$typeof === REACT_FUNDAMENTAL_TYPE ||
-        type.$$typeof === REACT_RESPONDER_TYPE))
+        type.$$typeof === REACT_RESPONDER_TYPE ||
+        type.$$typeof === REACT_SCOPE_TYPE ||
+        type.$$typeof === REACT_CHUNK_TYPE))
   );
 }
-
-var lowPriorityWarning = require("lowPriorityWarning");
 
 function typeOf(object) {
   if (typeof object === "object" && object !== null) {
@@ -96,6 +98,8 @@ function typeOf(object) {
             switch ($$typeofType) {
               case REACT_CONTEXT_TYPE:
               case REACT_FORWARD_REF_TYPE:
+              case REACT_LAZY_TYPE:
+              case REACT_MEMO_TYPE:
               case REACT_PROVIDER_TYPE:
                 return $$typeofType;
 
@@ -104,8 +108,6 @@ function typeOf(object) {
             }
         }
 
-      case REACT_LAZY_TYPE:
-      case REACT_MEMO_TYPE:
       case REACT_PORTAL_TYPE:
         return $$typeof;
     }
@@ -132,9 +134,9 @@ var hasWarnedAboutDeprecatedIsAsyncMode = false; // AsyncMode should be deprecat
 function isAsyncMode(object) {
   {
     if (!hasWarnedAboutDeprecatedIsAsyncMode) {
-      hasWarnedAboutDeprecatedIsAsyncMode = true;
-      lowPriorityWarning(
-        false,
+      hasWarnedAboutDeprecatedIsAsyncMode = true; // Using console['warn'] to evade Babel and ESLint
+
+      console["warn"](
         "The ReactIs.isAsyncMode() alias has been deprecated, " +
           "and will be removed in React 17+. Update your code to use " +
           "ReactIs.isConcurrentMode() instead. It has the exact same API."

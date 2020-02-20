@@ -81,15 +81,15 @@ var contextMenuImpl = {
     }
   }
 };
-var ContextMenuResponder = React.unstable_createResponder(
+var ContextMenuResponder = React.DEPRECATED_createResponder(
   "ContextMenu",
   contextMenuImpl
 );
 function useContextMenu(props) {
-  return React.unstable_useResponder(ContextMenuResponder, props);
+  return React.DEPRECATED_useResponder(ContextMenuResponder, props);
 }
 
-var ContextMenu = (Object.freeze || Object)({
+var ContextMenu = Object.freeze({
   ContextMenuResponder: ContextMenuResponder,
   useContextMenu: useContextMenu
 });

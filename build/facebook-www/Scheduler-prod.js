@@ -14,11 +14,6 @@ Object.defineProperty(exports, "__esModule", { value: !0 });
 var _require = require("SchedulerFeatureFlags"),
   enableIsInputPending = _require.enableIsInputPending,
   enableSchedulerDebugging = _require.enableSchedulerDebugging,
-  requestIdleCallbackBeforeFirstFrame =
-    _require.requestIdleCallbackBeforeFirstFrame,
-  requestTimerEventBeforeFirstFrame =
-    _require.requestTimerEventBeforeFirstFrame,
-  enableMessageLoopImplementation = _require.enableMessageLoopImplementation,
   requestHostCallback,
   requestHostTimeout,
   cancelHostTimeout,
@@ -60,23 +55,18 @@ if ("undefined" === typeof window || "function" !== typeof MessageChannel) {
   var performance = window.performance,
     _Date = window.Date,
     _setTimeout = window.setTimeout,
-    _clearTimeout = window.clearTimeout,
-    requestAnimationFrame = window.requestAnimationFrame,
-    cancelAnimationFrame = window.cancelAnimationFrame,
-    requestIdleCallback = window.requestIdleCallback;
-  "undefined" !== typeof console &&
-    ("function" !== typeof requestAnimationFrame &&
+    _clearTimeout = window.clearTimeout;
+  if ("undefined" !== typeof console) {
+    var cancelAnimationFrame = window.cancelAnimationFrame;
+    "function" !== typeof window.requestAnimationFrame &&
       console.error(
         "This browser doesn't support requestAnimationFrame. Make sure that you load a polyfill in older browsers. https://fb.me/react-polyfills"
-      ),
+      );
     "function" !== typeof cancelAnimationFrame &&
       console.error(
         "This browser doesn't support cancelAnimationFrame. Make sure that you load a polyfill in older browsers. https://fb.me/react-polyfills"
-      ));
-  var requestIdleCallbackBeforeFirstFrame$1 =
-    requestIdleCallbackBeforeFirstFrame &&
-    "function" === typeof requestIdleCallback &&
-    "function" === typeof cancelIdleCallback;
+      );
+  }
   if ("object" === typeof performance && "function" === typeof performance.now)
     exports.unstable_now = function() {
       return performance.now();
@@ -87,16 +77,11 @@ if ("undefined" === typeof window || "function" !== typeof MessageChannel) {
       return _Date.now() - _initialTime;
     };
   }
-  var isRAFLoopRunning = !1,
-    isMessageLoopRunning = !1,
+  var isMessageLoopRunning = !1,
     scheduledHostCallback = null,
-    rAFTimeoutID = -1,
     taskTimeoutID = -1,
-    frameLength = enableMessageLoopImplementation ? 5 : 33.33,
-    prevRAFTime = -1,
-    prevRAFInterval = -1,
-    frameDeadline = 0,
-    fpsLocked = !1,
+    yieldInterval = 5,
+    deadline = 0,
     needsPaint = !1;
   if (
     enableIsInputPending &&
@@ -107,10 +92,10 @@ if ("undefined" === typeof window || "function" !== typeof MessageChannel) {
     var scheduling = navigator.scheduling;
     shouldYieldToHost = function() {
       var currentTime = exports.unstable_now();
-      return currentTime >= frameDeadline
+      return currentTime >= deadline
         ? needsPaint || scheduling.isInputPending()
           ? !0
-          : currentTime >= frameDeadline + 300
+          : 300 <= currentTime
         : !1;
     };
     requestPaint = function() {
@@ -118,7 +103,7 @@ if ("undefined" === typeof window || "function" !== typeof MessageChannel) {
     };
   } else
     (shouldYieldToHost = function() {
-      return exports.unstable_now() >= frameDeadline;
+      return exports.unstable_now() >= deadline;
     }),
       (requestPaint = function() {});
   exports.unstable_forceFrameRate = function(fps) {
@@ -126,98 +111,28 @@ if ("undefined" === typeof window || "function" !== typeof MessageChannel) {
       ? console.error(
           "forceFrameRate takes a positive int between 0 and 125, forcing framerates higher than 125 fps is not unsupported"
         )
-      : 0 < fps
-        ? ((frameLength = Math.floor(1e3 / fps)), (fpsLocked = !0))
-        : ((frameLength = 33.33), (fpsLocked = !1));
+      : (yieldInterval = 0 < fps ? Math.floor(1e3 / fps) : 5);
   };
-  var performWorkUntilDeadline = function() {
-      if (enableMessageLoopImplementation)
-        if (null !== scheduledHostCallback) {
-          var currentTime = exports.unstable_now();
-          frameDeadline = currentTime + frameLength;
-          try {
-            scheduledHostCallback(!0, currentTime)
-              ? port.postMessage(null)
-              : ((isMessageLoopRunning = !1), (scheduledHostCallback = null));
-          } catch (error) {
-            throw (port.postMessage(null), error);
-          }
-        } else isMessageLoopRunning = !1;
-      else if (null !== scheduledHostCallback) {
-        currentTime = exports.unstable_now();
-        var _hasTimeRemaining = 0 < frameDeadline - currentTime;
-        try {
-          scheduledHostCallback(_hasTimeRemaining, currentTime) ||
-            (scheduledHostCallback = null);
-        } catch (error) {
-          throw (port.postMessage(null), error);
-        }
-      }
-      needsPaint = !1;
-    },
-    channel = new MessageChannel(),
+  var channel = new MessageChannel(),
     port = channel.port2;
-  channel.port1.onmessage = performWorkUntilDeadline;
-  var onAnimationFrame = function(rAFTime) {
-    if (null === scheduledHostCallback)
-      (prevRAFInterval = prevRAFTime = -1), (isRAFLoopRunning = !1);
-    else {
-      isRAFLoopRunning = !0;
-      requestAnimationFrame(function(nextRAFTime) {
-        _clearTimeout(rAFTimeoutID);
-        onAnimationFrame(nextRAFTime);
-      });
-      var onTimeout = function() {
-        frameDeadline = exports.unstable_now() + frameLength / 2;
-        performWorkUntilDeadline();
-        rAFTimeoutID = _setTimeout(onTimeout, 3 * frameLength);
-      };
-      rAFTimeoutID = _setTimeout(onTimeout, 3 * frameLength);
-      if (-1 !== prevRAFTime && 0.1 < rAFTime - prevRAFTime) {
-        var rAFInterval = rAFTime - prevRAFTime;
-        !fpsLocked &&
-          -1 !== prevRAFInterval &&
-          rAFInterval < frameLength &&
-          prevRAFInterval < frameLength &&
-          ((frameLength =
-            rAFInterval < prevRAFInterval ? prevRAFInterval : rAFInterval),
-          8.33 > frameLength && (frameLength = 8.33));
-        prevRAFInterval = rAFInterval;
+  channel.port1.onmessage = function() {
+    if (null !== scheduledHostCallback) {
+      var currentTime = exports.unstable_now();
+      deadline = currentTime + yieldInterval;
+      try {
+        scheduledHostCallback(!0, currentTime)
+          ? port.postMessage(null)
+          : ((isMessageLoopRunning = !1), (scheduledHostCallback = null));
+      } catch (error) {
+        throw (port.postMessage(null), error);
       }
-      prevRAFTime = rAFTime;
-      frameDeadline = rAFTime + frameLength;
-      port.postMessage(null);
-    }
+    } else isMessageLoopRunning = !1;
+    needsPaint = !1;
   };
   requestHostCallback = function(callback) {
     scheduledHostCallback = callback;
-    if (enableMessageLoopImplementation)
-      isMessageLoopRunning ||
-        ((isMessageLoopRunning = !0), port.postMessage(null));
-    else if (!isRAFLoopRunning) {
-      isRAFLoopRunning = !0;
-      requestAnimationFrame(function(rAFTime) {
-        requestIdleCallbackBeforeFirstFrame$1 &&
-          cancelIdleCallback(idleCallbackID);
-        requestTimerEventBeforeFirstFrame && _clearTimeout(idleTimeoutID);
-        onAnimationFrame(rAFTime);
-      });
-      var idleCallbackID;
-      requestIdleCallbackBeforeFirstFrame$1 &&
-        (idleCallbackID = requestIdleCallback(function() {
-          requestTimerEventBeforeFirstFrame && _clearTimeout(idleTimeoutID);
-          frameDeadline = exports.unstable_now() + frameLength;
-          performWorkUntilDeadline();
-        }));
-      var idleTimeoutID;
-      requestTimerEventBeforeFirstFrame &&
-        (idleTimeoutID = _setTimeout(function() {
-          requestIdleCallbackBeforeFirstFrame$1 &&
-            cancelIdleCallback(idleCallbackID);
-          frameDeadline = exports.unstable_now() + frameLength;
-          performWorkUntilDeadline();
-        }, 0));
-    }
+    isMessageLoopRunning ||
+      ((isMessageLoopRunning = !0), port.postMessage(null));
   };
   requestHostTimeout = function(callback, ms) {
     taskTimeoutID = _setTimeout(function() {
@@ -233,7 +148,7 @@ function push(heap, node) {
   var index = heap.length;
   heap.push(node);
   a: for (;;) {
-    var parentIndex = Math.floor((index - 1) / 2),
+    var parentIndex = (index - 1) >>> 1,
       parent = heap[parentIndex];
     if (void 0 !== parent && 0 < compare(parent, node))
       (heap[parentIndex] = node), (heap[index] = parent), (index = parentIndex);

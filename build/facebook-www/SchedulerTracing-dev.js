@@ -19,21 +19,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 
 // Re-export dynamic flags from the www version.
 var _require = require("ReactFeatureFlags");
-var debugRenderPhaseSideEffects = _require.debugRenderPhaseSideEffects;
 var debugRenderPhaseSideEffectsForStrictMode =
   _require.debugRenderPhaseSideEffectsForStrictMode;
-var replayFailedUnitOfWorkWithInvokeGuardedCallback =
-  _require.replayFailedUnitOfWorkWithInvokeGuardedCallback;
-var warnAboutDeprecatedLifecycles = _require.warnAboutDeprecatedLifecycles;
+var deferPassiveEffectCleanupDuringUnmount =
+  _require.deferPassiveEffectCleanupDuringUnmount;
 var disableInputAttributeSyncing = _require.disableInputAttributeSyncing;
+var enableTrustedTypesIntegration = _require.enableTrustedTypesIntegration;
+var runAllPassiveEffectDestroysBeforeCreates =
+  _require.runAllPassiveEffectDestroysBeforeCreates;
 var warnAboutShorthandPropertyCollision =
   _require.warnAboutShorthandPropertyCollision;
-var warnAboutDeprecatedSetNativeProps =
-  _require.warnAboutDeprecatedSetNativeProps;
-var enableUserBlockingEvents = _require.enableUserBlockingEvents;
-var disableLegacyContext = _require.disableLegacyContext;
 var disableSchedulerTimeoutBasedOnReactExpirationTime =
-  _require.disableSchedulerTimeoutBasedOnReactExpirationTime; // In www, we have experimental support for gathering data
+  _require.disableSchedulerTimeoutBasedOnReactExpirationTime;
+var warnAboutSpreadingKeyToJSX = _require.warnAboutSpreadingKeyToJSX; // On WWW, true is used for a new modern build.
 
 var enableSchedulerTracing = true;
 

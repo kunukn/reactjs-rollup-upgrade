@@ -20,54 +20,6 @@ var Scheduler = require("scheduler");
 var checkPropTypes = require("prop-types/checkPropTypes");
 var tracing = require("scheduler/tracing");
 
-// Re-export dynamic flags from the www version.
-var _require = require("ReactFeatureFlags");
-var debugRenderPhaseSideEffectsForStrictMode =
-  _require.debugRenderPhaseSideEffectsForStrictMode;
-var deferPassiveEffectCleanupDuringUnmount =
-  _require.deferPassiveEffectCleanupDuringUnmount;
-var disableInputAttributeSyncing = _require.disableInputAttributeSyncing;
-var enableTrustedTypesIntegration = _require.enableTrustedTypesIntegration;
-var runAllPassiveEffectDestroysBeforeCreates =
-  _require.runAllPassiveEffectDestroysBeforeCreates;
-var warnAboutShorthandPropertyCollision =
-  _require.warnAboutShorthandPropertyCollision;
-var disableSchedulerTimeoutBasedOnReactExpirationTime =
-  _require.disableSchedulerTimeoutBasedOnReactExpirationTime;
-var warnAboutSpreadingKeyToJSX = _require.warnAboutSpreadingKeyToJSX; // On WWW, true is used for a new modern build.
-var enableUserTimingAPI = true && !true;
-var enableProfilerTimer = true;
-var enableSchedulerTracing = true;
-
-var replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
-var warnAboutDeprecatedLifecycles = true;
-var disableLegacyContext = true;
-var warnAboutStringRefs = false;
-var warnAboutDefaultPropsOnFunctionComponents = false;
-var enableTrainModelFix = true;
-var exposeConcurrentModeAPIs = true;
-var enableSuspenseServerRenderer = true;
-var enableSelectiveHydration = true;
-var enableChunksAPI = true;
-var disableJavaScriptURLs = true;
-// The flag is intentionally updated in a timeout.
-var enableDeprecatedFlareAPI = true;
-var enableFundamentalAPI = false;
-var enableScopeAPI = true;
-
-var warnAboutUnmockedScheduler = true;
-var enableSuspenseCallback = true;
-var flushSuspenseFallbacksInTests = true;
-
-var disableLegacyReactDOMAPIs = true;
-var disableTextareaChildren = true;
-
-var disableUnstableRenderSubtreeIntoContainer = true;
-var warnUnstableRenderSubtreeIntoContainer = false;
-var disableUnstableCreatePortal = true;
-var isTestEnvironment = false;
-// Flow magic to verify the exports of this file match the original version.
-
 // This refers to a WWW module.
 var warningWWW = require("warning");
 
@@ -1055,6 +1007,48 @@ function restoreStateIfNeeded() {
     }
   }
 }
+
+var debugRenderPhaseSideEffectsForStrictMode = false;
+var enableUserTimingAPI = false;
+var warnAboutDeprecatedLifecycles = true;
+var replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
+var enableProfilerTimer = false;
+var enableSchedulerTracing = false;
+var enableSuspenseServerRenderer = true;
+var enableSelectiveHydration = true;
+var enableChunksAPI = true;
+var disableJavaScriptURLs = true;
+var disableInputAttributeSyncing = false;
+var exposeConcurrentModeAPIs = true;
+var warnAboutShorthandPropertyCollision = true;
+
+var enableDeprecatedFlareAPI = true;
+var enableFundamentalAPI = false;
+var enableScopeAPI = true;
+
+var warnAboutUnmockedScheduler = true;
+var flushSuspenseFallbacksInTests = true;
+var enableSuspenseCallback = true;
+var warnAboutDefaultPropsOnFunctionComponents = false;
+var warnAboutStringRefs = false;
+var disableLegacyContext = true;
+var disableSchedulerTimeoutBasedOnReactExpirationTime = false;
+var enableTrainModelFix = true;
+var enableTrustedTypesIntegration = false;
+
+var disableLegacyReactDOMAPIs = true;
+var disableTextareaChildren = true;
+
+var disableUnstableRenderSubtreeIntoContainer = true;
+var warnUnstableRenderSubtreeIntoContainer = false;
+var disableUnstableCreatePortal = true;
+var deferPassiveEffectCleanupDuringUnmount = false;
+var runAllPassiveEffectDestroysBeforeCreates = false;
+var isTestEnvironment = true;
+
+// Only used in www builds.
+
+// Flow magic to verify the exports of this file match the original version.
 
 // the renderer. Such as when we're dispatching events or if third party
 // libraries need to call batchedUpdates. Eventually, this API will go away when
@@ -33706,7 +33700,7 @@ function createPortal$$1(children, container) {
   return createPortal$1(children, container, null, key);
 }
 
-var ReactDOM$1 = {
+var ReactDOM = {
   createPortal: createPortal$$1,
   unstable_batchedUpdates: batchedUpdates$1,
   flushSync: flushSync,
@@ -33733,20 +33727,20 @@ var ReactDOM$1 = {
 };
 
 if (!disableLegacyReactDOMAPIs) {
-  ReactDOM$1.findDOMNode = findDOMNode;
-  ReactDOM$1.hydrate = hydrate;
-  ReactDOM$1.render = render;
-  ReactDOM$1.unmountComponentAtNode = unmountComponentAtNode;
+  ReactDOM.findDOMNode = findDOMNode;
+  ReactDOM.hydrate = hydrate;
+  ReactDOM.render = render;
+  ReactDOM.unmountComponentAtNode = unmountComponentAtNode;
 }
 
 if (exposeConcurrentModeAPIs) {
-  ReactDOM$1.createRoot = createRoot;
-  ReactDOM$1.createBlockingRoot = createBlockingRoot;
-  ReactDOM$1.unstable_discreteUpdates = discreteUpdates$1;
-  ReactDOM$1.unstable_flushDiscreteUpdates = flushDiscreteUpdates;
-  ReactDOM$1.unstable_flushControlled = flushControlled;
+  ReactDOM.createRoot = createRoot;
+  ReactDOM.createBlockingRoot = createBlockingRoot;
+  ReactDOM.unstable_discreteUpdates = discreteUpdates$1;
+  ReactDOM.unstable_flushDiscreteUpdates = flushDiscreteUpdates;
+  ReactDOM.unstable_flushControlled = flushControlled;
 
-  ReactDOM$1.unstable_scheduleHydration = function(target) {
+  ReactDOM.unstable_scheduleHydration = function(target) {
     if (target) {
       queueExplicitHydrationTarget(target);
     }
@@ -33754,7 +33748,7 @@ if (exposeConcurrentModeAPIs) {
 }
 
 if (!disableUnstableRenderSubtreeIntoContainer) {
-  ReactDOM$1.unstable_renderSubtreeIntoContainer = function() {
+  ReactDOM.unstable_renderSubtreeIntoContainer = function() {
     {
       if (
         warnUnstableRenderSubtreeIntoContainer &&
@@ -33777,7 +33771,7 @@ if (!disableUnstableRenderSubtreeIntoContainer) {
 if (!disableUnstableCreatePortal) {
   // Temporary alias since we already shipped React 16 RC with it.
   // TODO: remove in React 17.
-  ReactDOM$1.unstable_createPortal = function() {
+  ReactDOM.unstable_createPortal = function() {
     {
       if (!didWarnAboutUnstableCreatePortal) {
         didWarnAboutUnstableCreatePortal = true;
@@ -33830,21 +33824,21 @@ var foundDevTools = injectIntoDevTools({
 }
 
 if (isTestEnvironment) {
-  ReactDOM$1.act = act;
+  ReactDOM.act = act;
 }
 
-var ReactDOMFB = Object.freeze({
-  default: ReactDOM$1
+var ReactDOM$2 = Object.freeze({
+  default: ReactDOM
 });
 
-var ReactDOMFB$1 = (ReactDOMFB && ReactDOM$1) || ReactDOMFB;
+var ReactDOM$3 = (ReactDOM$2 && ReactDOM) || ReactDOM$2;
 
 // TODO: decide on the top-level export form.
 // This is hacky but makes it work with both Rollup and Jest.
 
-var index_fb = ReactDOMFB$1.default || ReactDOMFB$1;
+var testing = ReactDOM$3.default || ReactDOM$3;
 
-module.exports = index_fb;
+module.exports = testing;
 
   })();
 }

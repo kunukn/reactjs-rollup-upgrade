@@ -30,9 +30,10 @@ var hasSymbol = "function" === typeof Symbol && Symbol.for,
     : 60120,
   REACT_MEMO_TYPE = hasSymbol ? Symbol.for("react.memo") : 60115,
   REACT_LAZY_TYPE = hasSymbol ? Symbol.for("react.lazy") : 60116,
+  REACT_CHUNK_TYPE = hasSymbol ? Symbol.for("react.chunk") : 60121,
   REACT_FUNDAMENTAL_TYPE = hasSymbol ? Symbol.for("react.fundamental") : 60117,
-  REACT_RESPONDER_TYPE = hasSymbol ? Symbol.for("react.responder") : 60118;
-require("lowPriorityWarning");
+  REACT_RESPONDER_TYPE = hasSymbol ? Symbol.for("react.responder") : 60118,
+  REACT_SCOPE_TYPE = hasSymbol ? Symbol.for("react.scope") : 60119;
 function typeOf(object) {
   if ("object" === typeof object && null !== object) {
     var $$typeof = object.$$typeof;
@@ -50,14 +51,14 @@ function typeOf(object) {
             switch (((object = object && object.$$typeof), object)) {
               case REACT_CONTEXT_TYPE:
               case REACT_FORWARD_REF_TYPE:
+              case REACT_LAZY_TYPE:
+              case REACT_MEMO_TYPE:
               case REACT_PROVIDER_TYPE:
                 return object;
               default:
                 return $$typeof;
             }
         }
-      case REACT_LAZY_TYPE:
-      case REACT_MEMO_TYPE:
       case REACT_PORTAL_TYPE:
         return $$typeof;
     }
@@ -98,7 +99,9 @@ exports.isValidElementType = function(type) {
         type.$$typeof === REACT_CONTEXT_TYPE ||
         type.$$typeof === REACT_FORWARD_REF_TYPE ||
         type.$$typeof === REACT_FUNDAMENTAL_TYPE ||
-        type.$$typeof === REACT_RESPONDER_TYPE))
+        type.$$typeof === REACT_RESPONDER_TYPE ||
+        type.$$typeof === REACT_SCOPE_TYPE ||
+        type.$$typeof === REACT_CHUNK_TYPE))
   );
 };
 exports.isAsyncMode = function(object) {

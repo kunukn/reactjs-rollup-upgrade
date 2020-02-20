@@ -20,15 +20,57 @@ var reactIs = require("react-is");
 var checkPropTypes = require("prop-types/checkPropTypes");
 
 // Do not require this module directly! Use normal `invariant` calls with
-// template literal strings. The messages will be converted to ReactError during
-// build, and in production they will be minified.
+// template literal strings. The messages will be replaced with error codes
+// during build.
 
-// Do not require this module directly! Use normal `invariant` calls with
-// template literal strings. The messages will be converted to ReactError during
-// build, and in production they will be minified.
-function ReactError(error) {
-  error.name = "Invariant Violation";
-  return error;
+// This refers to a WWW module.
+var warningWWW = require("warning");
+
+function error(format) {
+  {
+    for (
+      var _len2 = arguments.length,
+        args = new Array(_len2 > 1 ? _len2 - 1 : 0),
+        _key2 = 1;
+      _key2 < _len2;
+      _key2++
+    ) {
+      args[_key2 - 1] = arguments[_key2];
+    }
+
+    printWarning("error", format, args);
+  }
+}
+
+function printWarning(level, format, args) {
+  {
+    var hasExistingStack =
+      args.length > 0 &&
+      typeof args[args.length - 1] === "string" &&
+      args[args.length - 1].indexOf("\n    in") === 0;
+
+    if (!hasExistingStack) {
+      var React$$1 = require("react");
+
+      var ReactSharedInternals =
+        React$$1.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // Defensive in case this is fired before React is initialized.
+
+      if (ReactSharedInternals != null) {
+        var ReactDebugCurrentFrame =
+          ReactSharedInternals.ReactDebugCurrentFrame;
+        var stack = ReactDebugCurrentFrame.getStackAddendum();
+
+        if (stack !== "") {
+          format += "%s";
+          args.push(stack);
+        }
+      }
+    } // TODO: don't ignore level and pass it down somewhere too.
+
+    args.unshift(format);
+    args.unshift(false);
+    warningWWW.apply(null, args);
+  }
 }
 
 var BEFORE_SLASH_RE = /^(.*)[\\\/]/;
@@ -64,8 +106,6 @@ var describeComponentFrame = function(name, source, ownerName) {
   return "\n    in " + (name || "Unknown") + sourceInfo;
 };
 
-var warningWithoutStack = require("warning");
-
 // The Symbol used to tag the ReactElement-like types. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
 var hasSymbol = typeof Symbol === "function" && Symbol.for;
@@ -89,60 +129,7 @@ var REACT_SUSPENSE_LIST_TYPE = hasSymbol
   : 0xead8;
 var REACT_MEMO_TYPE = hasSymbol ? Symbol.for("react.memo") : 0xead3;
 var REACT_LAZY_TYPE = hasSymbol ? Symbol.for("react.lazy") : 0xead4;
-
-var ReactSharedInternals =
-  React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // Prevent newer renderers from RTE when used with older react package versions.
-// Current owner and dispatcher used to share the same ref,
-// but PR #14548 split them out to better support the react-debug-tools package.
-
-if (!ReactSharedInternals.hasOwnProperty("ReactCurrentDispatcher")) {
-  ReactSharedInternals.ReactCurrentDispatcher = {
-    current: null
-  };
-}
-
-if (!ReactSharedInternals.hasOwnProperty("ReactCurrentBatchConfig")) {
-  ReactSharedInternals.ReactCurrentBatchConfig = {
-    suspense: null
-  };
-}
-
-/**
- * Similar to invariant but only logs a warning if the condition is not met.
- * This can be used to log issues in development environments in critical
- * paths. Removing the logging code for production environments will keep the
- * same logic and follow the same code paths.
- */
-
-var warning = warningWithoutStack;
-
-{
-  warning = function(condition, format) {
-    if (condition) {
-      return;
-    }
-
-    var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
-    var stack = ReactDebugCurrentFrame.getStackAddendum(); // eslint-disable-next-line react-internal/warning-and-invariant-args
-
-    for (
-      var _len = arguments.length,
-        args = new Array(_len > 2 ? _len - 2 : 0),
-        _key = 2;
-      _key < _len;
-      _key++
-    ) {
-      args[_key - 2] = arguments[_key];
-    }
-
-    warningWithoutStack.apply(
-      void 0,
-      [false, format + "%s"].concat(args, [stack])
-    );
-  };
-}
-
-var warning$1 = warning;
+var REACT_CHUNK_TYPE = hasSymbol ? Symbol.for("react.chunk") : 0xead9;
 
 var Resolved = 1;
 
@@ -166,8 +153,7 @@ function getComponentName(type) {
 
   {
     if (typeof type.tag === "number") {
-      warningWithoutStack(
-        false,
+      error(
         "Received an unexpected object in getComponentName(). " +
           "This is likely a bug in React. Please file an issue."
       );
@@ -216,6 +202,9 @@ function getComponentName(type) {
       case REACT_MEMO_TYPE:
         return getComponentName(type.type);
 
+      case REACT_CHUNK_TYPE:
+        return getComponentName(type.render);
+
       case REACT_LAZY_TYPE: {
         var thenable = type;
         var resolvedThenable = refineResolvedLazyComponent(thenable);
@@ -242,6 +231,8 @@ function is(x, y) {
   );
 }
 
+var objectIs = typeof Object.is === "function" ? Object.is : is;
+
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 /**
  * Performs equality by iterating through keys on an object and returning false
@@ -250,7 +241,7 @@ var hasOwnProperty = Object.prototype.hasOwnProperty;
  */
 
 function shallowEqual(objA, objB) {
-  if (is(objA, objB)) {
+  if (objectIs(objA, objB)) {
     return true;
   }
 
@@ -273,7 +264,7 @@ function shallowEqual(objA, objB) {
   for (var i = 0; i < keysA.length; i++) {
     if (
       !hasOwnProperty.call(objB, keysA[i]) ||
-      !is(objA[keysA[i]], objB[keysA[i]])
+      !objectIs(objA[keysA[i]], objB[keysA[i]])
     ) {
       return false;
     }
@@ -293,6 +284,23 @@ function shallowEqual(objA, objB) {
  * will remain to ensure logic does not differ in production.
  */
 
+var ReactSharedInternals =
+  React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // Prevent newer renderers from RTE when used with older react package versions.
+// Current owner and dispatcher used to share the same ref,
+// but PR #14548 split them out to better support the react-debug-tools package.
+
+if (!ReactSharedInternals.hasOwnProperty("ReactCurrentDispatcher")) {
+  ReactSharedInternals.ReactCurrentDispatcher = {
+    current: null
+  };
+}
+
+if (!ReactSharedInternals.hasOwnProperty("ReactCurrentBatchConfig")) {
+  ReactSharedInternals.ReactCurrentBatchConfig = {
+    suspense: null
+  };
+}
+
 var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 var RE_RENDER_LIMIT = 25;
 var emptyObject = {};
@@ -305,32 +313,36 @@ var currentHookNameInDev;
 
 function areHookInputsEqual(nextDeps, prevDeps) {
   if (prevDeps === null) {
-    warning$1(
-      false,
-      "%s received a final argument during this render, but not during " +
-        "the previous render. Even though the final argument is optional, " +
-        "its type cannot change between renders.",
-      currentHookNameInDev
-    );
-    return false;
-  } // Don't bother comparing lengths in prod because these arrays should be
-  // passed inline.
+    {
+      error(
+        "%s received a final argument during this render, but not during " +
+          "the previous render. Even though the final argument is optional, " +
+          "its type cannot change between renders.",
+        currentHookNameInDev
+      );
+    }
 
-  if (nextDeps.length !== prevDeps.length) {
-    warning$1(
-      false,
-      "The final argument passed to %s changed size between renders. The " +
-        "order and size of this array must remain constant.\n\n" +
-        "Previous: %s\n" +
-        "Incoming: %s",
-      currentHookNameInDev,
-      "[" + nextDeps.join(", ") + "]",
-      "[" + prevDeps.join(", ") + "]"
-    );
+    return false;
+  }
+
+  {
+    // Don't bother comparing lengths in prod because these arrays should be
+    // passed inline.
+    if (nextDeps.length !== prevDeps.length) {
+      error(
+        "The final argument passed to %s changed size between renders. The " +
+          "order and size of this array must remain constant.\n\n" +
+          "Previous: %s\n" +
+          "Incoming: %s",
+        currentHookNameInDev,
+        "[" + nextDeps.join(", ") + "]",
+        "[" + prevDeps.join(", ") + "]"
+      );
+    }
   }
 
   for (var i = 0; i < prevDeps.length && i < nextDeps.length; i++) {
-    if (is(nextDeps[i], prevDeps[i])) {
+    if (objectIs(nextDeps[i], prevDeps[i])) {
       continue;
     }
 
@@ -445,6 +457,7 @@ function createHook() {
 }
 
 function basicStateReducer(state, action) {
+  // $FlowFixMe: Flow doesn't like mixed types
   return typeof action === "function" ? action(state) : action;
 }
 
@@ -476,46 +489,38 @@ var ReactShallowRenderer =
     };
 
     _proto2._validateCurrentlyRenderingComponent = function _validateCurrentlyRenderingComponent() {
-      var _this = this;
-
-      (function() {
-        if (!(_this._rendering && !_this._instance)) {
-          {
-            throw ReactError(
-              Error(
-                "Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem."
-              )
-            );
-          }
+      if (!(this._rendering && !this._instance)) {
+        {
+          throw Error(
+            "Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem."
+          );
         }
-      })();
+      }
     };
 
     _proto2._createDispatcher = function _createDispatcher() {
-      var _this2 = this;
+      var _this = this;
 
       var useReducer = function(reducer, initialArg, init) {
-        _this2._validateCurrentlyRenderingComponent();
+        _this._validateCurrentlyRenderingComponent();
 
-        _this2._createWorkInProgressHook();
+        _this._createWorkInProgressHook();
 
-        var workInProgressHook = _this2._workInProgressHook;
+        var workInProgressHook = _this._workInProgressHook;
 
-        if (_this2._isReRender) {
+        if (_this._isReRender) {
           // This is a re-render.
           var queue = workInProgressHook.queue;
           var dispatch = queue.dispatch;
 
-          if (_this2._numberOfReRenders > 0) {
+          if (_this._numberOfReRenders > 0) {
             // Apply the new render phase updates to the previous current hook.
-            if (_this2._renderPhaseUpdates !== null) {
+            if (_this._renderPhaseUpdates !== null) {
               // Render phase updates are stored in a map of queue -> linked list
-              var firstRenderPhaseUpdate = _this2._renderPhaseUpdates.get(
-                queue
-              );
+              var firstRenderPhaseUpdate = _this._renderPhaseUpdates.get(queue);
 
               if (firstRenderPhaseUpdate !== undefined) {
-                _this2._renderPhaseUpdates.delete(queue);
+                _this._renderPhaseUpdates.delete(queue);
 
                 var _newState = workInProgressHook.memoizedState;
                 var _update = firstRenderPhaseUpdate;
@@ -567,8 +572,8 @@ var ReactShallowRenderer =
             dispatch: null
           });
 
-          var _dispatch = (_queue.dispatch = _this2._dispatchAction.bind(
-            _this2,
+          var _dispatch = (_queue.dispatch = _this._dispatchAction.bind(
+            _this,
             _queue
           ));
 
@@ -584,17 +589,17 @@ var ReactShallowRenderer =
       };
 
       var useMemo = function(nextCreate, deps) {
-        _this2._validateCurrentlyRenderingComponent();
+        _this._validateCurrentlyRenderingComponent();
 
-        _this2._createWorkInProgressHook();
+        _this._createWorkInProgressHook();
 
         var nextDeps = deps !== undefined ? deps : null;
 
         if (
-          _this2._workInProgressHook !== null &&
-          _this2._workInProgressHook.memoizedState !== null
+          _this._workInProgressHook !== null &&
+          _this._workInProgressHook.memoizedState !== null
         ) {
-          var prevState = _this2._workInProgressHook.memoizedState;
+          var prevState = _this._workInProgressHook.memoizedState;
           var prevDeps = prevState[1];
 
           if (nextDeps !== null) {
@@ -605,16 +610,16 @@ var ReactShallowRenderer =
         }
 
         var nextValue = nextCreate();
-        _this2._workInProgressHook.memoizedState = [nextValue, nextDeps];
+        _this._workInProgressHook.memoizedState = [nextValue, nextDeps];
         return nextValue;
       };
 
       var useRef = function(initialValue) {
-        _this2._validateCurrentlyRenderingComponent();
+        _this._validateCurrentlyRenderingComponent();
 
-        _this2._createWorkInProgressHook();
+        _this._createWorkInProgressHook();
 
-        var previousRef = _this2._workInProgressHook.memoizedState;
+        var previousRef = _this._workInProgressHook.memoizedState;
 
         if (previousRef === null) {
           var ref = {
@@ -625,7 +630,7 @@ var ReactShallowRenderer =
             Object.seal(ref);
           }
 
-          _this2._workInProgressHook.memoizedState = ref;
+          _this._workInProgressHook.memoizedState = ref;
           return ref;
         } else {
           return previousRef;
@@ -637,7 +642,7 @@ var ReactShallowRenderer =
       };
 
       var noOp = function() {
-        _this2._validateCurrentlyRenderingComponent();
+        _this._validateCurrentlyRenderingComponent();
       };
 
       var identity = function(fn) {
@@ -649,13 +654,29 @@ var ReactShallowRenderer =
           props: props,
           responder: responder
         };
+      }; // TODO: implement if we decide to keep the shallow renderer
+
+      var useTransition = function(config) {
+        _this._validateCurrentlyRenderingComponent();
+
+        var startTransition = function(callback) {
+          callback();
+        };
+
+        return [startTransition, false];
+      }; // TODO: implement if we decide to keep the shallow renderer
+
+      var useDeferredValue = function(value, config) {
+        _this._validateCurrentlyRenderingComponent();
+
+        return value;
       };
 
       return {
         readContext: readContext,
         useCallback: identity,
         useContext: function(context) {
-          _this2._validateCurrentlyRenderingComponent();
+          _this._validateCurrentlyRenderingComponent();
 
           return readContext(context);
         },
@@ -667,24 +688,20 @@ var ReactShallowRenderer =
         useReducer: useReducer,
         useRef: useRef,
         useState: useState,
-        useResponder: useResponder
+        useResponder: useResponder,
+        useTransition: useTransition,
+        useDeferredValue: useDeferredValue
       };
     };
 
     _proto2._dispatchAction = function _dispatchAction(queue, action) {
-      var _this3 = this;
-
-      (function() {
-        if (!(_this3._numberOfReRenders < RE_RENDER_LIMIT)) {
-          {
-            throw ReactError(
-              Error(
-                "Too many re-renders. React limits the number of renders to prevent an infinite loop."
-              )
-            );
-          }
+      if (!(this._numberOfReRenders < RE_RENDER_LIMIT)) {
+        {
+          throw Error(
+            "Too many re-renders. React limits the number of renders to prevent an infinite loop."
+          );
         }
-      })();
+      }
 
       if (this._rendering) {
         // This is a render phase update. Stash it in a lazily-created map of
@@ -796,61 +813,49 @@ var ReactShallowRenderer =
           ? arguments[1]
           : emptyObject;
 
-      (function() {
-        if (!React.isValidElement(element)) {
-          {
-            throw ReactError(
-              Error(
-                "ReactShallowRenderer render(): Invalid component element." +
-                  (typeof element === "function"
-                    ? " Instead of passing a component class, make sure to instantiate " +
-                      "it by passing it to React.createElement."
-                    : "")
-              )
-            );
-          }
+      if (!React.isValidElement(element)) {
+        {
+          throw Error(
+            "ReactShallowRenderer render(): Invalid component element." +
+              (typeof element === "function"
+                ? " Instead of passing a component class, make sure to instantiate " +
+                  "it by passing it to React.createElement."
+                : "")
+          );
         }
-      })();
+      }
 
       element = element; // Show a special message for host elements since it's a common case.
 
-      (function() {
-        if (!(typeof element.type !== "string")) {
-          {
-            throw ReactError(
-              Error(
-                "ReactShallowRenderer render(): Shallow rendering works only with custom components, not primitives (" +
-                  element.type +
-                  "). Instead of calling `.render(el)` and inspecting the rendered output, look at `el.props` directly instead."
-              )
-            );
-          }
+      if (!(typeof element.type !== "string")) {
+        {
+          throw Error(
+            "ReactShallowRenderer render(): Shallow rendering works only with custom components, not primitives (" +
+              element.type +
+              "). Instead of calling `.render(el)` and inspecting the rendered output, look at `el.props` directly instead."
+          );
         }
-      })();
+      }
 
-      (function() {
-        if (
-          !(
-            reactIs.isForwardRef(element) ||
-            typeof element.type === "function" ||
-            reactIs.isMemo(element.type)
-          )
-        ) {
-          {
-            throw ReactError(
-              Error(
-                "ReactShallowRenderer render(): Shallow rendering works only with custom components, but the provided element type was `" +
-                  (Array.isArray(element.type)
-                    ? "array"
-                    : element.type === null
-                      ? "null"
-                      : typeof element.type) +
-                  "`."
-              )
-            );
-          }
+      if (
+        !(
+          reactIs.isForwardRef(element) ||
+          typeof element.type === "function" ||
+          reactIs.isMemo(element)
+        )
+      ) {
+        {
+          throw Error(
+            "ReactShallowRenderer render(): Shallow rendering works only with custom components, but the provided element type was `" +
+              (Array.isArray(element.type)
+                ? "array"
+                : element.type === null
+                ? "null"
+                : typeof element.type) +
+              "`."
+          );
         }
-      })();
+      }
 
       if (this._rendering) {
         return;
@@ -860,7 +865,7 @@ var ReactShallowRenderer =
         this._reset();
       }
 
-      var elementType = reactIs.isMemo(element.type)
+      var elementType = reactIs.isMemo(element)
         ? element.type.type
         : element.type;
       var previousElement = this._element;
@@ -868,7 +873,7 @@ var ReactShallowRenderer =
       this._element = element;
       this._context = getMaskedContext(elementType.contextTypes, context); // Inner memo component props aren't currently validated in createElement.
 
-      if (reactIs.isMemo(element.type) && elementType.propTypes) {
+      if (reactIs.isMemo(element) && elementType.propTypes) {
         currentlyValidatingElement = element;
         checkPropTypes(
           elementType.propTypes,
@@ -921,7 +926,7 @@ var ReactShallowRenderer =
         } else {
           var shouldRender = true;
 
-          if (reactIs.isMemo(element.type) && previousElement !== null) {
+          if (reactIs.isMemo(element) && previousElement !== null) {
             // This is a Memo component that is being re-rendered.
             var compare = element.type.compare || shallowEqual;
 
@@ -938,19 +943,15 @@ var ReactShallowRenderer =
               // elementType could still be a ForwardRef if it was
               // nested inside Memo.
               if (elementType.$$typeof === reactIs.ForwardRef) {
-                (function() {
-                  if (!(typeof elementType.render === "function")) {
-                    {
-                      throw ReactError(
-                        Error(
-                          "forwardRef requires a render function but was given " +
-                            typeof elementType.render +
-                            "."
-                        )
-                      );
-                    }
+                if (!(typeof elementType.render === "function")) {
+                  {
+                    throw Error(
+                      "forwardRef requires a render function but was given " +
+                        typeof elementType.render +
+                        "."
+                    );
                   }
-                })();
+                }
 
                 this._rendered = elementType.render.call(
                   undefined,
@@ -1132,7 +1133,7 @@ function getDisplayName(element) {
   } else if (typeof element.type === "string") {
     return element.type;
   } else {
-    var elementType = reactIs.isMemo(element.type)
+    var elementType = reactIs.isMemo(element)
       ? element.type.type
       : element.type;
     return elementType.displayName || elementType.name || "Unknown";
@@ -1184,7 +1185,7 @@ function getMaskedContext(contextTypes, unmaskedContext) {
   return context;
 }
 
-var ReactShallowRenderer$2 = (Object.freeze || Object)({
+var ReactShallowRenderer$2 = Object.freeze({
   default: ReactShallowRenderer
 });
 

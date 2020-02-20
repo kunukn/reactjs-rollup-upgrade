@@ -11,7 +11,7 @@
 
 "use strict";
 var React = require("react"),
-  ContextMenuResponder = React.unstable_createResponder("ContextMenu", {
+  ContextMenuResponder = React.DEPRECATED_createResponder("ContextMenu", {
     targetEventTypes:
       "undefined" !== typeof window && null != window.PointerEvent
         ? ["contextmenu_active", "pointerdown"]
@@ -59,6 +59,6 @@ var React = require("react"),
 module.exports = {
   ContextMenuResponder: ContextMenuResponder,
   useContextMenu: function(props) {
-    return React.unstable_useResponder(ContextMenuResponder, props);
+    return React.DEPRECATED_useResponder(ContextMenuResponder, props);
   }
 };

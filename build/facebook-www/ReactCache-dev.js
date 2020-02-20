@@ -20,7 +20,55 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var React = require("react");
 var Scheduler = require("scheduler");
 
-var warningWithoutStack = require("warning");
+// This refers to a WWW module.
+var warningWWW = require("warning");
+
+function error(format) {
+  {
+    for (
+      var _len2 = arguments.length,
+        args = new Array(_len2 > 1 ? _len2 - 1 : 0),
+        _key2 = 1;
+      _key2 < _len2;
+      _key2++
+    ) {
+      args[_key2 - 1] = arguments[_key2];
+    }
+
+    printWarning("error", format, args);
+  }
+}
+
+function printWarning(level, format, args) {
+  {
+    var hasExistingStack =
+      args.length > 0 &&
+      typeof args[args.length - 1] === "string" &&
+      args[args.length - 1].indexOf("\n    in") === 0;
+
+    if (!hasExistingStack) {
+      var React$$1 = require("react");
+
+      var ReactSharedInternals =
+        React$$1.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // Defensive in case this is fired before React is initialized.
+
+      if (ReactSharedInternals != null) {
+        var ReactDebugCurrentFrame =
+          ReactSharedInternals.ReactDebugCurrentFrame;
+        var stack = ReactDebugCurrentFrame.getStackAddendum();
+
+        if (stack !== "") {
+          format += "%s";
+          args.push(stack);
+        }
+      }
+    } // TODO: don't ignore level and pass it down somewhere too.
+
+    args.unshift(format);
+    args.unshift(false);
+    warningWWW.apply(null, args);
+  }
+}
 
 // use dynamic dispatch for CommonJS interop named imports.
 
@@ -172,22 +220,21 @@ function readContext(Context, observedBits) {
 
 function identityHashFn(input) {
   {
-    !(
-      typeof input === "string" ||
-      typeof input === "number" ||
-      typeof input === "boolean" ||
-      input === undefined ||
-      input === null
-    )
-      ? warningWithoutStack(
-          false,
-          "Invalid key type. Expected a string, number, symbol, or boolean, " +
-            "but instead received: %s" +
-            "\n\nTo use non-primitive values as keys, you must pass a hash " +
-            "function as the second argument to createResource().",
-          input
-        )
-      : void 0;
+    if (
+      typeof input !== "string" &&
+      typeof input !== "number" &&
+      typeof input !== "boolean" &&
+      input !== undefined &&
+      input !== null
+    ) {
+      error(
+        "Invalid key type. Expected a string, number, symbol, or boolean, " +
+          "but instead received: %s" +
+          "\n\nTo use non-primitive values as keys, you must pass a hash " +
+          "function as the second argument to createResource().",
+        input
+      );
+    }
   }
 
   return input;
@@ -218,11 +265,11 @@ function accessResult(resource, fetch, input, key) {
           resolvedResult.value = value;
         }
       },
-      function(error) {
+      function(error$$1) {
         if (newResult.status === Pending) {
           var rejectedResult = newResult;
           rejectedResult.status = Rejected;
-          rejectedResult.value = error;
+          rejectedResult.value = error$$1;
         }
       }
     );
@@ -273,8 +320,8 @@ function unstable_createResource(fetch, maybeHashInput) {
         }
 
         case Rejected: {
-          var error = result.value;
-          throw error;
+          var error$$1 = result.value;
+          throw error$$1;
         }
 
         default:

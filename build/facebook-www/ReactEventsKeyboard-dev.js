@@ -19,7 +19,31 @@ var React = require("react");
 
 var DiscreteEvent = 0;
 
-var targetEventTypes = ["keydown", "keyup"];
+var hasPointerEvents =
+  typeof window !== "undefined" && window.PointerEvent !== undefined;
+var isMac =
+  typeof window !== "undefined" && window.navigator != null
+    ? /^Mac/.test(window.navigator.platform)
+    : false;
+
+// Keyboards, Assitive Technologies, and element.click() all produce a "virtual"
+// click event. This is a method of inferring such clicks. Every browser except
+// IE 11 only sets a zero value of "detail" for click events that are "virtual".
+// However, IE 11 uses a zero value for all click events. For IE 11 we rely on
+// the quirk that it produces click events that are of type PointerEvent, and
+// where only the "virtual" click lacks a pointerType field.
+
+function isVirtualClick(event) {
+  var nativeEvent = event.nativeEvent; // JAWS/NVDA with Firefox.
+
+  if (nativeEvent.mozInputSource === 0 && nativeEvent.isTrusted) {
+    return true;
+  }
+
+  return nativeEvent.detail === 0 && !nativeEvent.pointerType;
+}
+
+var targetEventTypes = ["click_active", "keydown_active", "keyup"];
 /**
  * Normalization of deprecated HTML5 `key` values
  * @see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent#Key_names
@@ -84,10 +108,6 @@ var translateToKey = {
   "224": "Meta"
 };
 
-function isFunction(obj) {
-  return typeof obj === "function";
-}
-
 function getEventKey(nativeEvent) {
   var nativeKey = nativeEvent.key;
 
@@ -106,81 +126,103 @@ function getEventKey(nativeEvent) {
   return translateToKey[nativeEvent.keyCode] || "Unidentified";
 }
 
-function createKeyboardEvent(event, context, type, target) {
+function createKeyboardEvent(event, context, type) {
   var nativeEvent = event.nativeEvent;
   var altKey = nativeEvent.altKey,
     ctrlKey = nativeEvent.ctrlKey,
-    isComposing = nativeEvent.isComposing,
-    location = nativeEvent.location,
     metaKey = nativeEvent.metaKey,
-    repeat = nativeEvent.repeat,
     shiftKey = nativeEvent.shiftKey;
-  return {
+  var keyboardEvent = {
     altKey: altKey,
     ctrlKey: ctrlKey,
-    isComposing: isComposing,
-    key: getEventKey(nativeEvent),
-    location: location,
+    defaultPrevented: nativeEvent.defaultPrevented === true,
     metaKey: metaKey,
-    repeat: repeat,
+    pointerType: "keyboard",
     shiftKey: shiftKey,
-    target: target,
+    target: event.target,
     timeStamp: context.getTimeStamp(),
-    type: type
+    type: type,
+    // We don't use stopPropagation, as the default behavior
+    // is to not propagate. Plus, there might be confusion
+    // using stopPropagation as we don't actually stop
+    // native propagation from working, but instead only
+    // allow propagation to the others keyboard responders.
+    continuePropagation: function() {
+      context.continuePropagation();
+    },
+    preventDefault: function() {
+      keyboardEvent.defaultPrevented = true;
+      nativeEvent.preventDefault();
+    }
   };
+
+  if (type !== "keyboard:click") {
+    var key = getEventKey(nativeEvent);
+    var isComposing = nativeEvent.isComposing;
+    keyboardEvent = context.objectAssign(
+      {
+        isComposing: isComposing,
+        key: key
+      },
+      keyboardEvent
+    );
+  }
+
+  return keyboardEvent;
 }
 
-function dispatchKeyboardEvent(event, listener, context, type, target) {
-  var syntheticEvent = createKeyboardEvent(event, context, type, target);
+function dispatchKeyboardEvent(event, listener, context, type) {
+  var syntheticEvent = createKeyboardEvent(event, context, type);
   context.dispatchEvent(syntheticEvent, listener, DiscreteEvent);
 }
 
 var keyboardResponderImpl = {
   targetEventTypes: targetEventTypes,
-  onEvent: function(event, context, props) {
-    var responderTarget = event.responderTarget,
-      type = event.type;
+  targetPortalPropagation: true,
+  getInitialState: function() {
+    return {
+      isActive: false
+    };
+  },
+  onEvent: function(event, context, props, state) {
+    var type = event.type;
 
     if (props.disabled) {
       return;
     }
 
     if (type === "keydown") {
+      state.isActive = true;
       var onKeyDown = props.onKeyDown;
 
-      if (isFunction(onKeyDown)) {
-        dispatchKeyboardEvent(
-          event,
-          onKeyDown,
-          context,
-          "keydown",
-          responderTarget
-        );
+      if (onKeyDown != null) {
+        dispatchKeyboardEvent(event, onKeyDown, context, "keyboard:keydown");
+      }
+    } else if (type === "click" && isVirtualClick(event)) {
+      var onClick = props.onClick;
+
+      if (onClick != null) {
+        dispatchKeyboardEvent(event, onClick, context, "keyboard:click");
       }
     } else if (type === "keyup") {
+      state.isActive = false;
       var onKeyUp = props.onKeyUp;
 
-      if (isFunction(onKeyUp)) {
-        dispatchKeyboardEvent(
-          event,
-          onKeyUp,
-          context,
-          "keyup",
-          responderTarget
-        );
+      if (onKeyUp != null) {
+        dispatchKeyboardEvent(event, onKeyUp, context, "keyboard:keyup");
       }
     }
   }
 };
-var KeyboardResponder = React.unstable_createResponder(
+var KeyboardResponder = React.DEPRECATED_createResponder(
   "Keyboard",
   keyboardResponderImpl
 );
 function useKeyboard(props) {
-  return React.unstable_useResponder(KeyboardResponder, props);
+  return React.DEPRECATED_useResponder(KeyboardResponder, props);
 }
 
-var Keyboard = (Object.freeze || Object)({
+var Keyboard = Object.freeze({
   KeyboardResponder: KeyboardResponder,
   useKeyboard: useKeyboard
 });
