@@ -19,15 +19,70 @@ var React = require("react");
 var ReactDOM = require("react-dom");
 var Scheduler = require("scheduler");
 
-// Do not require this module directly! Use normal `invariant` calls with
-// template literal strings. The messages will be converted to ReactError during
-// build, and in production they will be minified.
-function ReactError(error) {
-  error.name = "Invariant Violation";
-  return error;
+// This refers to a WWW module.
+var warningWWW = require("warning");
+
+function warn(format) {
+  {
+    for (
+      var _len = arguments.length,
+        args = new Array(_len > 1 ? _len - 1 : 0),
+        _key = 1;
+      _key < _len;
+      _key++
+    ) {
+      args[_key - 1] = arguments[_key];
+    }
+
+    printWarning("warn", format, args);
+  }
+}
+function error(format) {
+  {
+    for (
+      var _len2 = arguments.length,
+        args = new Array(_len2 > 1 ? _len2 - 1 : 0),
+        _key2 = 1;
+      _key2 < _len2;
+      _key2++
+    ) {
+      args[_key2 - 1] = arguments[_key2];
+    }
+
+    printWarning("error", format, args);
+  }
 }
 
-var warningWithoutStack = require("warning");
+function printWarning(level, format, args) {
+  {
+    var hasExistingStack =
+      args.length > 0 &&
+      typeof args[args.length - 1] === "string" &&
+      args[args.length - 1].indexOf("\n    in") === 0;
+
+    if (!hasExistingStack) {
+      var React = require("react");
+
+      var ReactSharedInternals =
+        React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // Defensive in case this is fired before React is initialized.
+
+      if (ReactSharedInternals != null) {
+        var ReactDebugCurrentFrame =
+          ReactSharedInternals.ReactDebugCurrentFrame;
+        var stack = ReactDebugCurrentFrame.getStackAddendum();
+
+        if (stack !== "") {
+          format += "%s";
+          args.push(stack);
+        }
+      }
+    } // TODO: don't ignore level and pass it down somewhere too.
+
+    args.unshift(format);
+    args.unshift(false);
+    warningWWW.apply(null, args);
+  }
+}
 
 /**
  * `ReactInstanceMap` maintains a mapping from a public facing stateful
@@ -81,29 +136,24 @@ var Hydrating =
 
 // Re-export dynamic flags from the www version.
 var _require = require("ReactFeatureFlags"),
-  debugRenderPhaseSideEffects = _require.debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode =
     _require.debugRenderPhaseSideEffectsForStrictMode,
-  replayFailedUnitOfWorkWithInvokeGuardedCallback =
-    _require.replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  warnAboutDeprecatedLifecycles = _require.warnAboutDeprecatedLifecycles,
+  deferPassiveEffectCleanupDuringUnmount =
+    _require.deferPassiveEffectCleanupDuringUnmount,
   disableInputAttributeSyncing = _require.disableInputAttributeSyncing,
+  enableTrustedTypesIntegration = _require.enableTrustedTypesIntegration,
+  runAllPassiveEffectDestroysBeforeCreates =
+    _require.runAllPassiveEffectDestroysBeforeCreates,
   warnAboutShorthandPropertyCollision =
     _require.warnAboutShorthandPropertyCollision,
-  warnAboutDeprecatedSetNativeProps =
-    _require.warnAboutDeprecatedSetNativeProps,
-  enableUserBlockingEvents = _require.enableUserBlockingEvents,
-  disableLegacyContext = _require.disableLegacyContext,
   disableSchedulerTimeoutBasedOnReactExpirationTime =
-    _require.disableSchedulerTimeoutBasedOnReactExpirationTime; // In www, we have experimental support for gathering data
+    _require.disableSchedulerTimeoutBasedOnReactExpirationTime,
+  warnAboutSpreadingKeyToJSX = _require.warnAboutSpreadingKeyToJSX; // On WWW, true is used for a new modern build.
 
 var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
-var MOUNTING = 1;
-var MOUNTED = 2;
-var UNMOUNTED = 3;
-
-function isFiberMountedImpl(fiber) {
+function getNearestMountedFiber(fiber) {
   var node = fiber;
+  var nearestMounted = fiber;
 
   if (!fiber.alternate) {
     // If there is no alternate, this might be a new tree that isn't inserted
@@ -114,7 +164,10 @@ function isFiberMountedImpl(fiber) {
       node = nextNode;
 
       if ((node.effectTag & (Placement | Hydrating)) !== NoEffect) {
-        return MOUNTING;
+        // This is an insertion or in-progress hydration. The nearest possible
+        // mounted fiber is the parent but we need to continue to figure out
+        // if that one is still mounted.
+        nearestMounted = node.return;
       }
 
       nextNode = node.return;
@@ -128,23 +181,19 @@ function isFiberMountedImpl(fiber) {
   if (node.tag === HostRoot) {
     // TODO: Check if this was a nested HostRoot when used with
     // renderContainerIntoSubtree.
-    return MOUNTED;
+    return nearestMounted;
   } // If we didn't hit the root, that means that we're in an disconnected tree
   // that has been unmounted.
 
-  return UNMOUNTED;
+  return null;
 }
 
 function assertIsMounted(fiber) {
-  (function() {
-    if (!(isFiberMountedImpl(fiber) === MOUNTED)) {
-      {
-        throw ReactError(
-          Error("Unable to find node on an unmounted component.")
-        );
-      }
+  if (!(getNearestMountedFiber(fiber) === fiber)) {
+    {
+      throw Error("Unable to find node on an unmounted component.");
     }
-  })();
+  }
 }
 
 function findCurrentFiberUsingSlowPath(fiber) {
@@ -152,19 +201,15 @@ function findCurrentFiberUsingSlowPath(fiber) {
 
   if (!alternate) {
     // If there is no alternate, then we only need to check if it is mounted.
-    var state = isFiberMountedImpl(fiber);
+    var nearestMounted = getNearestMountedFiber(fiber);
 
-    (function() {
-      if (!(state !== UNMOUNTED)) {
-        {
-          throw ReactError(
-            Error("Unable to find node on an unmounted component.")
-          );
-        }
+    if (!(nearestMounted !== null)) {
+      {
+        throw Error("Unable to find node on an unmounted component.");
       }
-    })();
+    }
 
-    if (state === MOUNTING) {
+    if (nearestMounted !== fiber) {
       return null;
     }
 
@@ -223,15 +268,11 @@ function findCurrentFiberUsingSlowPath(fiber) {
       } // We should never have an alternate for any mounting node. So the only
       // way this could possibly happen is if this was unmounted, if at all.
 
-      (function() {
+      {
         {
-          {
-            throw ReactError(
-              Error("Unable to find node on an unmounted component.")
-            );
-          }
+          throw Error("Unable to find node on an unmounted component.");
         }
-      })();
+      }
     }
 
     if (a.return !== b.return) {
@@ -290,43 +331,31 @@ function findCurrentFiberUsingSlowPath(fiber) {
           _child = _child.sibling;
         }
 
-        (function() {
-          if (!didFindChild) {
-            {
-              throw ReactError(
-                Error(
-                  "Child was not found in either parent set. This indicates a bug in React related to the return pointer. Please file an issue."
-                )
-              );
-            }
+        if (!didFindChild) {
+          {
+            throw Error(
+              "Child was not found in either parent set. This indicates a bug in React related to the return pointer. Please file an issue."
+            );
           }
-        })();
+        }
       }
     }
 
-    (function() {
-      if (!(a.alternate === b)) {
-        {
-          throw ReactError(
-            Error(
-              "Return fibers should always be each others' alternates. This error is likely caused by a bug in React. Please file an issue."
-            )
-          );
-        }
-      }
-    })();
-  } // If the root is not a host container, we're in a disconnected tree. I.e.
-  // unmounted.
-
-  (function() {
-    if (!(a.tag === HostRoot)) {
+    if (!(a.alternate === b)) {
       {
-        throw ReactError(
-          Error("Unable to find node on an unmounted component.")
+        throw Error(
+          "Return fibers should always be each others' alternates. This error is likely caused by a bug in React. Please file an issue."
         );
       }
     }
-  })();
+  } // If the root is not a host container, we're in a disconnected tree. I.e.
+  // unmounted.
+
+  if (!(a.tag === HostRoot)) {
+    {
+      throw Error("Unable to find node on an unmounted component.");
+    }
+  }
 
   if (a.stateNode.current === a) {
     // We've determined that A is the current branch.
@@ -614,16 +643,17 @@ function getPooledWarningPropertyDefinition(propName, getVal) {
   }
 
   function warn(action, result) {
-    warningWithoutStack(
-      false,
-      "This synthetic event is reused for performance reasons. If you're seeing this, " +
-        "you're %s `%s` on a released/nullified synthetic event. %s. " +
-        "If you must keep the original synthetic event around, use event.persist(). " +
-        "See https://fb.me/react-event-pooling for more information.",
-      action,
-      propName,
-      result
-    );
+    {
+      error(
+        "This synthetic event is reused for performance reasons. If you're seeing this, " +
+          "you're %s `%s` on a released/nullified synthetic event. %s. " +
+          "If you must keep the original synthetic event around, use event.persist(). " +
+          "See https://fb.me/react-event-pooling for more information.",
+        action,
+        propName,
+        result
+      );
+    }
   }
 }
 
@@ -653,17 +683,13 @@ function getPooledEvent(dispatchConfig, targetInst, nativeEvent, nativeInst) {
 function releasePooledEvent(event) {
   var EventConstructor = this;
 
-  (function() {
-    if (!(event instanceof EventConstructor)) {
-      {
-        throw ReactError(
-          Error(
-            "Trying to release an event instance into a pool of a different type."
-          )
-        );
-      }
+  if (!(event instanceof EventConstructor)) {
+    {
+      throw Error(
+        "Trying to release an event instance into a pool of a different type."
+      );
     }
-  })();
+  }
 
   event.destructor();
 
@@ -677,8 +703,6 @@ function addEventPoolingTo(EventConstructor) {
   EventConstructor.getPooled = getPooledEvent;
   EventConstructor.release = releasePooledEvent;
 }
-
-var lowPriorityWarning = require("lowPriorityWarning");
 
 /**
  * HTML nodeType values that represent the type of the node
@@ -870,43 +894,46 @@ var TOP_WHEEL = unsafeCastStringToDOMTopLevelType("wheel"); // List of events th
 var PLUGIN_EVENT_SYSTEM = 1;
 
 var didWarnAboutMessageChannel = false;
-var enqueueTask;
+var enqueueTaskImpl = null;
+function enqueueTask(task) {
+  if (enqueueTaskImpl === null) {
+    try {
+      // read require off the module object to get around the bundlers.
+      // we don't want them to detect a require and bundle a Node polyfill.
+      var requireString = ("require" + Math.random()).slice(0, 7);
+      var nodeRequire = module && module[requireString]; // assuming we're in node, let's try to get node's
+      // version of setImmediate, bypassing fake timers if any.
 
-try {
-  // read require off the module object to get around the bundlers.
-  // we don't want them to detect a require and bundle a Node polyfill.
-  var requireString = ("require" + Math.random()).slice(0, 7);
-  var nodeRequire = module && module[requireString]; // assuming we're in node, let's try to get node's
-  // version of setImmediate, bypassing fake timers if any.
+      enqueueTaskImpl = nodeRequire("timers").setImmediate;
+    } catch (_err) {
+      // we're in a browser
+      // we can't use regular timers because they may still be faked
+      // so we try MessageChannel+postMessage instead
+      enqueueTaskImpl = function(callback) {
+        {
+          if (didWarnAboutMessageChannel === false) {
+            didWarnAboutMessageChannel = true;
 
-  enqueueTask = nodeRequire("timers").setImmediate;
-} catch (_err) {
-  // we're in a browser
-  // we can't use regular timers because they may still be faked
-  // so we try MessageChannel+postMessage instead
-  enqueueTask = function(callback) {
-    {
-      if (didWarnAboutMessageChannel === false) {
-        didWarnAboutMessageChannel = true;
-        !(typeof MessageChannel !== "undefined")
-          ? warningWithoutStack(
-              false,
-              "This browser does not have a MessageChannel implementation, " +
-                "so enqueuing tasks via await act(async () => ...) will fail. " +
-                "Please file an issue at https://github.com/facebook/react/issues " +
-                "if you encounter this warning."
-            )
-          : void 0;
-      }
+            if (typeof MessageChannel === "undefined") {
+              error(
+                "This browser does not have a MessageChannel implementation, " +
+                  "so enqueuing tasks via await act(async () => ...) will fail. " +
+                  "Please file an issue at https://github.com/facebook/react/issues " +
+                  "if you encounter this warning."
+              );
+            }
+          }
+        }
+
+        var channel = new MessageChannel();
+        channel.port1.onmessage = callback;
+        channel.port2.postMessage(undefined);
+      };
     }
+  }
 
-    var channel = new MessageChannel();
-    channel.port1.onmessage = callback;
-    channel.port2.postMessage(undefined);
-  };
+  return enqueueTaskImpl(task);
 }
-
-var enqueueTask$1 = enqueueTask;
 
 // ReactDOM.js, and ReactTestUtils.js:
 
@@ -949,7 +976,7 @@ var flushWork =
 function flushWorkAndMicroTasks(onDone) {
   try {
     flushWork();
-    enqueueTask$1(function() {
+    enqueueTask(function() {
       if (flushWork()) {
         flushWorkAndMicroTasks(onDone);
       } else {
@@ -982,8 +1009,7 @@ function act(callback) {
     {
       if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
         // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
-        warningWithoutStack(
-          false,
+        error(
           "You seem to have overlapping act() calls, this is not supported. " +
             "Be sure to await previous act() calls before making a new one. "
         );
@@ -1017,8 +1043,7 @@ function act(callback) {
           .then(function() {})
           .then(function() {
             if (called === false) {
-              warningWithoutStack(
-                false,
+              error(
                 "You called act(async () => ...) without await. " +
                   "This could lead to unexpected testing behaviour, interleaving multiple act " +
                   "calls and mixing their scopes. You should - await act(async () => ...);"
@@ -1065,14 +1090,13 @@ function act(callback) {
     };
   } else {
     {
-      !(result === undefined)
-        ? warningWithoutStack(
-            false,
-            "The callback passed to act(...) function " +
-              "must return undefined, or a Promise. You returned %s",
-            result
-          )
-        : void 0;
+      if (result !== undefined) {
+        error(
+          "The callback passed to act(...) function " +
+            "must return undefined, or a Promise. You returned %s",
+          result
+        );
+      }
     } // flush effects until none remain, and cleanup
 
     try {
@@ -1094,8 +1118,7 @@ function act(callback) {
     return {
       then: function(resolve) {
         {
-          warningWithoutStack(
-            false,
+          error(
             "Do not await the result of calling act(...) with sync logic, it is not a Promise."
           );
         }
@@ -1126,7 +1149,9 @@ var _ReactDOM$__SECRET_IN$1 =
   runEventsInBatch$1 = _ReactDOM$__SECRET_IN$1[10],
   /* eslint-disable no-unused-vars */
   flushPassiveEffects$1 = _ReactDOM$__SECRET_IN$1[11],
-  IsThisRendererActing$1 = _ReactDOM$__SECRET_IN$1[12];
+  IsThisRendererActing$1 =
+    /* eslint-enable no-unused-vars */
+    _ReactDOM$__SECRET_IN$1[12];
 
 function Event(suffix) {}
 
@@ -1145,7 +1170,7 @@ var hasWarnedAboutDeprecatedMockComponent = false;
 
 function simulateNativeEventOnNode(topLevelType, node, fakeNativeEvent) {
   fakeNativeEvent.target = node;
-  dispatchEvent$1(topLevelType, PLUGIN_EVENT_SYSTEM, fakeNativeEvent);
+  dispatchEvent$1(topLevelType, PLUGIN_EVENT_SYSTEM, document, fakeNativeEvent);
 }
 /**
  * Simulates a top level event being dispatched from a raw event that occurred
@@ -1238,20 +1263,16 @@ function validateClassInstance(inst, methodName) {
     received = stringified;
   }
 
-  (function() {
+  {
     {
-      {
-        throw ReactError(
-          Error(
-            methodName +
-              "(...): the first argument must be a React class instance. Instead received: " +
-              received +
-              "."
-          )
-        );
-      }
+      throw Error(
+        methodName +
+          "(...): the first argument must be a React class instance. Instead received: " +
+          received +
+          "."
+      );
     }
-  })();
+  }
 }
 /**
  * Utilities for making it easy to test React components.
@@ -1337,17 +1358,13 @@ var ReactTestUtils = {
         var classList = className.split(/\s+/);
 
         if (!Array.isArray(classNames)) {
-          (function() {
-            if (!(classNames !== undefined)) {
-              {
-                throw ReactError(
-                  Error(
-                    "TestUtils.scryRenderedDOMComponentsWithClass expects a className as a second argument."
-                  )
-                );
-              }
+          if (!(classNames !== undefined)) {
+            {
+              throw Error(
+                "TestUtils.scryRenderedDOMComponentsWithClass expects a className as a second argument."
+              );
             }
-          })();
+          }
 
           classNames = classNames.split(/\s+/);
         }
@@ -1476,14 +1493,16 @@ var ReactTestUtils = {
    * @return {object} the ReactTestUtils object (for chaining)
    */
   mockComponent: function(module, mockTagName) {
-    if (!hasWarnedAboutDeprecatedMockComponent) {
-      hasWarnedAboutDeprecatedMockComponent = true;
-      lowPriorityWarning(
-        false,
-        "ReactTestUtils.mockComponent() is deprecated. " +
-          "Use shallow rendering or jest.mock() instead.\n\n" +
-          "See https://fb.me/test-utils-mock-component for more information."
-      );
+    {
+      if (!hasWarnedAboutDeprecatedMockComponent) {
+        hasWarnedAboutDeprecatedMockComponent = true;
+
+        warn(
+          "ReactTestUtils.mockComponent() is deprecated. " +
+            "Use shallow rendering or jest.mock() instead.\n\n" +
+            "See https://fb.me/test-utils-mock-component for more information."
+        );
+      }
     }
 
     mockTagName = mockTagName || module.mockTagName || "div";
@@ -1517,29 +1536,21 @@ var ReactTestUtils = {
 
 function makeSimulator(eventType) {
   return function(domNode, eventData) {
-    (function() {
-      if (!!React.isValidElement(domNode)) {
-        {
-          throw ReactError(
-            Error(
-              "TestUtils.Simulate expected a DOM node as the first argument but received a React element. Pass the DOM node you wish to simulate the event on instead. Note that TestUtils.Simulate will not work if you are using shallow rendering."
-            )
-          );
-        }
+    if (!!React.isValidElement(domNode)) {
+      {
+        throw Error(
+          "TestUtils.Simulate expected a DOM node as the first argument but received a React element. Pass the DOM node you wish to simulate the event on instead. Note that TestUtils.Simulate will not work if you are using shallow rendering."
+        );
       }
-    })();
+    }
 
-    (function() {
-      if (!!ReactTestUtils.isCompositeComponent(domNode)) {
-        {
-          throw ReactError(
-            Error(
-              "TestUtils.Simulate expected a DOM node as the first argument but received a component instance. Pass the DOM node you wish to simulate the event on instead."
-            )
-          );
-        }
+    if (!!ReactTestUtils.isCompositeComponent(domNode)) {
+      {
+        throw Error(
+          "TestUtils.Simulate expected a DOM node as the first argument but received a component instance. Pass the DOM node you wish to simulate the event on instead."
+        );
       }
-    })();
+    }
 
     var dispatchConfig = eventNameDispatchConfigs$1[eventType];
     var fakeNativeEvent = new Event();
@@ -1711,20 +1722,10 @@ function makeNativeSimulator(eventType, topLevelType) {
   );
 });
 
-var ReactTestUtils$1 = /*#__PURE__*/ Object.freeze({
-  default: ReactTestUtils
-});
-
-function getCjsExportFromNamespace(n) {
-  return (n && n["default"]) || n;
-}
-
-var ReactTestUtils$2 = getCjsExportFromNamespace(ReactTestUtils$1);
-
 // TODO: decide on the top-level export form.
 // This is hacky but makes it work with both Rollup and Jest.
 
-var testUtils = ReactTestUtils$2.default || ReactTestUtils$2;
+var testUtils = ReactTestUtils.default || ReactTestUtils;
 
 module.exports = testUtils;
 

@@ -31,17 +31,6 @@ function shouldYieldToHost() {
     ? (didStop = !0)
     : !1;
 }
-function unstable_flushExpired() {
-  if (isFlushing) throw Error("Already flushing work.");
-  if (null !== scheduledCallback) {
-    isFlushing = !0;
-    try {
-      scheduledCallback(!1, currentTime) || (scheduledCallback = null);
-    } finally {
-      isFlushing = !1;
-    }
-  }
-}
 function unstable_flushAllWithoutAsserting() {
   if (isFlushing) throw Error("Already flushing work.");
   if (null !== scheduledCallback) {
@@ -62,7 +51,7 @@ function push(heap, node) {
   var index = heap.length;
   heap.push(node);
   a: for (;;) {
-    var parentIndex = Math.floor((index - 1) / 2),
+    var parentIndex = (index - 1) >>> 1,
       parent = heap[parentIndex];
     if (void 0 !== parent && 0 < compare(parent, node))
       (heap[parentIndex] = node), (heap[index] = parent), (index = parentIndex);
@@ -215,13 +204,11 @@ exports.unstable_Profiling = null;
 exports.unstable_UserBlockingPriority = 2;
 exports.unstable_advanceTime = function(ms) {
   currentTime += ms;
-  isFlushing ||
-    (null !== scheduledTimeout &&
-      timeoutTime <= currentTime &&
-      (scheduledTimeout(currentTime),
-      (timeoutTime = -1),
-      (scheduledTimeout = null)),
-    unstable_flushExpired());
+  null !== scheduledTimeout &&
+    timeoutTime <= currentTime &&
+    (scheduledTimeout(currentTime),
+    (timeoutTime = -1),
+    (scheduledTimeout = null));
 };
 exports.unstable_cancelCallback = function(task) {
   task.callback = null;
@@ -250,7 +237,17 @@ exports.unstable_flushAll = function() {
     );
 };
 exports.unstable_flushAllWithoutAsserting = unstable_flushAllWithoutAsserting;
-exports.unstable_flushExpired = unstable_flushExpired;
+exports.unstable_flushExpired = function() {
+  if (isFlushing) throw Error("Already flushing work.");
+  if (null !== scheduledCallback) {
+    isFlushing = !0;
+    try {
+      scheduledCallback(!1, currentTime) || (scheduledCallback = null);
+    } finally {
+      isFlushing = !1;
+    }
+  }
+};
 exports.unstable_flushNumberOfYields = function(count) {
   if (isFlushing) throw Error("Already flushing work.");
   if (null !== scheduledCallback) {

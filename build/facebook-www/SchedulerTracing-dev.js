@@ -19,21 +19,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 
 // Re-export dynamic flags from the www version.
 var _require = require("ReactFeatureFlags"),
-  debugRenderPhaseSideEffects = _require.debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode =
     _require.debugRenderPhaseSideEffectsForStrictMode,
-  replayFailedUnitOfWorkWithInvokeGuardedCallback =
-    _require.replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  warnAboutDeprecatedLifecycles = _require.warnAboutDeprecatedLifecycles,
+  deferPassiveEffectCleanupDuringUnmount =
+    _require.deferPassiveEffectCleanupDuringUnmount,
   disableInputAttributeSyncing = _require.disableInputAttributeSyncing,
+  enableTrustedTypesIntegration = _require.enableTrustedTypesIntegration,
+  runAllPassiveEffectDestroysBeforeCreates =
+    _require.runAllPassiveEffectDestroysBeforeCreates,
   warnAboutShorthandPropertyCollision =
     _require.warnAboutShorthandPropertyCollision,
-  warnAboutDeprecatedSetNativeProps =
-    _require.warnAboutDeprecatedSetNativeProps,
-  enableUserBlockingEvents = _require.enableUserBlockingEvents,
-  disableLegacyContext = _require.disableLegacyContext,
   disableSchedulerTimeoutBasedOnReactExpirationTime =
-    _require.disableSchedulerTimeoutBasedOnReactExpirationTime; // In www, we have experimental support for gathering data
+    _require.disableSchedulerTimeoutBasedOnReactExpirationTime,
+  warnAboutSpreadingKeyToJSX = _require.warnAboutSpreadingKeyToJSX; // On WWW, true is used for a new modern build.
 
 var DEFAULT_THREAD_ID = 0; // Counters used to generate unique IDs.
 

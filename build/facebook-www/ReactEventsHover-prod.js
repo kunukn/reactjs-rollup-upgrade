@@ -49,19 +49,21 @@ function createHoverEvent(event, context, type, target) {
 function dispatchHoverStartEvents(event, context, props, state) {
   var target = state.hoverTarget;
   if (
-    null === event ||
-    !context.isTargetWithinResponderScope(event.nativeEvent.relatedTarget)
+    null !== event &&
+    context.isTargetWithinResponderScope(event.nativeEvent.relatedTarget)
   )
-    if (((state.isHovered = !0), !state.isActiveHovered)) {
-      state.isActiveHovered = !0;
-      var onHoverStart = props.onHoverStart;
-      isFunction(onHoverStart) &&
-        ((event = createHoverEvent(event, context, "hoverstart", target)),
-        context.dispatchEvent(event, onHoverStart, 1));
-      props = props.onHoverChange;
-      isFunction(props) &&
-        context.dispatchEvent(state.isActiveHovered, props, 1);
-    }
+    return !1;
+  state.isHovered = !0;
+  if (!state.isActiveHovered) {
+    state.isActiveHovered = !0;
+    var onHoverStart = props.onHoverStart;
+    isFunction(onHoverStart) &&
+      ((event = createHoverEvent(event, context, "hoverstart", target)),
+      context.dispatchEvent(event, onHoverStart, 1));
+    props = props.onHoverChange;
+    isFunction(props) && context.dispatchEvent(state.isActiveHovered, props, 1);
+  }
+  return !0;
 }
 function dispatchHoverMoveEvent(event, context, props, state) {
   state = state.hoverTarget;
@@ -73,65 +75,73 @@ function dispatchHoverMoveEvent(event, context, props, state) {
 function dispatchHoverEndEvents(event, context, props, state) {
   var target = state.hoverTarget;
   if (
-    null === event ||
-    !context.isTargetWithinResponderScope(event.nativeEvent.relatedTarget)
+    null !== event &&
+    context.isTargetWithinResponderScope(event.nativeEvent.relatedTarget)
   )
-    if (((state.isHovered = !1), state.isActiveHovered)) {
-      state.isActiveHovered = !1;
-      var onHoverEnd = props.onHoverEnd;
-      isFunction(onHoverEnd) &&
-        ((event = createHoverEvent(event, context, "hoverend", target)),
-        context.dispatchEvent(event, onHoverEnd, 1));
-      props = props.onHoverChange;
-      isFunction(props) &&
-        context.dispatchEvent(state.isActiveHovered, props, 1);
-      state.hoverTarget = null;
-      state.isTouched = !1;
-    }
+    return !1;
+  state.isHovered = !1;
+  if (state.isActiveHovered) {
+    state.isActiveHovered = !1;
+    var onHoverEnd = props.onHoverEnd;
+    isFunction(onHoverEnd) &&
+      ((event = createHoverEvent(event, context, "hoverend", target)),
+      context.dispatchEvent(event, onHoverEnd, 1));
+    props = props.onHoverChange;
+    isFunction(props) && context.dispatchEvent(state.isActiveHovered, props, 1);
+    state.hoverTarget = null;
+    state.isTouched = !1;
+  }
+  return !0;
 }
 function unmountResponder(context, props, state) {
   state.isHovered && dispatchHoverEndEvents(null, context, props, state);
 }
-var hoverResponderImpl = {
-    targetEventTypes: [
-      "pointerover",
-      "pointermove",
-      "pointerout",
-      "pointercancel"
-    ],
+var rootPointerEventTypes = ["pointerout", "pointermove", "pointercancel"],
+  hoverResponderImpl = {
+    targetEventTypes: ["pointerover"],
     getInitialState: function() {
       return { isActiveHovered: !1, isHovered: !1 };
     },
     allowMultipleHostChildren: !1,
     allowEventHooks: !0,
+    onRootEvent: function(event, context, props, state) {
+      var type = event.type;
+      switch (type) {
+        case "pointermove":
+          state.isHovered &&
+            null !== state.hoverTarget &&
+            dispatchHoverMoveEvent(event, context, props, state);
+          break;
+        case "pointercancel":
+        case "pointerout":
+          state.isHovered &&
+            (dispatchHoverEndEvents(event, context, props, state) ||
+              "pointercancel" === type) &&
+            context.removeRootEventTypes(rootPointerEventTypes);
+      }
+    },
     onEvent: function(event, context, props, state) {
       var pointerType = event.pointerType,
         type = event.type;
       if (props.disabled)
-        state.isHovered && dispatchHoverEndEvents(event, context, props, state);
+        state.isHovered &&
+          (context.removeRootEventTypes(rootPointerEventTypes),
+          dispatchHoverEndEvents(event, context, props, state));
       else
         switch (type) {
           case "pointerover":
             state.isHovered ||
               "touch" === pointerType ||
-              ((state.hoverTarget = event.responderTarget),
-              dispatchHoverStartEvents(event, context, props, state));
-            break;
-          case "pointermove":
-            state.isHovered &&
-              null !== state.hoverTarget &&
-              dispatchHoverMoveEvent(event, context, props, state);
-            break;
-          case "pointerout":
-          case "pointercancel":
-            state.isHovered &&
-              dispatchHoverEndEvents(event, context, props, state);
+              ((state.hoverTarget = context.getResponderNode()),
+              dispatchHoverStartEvents(event, context, props, state) &&
+                context.addRootEventTypes(rootPointerEventTypes));
         }
     },
     onUnmount: unmountResponder
   },
+  rootMouseEventTypes = ["mousemove", "mouseout"],
   hoverResponderFallbackImpl = {
-    targetEventTypes: ["mouseover", "mousemove", "mouseout", "touchstart"],
+    targetEventTypes: ["mouseover", "mousemove", "touchstart"],
     getInitialState: function() {
       return {
         isActiveHovered: !1,
@@ -142,11 +152,26 @@ var hoverResponderImpl = {
     },
     allowMultipleHostChildren: !1,
     allowEventHooks: !0,
+    onRootEvent: function(event, context, props, state) {
+      switch (event.type) {
+        case "mousemove":
+          state.isHovered &&
+            null !== state.hoverTarget &&
+            !state.ignoreEmulatedMouseEvents &&
+            dispatchHoverMoveEvent(event, context, props, state);
+          break;
+        case "mouseout":
+          state.isHovered &&
+            dispatchHoverEndEvents(event, context, props, state) &&
+            context.removeRootEventTypes(rootMouseEventTypes);
+      }
+    },
     onEvent: function(event, context, props, state) {
       var type = event.type;
       if (props.disabled)
         state.isHovered &&
-          (dispatchHoverEndEvents(event, context, props, state),
+          (context.removeRootEventTypes(rootMouseEventTypes),
+          dispatchHoverEndEvents(event, context, props, state),
           (state.ignoreEmulatedMouseEvents = !1)),
           (state.isTouched = !1);
       else
@@ -154,22 +179,14 @@ var hoverResponderImpl = {
           case "mouseover":
             state.isHovered ||
               state.ignoreEmulatedMouseEvents ||
-              ((state.hoverTarget = event.responderTarget),
-              dispatchHoverStartEvents(event, context, props, state));
+              ((state.hoverTarget = context.getResponderNode()),
+              dispatchHoverStartEvents(event, context, props, state) &&
+                context.addRootEventTypes(rootMouseEventTypes));
             break;
           case "mousemove":
-            state.isHovered &&
-            null !== state.hoverTarget &&
-            !state.ignoreEmulatedMouseEvents
-              ? dispatchHoverMoveEvent(event, context, props, state)
-              : state.isHovered ||
-                "mousemove" !== type ||
-                ((state.ignoreEmulatedMouseEvents = !1),
-                (state.isTouched = !1));
-            break;
-          case "mouseout":
-            state.isHovered &&
-              dispatchHoverEndEvents(event, context, props, state);
+            state.isHovered ||
+              "mousemove" !== type ||
+              ((state.ignoreEmulatedMouseEvents = !1), (state.isTouched = !1));
             break;
           case "touchstart":
             state.isHovered ||
@@ -178,16 +195,17 @@ var hoverResponderImpl = {
     },
     onUnmount: unmountResponder
   },
-  HoverResponder = React.unstable_createResponder(
+  HoverResponder = React.DEPRECATED_createResponder(
     "Hover",
     "undefined" !== typeof window && null != window.PointerEvent
       ? hoverResponderImpl
       : hoverResponderFallbackImpl
   ),
   Hover = {
+    __proto__: null,
     HoverResponder: HoverResponder,
     useHover: function(props) {
-      return React.unstable_useResponder(HoverResponder, props);
+      return React.DEPRECATED_useResponder(HoverResponder, props);
     }
   };
 module.exports = (Hover && Hover["default"]) || Hover;

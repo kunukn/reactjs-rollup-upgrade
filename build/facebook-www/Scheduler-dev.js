@@ -20,19 +20,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var _require = require("SchedulerFeatureFlags"),
   enableIsInputPending = _require.enableIsInputPending,
   enableSchedulerDebugging = _require.enableSchedulerDebugging,
-  requestIdleCallbackBeforeFirstFrame =
-    _require.requestIdleCallbackBeforeFirstFrame,
-  requestTimerEventBeforeFirstFrame =
-    _require.requestTimerEventBeforeFirstFrame,
-  enableMessageLoopImplementation = _require.enableMessageLoopImplementation;
-var enableProfiling = true;
-
-// works by scheduling a requestAnimationFrame, storing the time for the start
-// of the frame, then scheduling a postMessage which gets scheduled after paint.
-// Within the postMessage handler do as much work as possible until time + frame
-// rate. By separating the idle call into a separate event tick we ensure that
-// layout, paint and other browser work is counted against the available time.
-// The frame rate is dynamically adjusted.
+  enableProfilingFeatureFlag = _require.enableProfiling;
+var enableProfiling = enableProfilingFeatureFlag;
 
 var requestHostCallback;
 var requestHostTimeout;
@@ -102,14 +91,17 @@ if (
   var _Date = window.Date;
   var _setTimeout = window.setTimeout;
   var _clearTimeout = window.clearTimeout;
-  var requestAnimationFrame = window.requestAnimationFrame;
-  var cancelAnimationFrame = window.cancelAnimationFrame;
-  var requestIdleCallback = window.requestIdleCallback;
 
   if (typeof console !== "undefined") {
-    // TODO: Remove fb.me link
+    // TODO: Scheduler no longer requires these methods to be polyfilled. But
+    // maybe we want to continue warning if they don't exist, to preserve the
+    // option to rely on it in the future?
+    var requestAnimationFrame = window.requestAnimationFrame;
+    var cancelAnimationFrame = window.cancelAnimationFrame; // TODO: Remove fb.me link
+
     if (typeof requestAnimationFrame !== "function") {
-      console.error(
+      // Using console['error'] to evade Babel and ESLint
+      console["error"](
         "This browser doesn't support requestAnimationFrame. " +
           "Make sure that you load a " +
           "polyfill in older browsers. https://fb.me/react-polyfills"
@@ -117,18 +109,14 @@ if (
     }
 
     if (typeof cancelAnimationFrame !== "function") {
-      console.error(
+      // Using console['error'] to evade Babel and ESLint
+      console["error"](
         "This browser doesn't support cancelAnimationFrame. " +
           "Make sure that you load a " +
           "polyfill in older browsers. https://fb.me/react-polyfills"
       );
     }
   }
-
-  var requestIdleCallbackBeforeFirstFrame$1 =
-    requestIdleCallbackBeforeFirstFrame &&
-    typeof requestIdleCallback === "function" &&
-    typeof cancelIdleCallback === "function";
 
   if (
     typeof performance === "object" &&
@@ -145,26 +133,18 @@ if (
     };
   }
 
-  var isRAFLoopRunning = false;
   var isMessageLoopRunning = false;
   var scheduledHostCallback = null;
-  var rAFTimeoutID = -1;
-  var taskTimeoutID = -1;
-  var frameLength = enableMessageLoopImplementation // We won't attempt to align with the vsync. Instead we'll yield multiple
-    ? // times per frame, often enough to keep it responsive even at really
-      // high frame rates > 120.
-      5 // Use a heuristic to measure the frame rate and yield at the end of the
-    : // frame. We start out assuming that we run at 30fps but then the
-      // heuristic tracking will adjust this value to a faster fps if we get
-      // more frequent animation frames.
-      33.33;
-  var prevRAFTime = -1;
-  var prevRAFInterval = -1;
-  var frameDeadline = 0;
-  var fpsLocked = false; // TODO: Make this configurable
+  var taskTimeoutID = -1; // Scheduler periodically yields in case there is other work on the main
+  // thread, like user events. By default, it yields multiple times per frame.
+  // It does not attempt to align with frame boundaries, since most tasks don't
+  // need to be frame aligned; for those that do, use requestAnimationFrame.
+
+  var yieldInterval = 5;
+  var deadline = 0; // TODO: Make this configurable
   // TODO: Adjust this based on priority?
 
-  var maxFrameLength = 300;
+  var maxYieldInterval = 300;
   var needsPaint = false;
 
   if (
@@ -178,22 +158,22 @@ if (
     shouldYieldToHost = function() {
       var currentTime = exports.unstable_now();
 
-      if (currentTime >= frameDeadline) {
-        // There's no time left in the frame. We may want to yield control of
-        // the main thread, so the browser can perform high priority tasks. The
-        // main ones are painting and user input. If there's a pending paint or
-        // a pending input, then we should yield. But if there's neither, then
-        // we can yield less often while remaining responsive. We'll eventually
-        // yield regardless, since there could be a pending paint that wasn't
+      if (currentTime >= deadline) {
+        // There's no time left. We may want to yield control of the main
+        // thread, so the browser can perform high priority tasks. The main ones
+        // are painting and user input. If there's a pending paint or a pending
+        // input, then we should yield. But if there's neither, then we can
+        // yield less often while remaining responsive. We'll eventually yield
+        // regardless, since there could be a pending paint that wasn't
         // accompanied by a call to `requestPaint`, or other main thread tasks
         // like network events.
         if (needsPaint || scheduling.isInputPending()) {
           // There is either a pending paint or a pending input.
           return true;
         } // There's no pending input. Only yield if we've reached the max
-        // frame length.
+        // yield interval.
 
-        return currentTime >= frameDeadline + maxFrameLength;
+        return currentTime >= maxYieldInterval;
       } else {
         // There's still time left in the frame.
         return false;
@@ -207,7 +187,7 @@ if (
     // `isInputPending` is not available. Since we have no way of knowing if
     // there's pending input, always yield at the end of the frame.
     shouldYieldToHost = function() {
-      return exports.unstable_now() >= frameDeadline;
+      return exports.unstable_now() >= deadline;
     }; // Since we yield every frame regardless, `requestPaint` has no effect.
 
     requestPaint = function() {};
@@ -215,7 +195,8 @@ if (
 
   exports.unstable_forceFrameRate = function(fps) {
     if (fps < 0 || fps > 125) {
-      console.error(
+      // Using console['error'] to evade Babel and ESLint
+      console["error"](
         "forceFrameRate takes a positive int between 0 and 125, " +
           "forcing framerates higher than 125 fps is not unsupported"
       );
@@ -223,219 +204,57 @@ if (
     }
 
     if (fps > 0) {
-      frameLength = Math.floor(1000 / fps);
-      fpsLocked = true;
+      yieldInterval = Math.floor(1000 / fps);
     } else {
       // reset the framerate
-      frameLength = 33.33;
-      fpsLocked = false;
+      yieldInterval = 5;
     }
   };
 
   var performWorkUntilDeadline = function() {
-    if (enableMessageLoopImplementation) {
-      if (scheduledHostCallback !== null) {
-        var currentTime = exports.unstable_now(); // Yield after `frameLength` ms, regardless of where we are in the vsync
-        // cycle. This means there's always time remaining at the beginning of
-        // the message event.
+    if (scheduledHostCallback !== null) {
+      var currentTime = exports.unstable_now(); // Yield after `yieldInterval` ms, regardless of where we are in the vsync
+      // cycle. This means there's always time remaining at the beginning of
+      // the message event.
 
-        frameDeadline = currentTime + frameLength;
-        var hasTimeRemaining = true;
+      deadline = currentTime + yieldInterval;
+      var hasTimeRemaining = true;
 
-        try {
-          var hasMoreWork = scheduledHostCallback(
-            hasTimeRemaining,
-            currentTime
-          );
+      try {
+        var hasMoreWork = scheduledHostCallback(hasTimeRemaining, currentTime);
 
-          if (!hasMoreWork) {
-            isMessageLoopRunning = false;
-            scheduledHostCallback = null;
-          } else {
-            // If there's more work, schedule the next message event at the end
-            // of the preceding one.
-            port.postMessage(null);
-          }
-        } catch (error) {
-          // If a scheduler task throws, exit the current browser task so the
-          // error can be observed.
+        if (!hasMoreWork) {
+          isMessageLoopRunning = false;
+          scheduledHostCallback = null;
+        } else {
+          // If there's more work, schedule the next message event at the end
+          // of the preceding one.
           port.postMessage(null);
-          throw error;
         }
-      } else {
-        isMessageLoopRunning = false;
-      } // Yielding to the browser will give it a chance to paint, so we can
-      // reset this.
-
-      needsPaint = false;
+      } catch (error) {
+        // If a scheduler task throws, exit the current browser task so the
+        // error can be observed.
+        port.postMessage(null);
+        throw error;
+      }
     } else {
-      if (scheduledHostCallback !== null) {
-        var _currentTime = exports.unstable_now();
+      isMessageLoopRunning = false;
+    } // Yielding to the browser will give it a chance to paint, so we can
+    // reset this.
 
-        var _hasTimeRemaining = frameDeadline - _currentTime > 0;
-
-        try {
-          var _hasMoreWork = scheduledHostCallback(
-            _hasTimeRemaining,
-            _currentTime
-          );
-
-          if (!_hasMoreWork) {
-            scheduledHostCallback = null;
-          }
-        } catch (error) {
-          // If a scheduler task throws, exit the current browser task so the
-          // error can be observed, and post a new task as soon as possible
-          // so we can continue where we left off.
-          port.postMessage(null);
-          throw error;
-        }
-      } // Yielding to the browser will give it a chance to paint, so we can
-      // reset this.
-
-      needsPaint = false;
-    }
+    needsPaint = false;
   };
 
   var channel = new MessageChannel();
   var port = channel.port2;
   channel.port1.onmessage = performWorkUntilDeadline;
 
-  var onAnimationFrame = function(rAFTime) {
-    if (scheduledHostCallback === null) {
-      // No scheduled work. Exit.
-      prevRAFTime = -1;
-      prevRAFInterval = -1;
-      isRAFLoopRunning = false;
-      return;
-    } // Eagerly schedule the next animation callback at the beginning of the
-    // frame. If the scheduler queue is not empty at the end of the frame, it
-    // will continue flushing inside that callback. If the queue *is* empty,
-    // then it will exit immediately. Posting the callback at the start of the
-    // frame ensures it's fired within the earliest possible frame. If we
-    // waited until the end of the frame to post the callback, we risk the
-    // browser skipping a frame and not firing the callback until the frame
-    // after that.
-
-    isRAFLoopRunning = true;
-    requestAnimationFrame(function(nextRAFTime) {
-      _clearTimeout(rAFTimeoutID);
-
-      onAnimationFrame(nextRAFTime);
-    }); // requestAnimationFrame is throttled when the tab is backgrounded. We
-    // don't want to stop working entirely. So we'll fallback to a timeout loop.
-    // TODO: Need a better heuristic for backgrounded work.
-
-    var onTimeout = function() {
-      frameDeadline = exports.unstable_now() + frameLength / 2;
-      performWorkUntilDeadline();
-      rAFTimeoutID = _setTimeout(onTimeout, frameLength * 3);
-    };
-
-    rAFTimeoutID = _setTimeout(onTimeout, frameLength * 3);
-
-    if (
-      prevRAFTime !== -1 && // Make sure this rAF time is different from the previous one. This check
-      // could fail if two rAFs fire in the same frame.
-      rAFTime - prevRAFTime > 0.1
-    ) {
-      var rAFInterval = rAFTime - prevRAFTime;
-
-      if (!fpsLocked && prevRAFInterval !== -1) {
-        // We've observed two consecutive frame intervals. We'll use this to
-        // dynamically adjust the frame rate.
-        //
-        // If one frame goes long, then the next one can be short to catch up.
-        // If two frames are short in a row, then that's an indication that we
-        // actually have a higher frame rate than what we're currently
-        // optimizing. For example, if we're running on 120hz display or 90hz VR
-        // display. Take the max of the two in case one of them was an anomaly
-        // due to missed frame deadlines.
-        if (rAFInterval < frameLength && prevRAFInterval < frameLength) {
-          frameLength =
-            rAFInterval < prevRAFInterval ? prevRAFInterval : rAFInterval;
-
-          if (frameLength < 8.33) {
-            // Defensive coding. We don't support higher frame rates than 120hz.
-            // If the calculated frame length gets lower than 8, it is probably
-            // a bug.
-            frameLength = 8.33;
-          }
-        }
-      }
-
-      prevRAFInterval = rAFInterval;
-    }
-
-    prevRAFTime = rAFTime;
-    frameDeadline = rAFTime + frameLength; // We use the postMessage trick to defer idle work until after the repaint.
-
-    port.postMessage(null);
-  };
-
   requestHostCallback = function(callback) {
     scheduledHostCallback = callback;
 
-    if (enableMessageLoopImplementation) {
-      if (!isMessageLoopRunning) {
-        isMessageLoopRunning = true;
-        port.postMessage(null);
-      }
-    } else {
-      if (!isRAFLoopRunning) {
-        // Start a rAF loop.
-        isRAFLoopRunning = true;
-        requestAnimationFrame(function(rAFTime) {
-          if (requestIdleCallbackBeforeFirstFrame$1) {
-            cancelIdleCallback(idleCallbackID);
-          }
-
-          if (requestTimerEventBeforeFirstFrame) {
-            _clearTimeout(idleTimeoutID);
-          }
-
-          onAnimationFrame(rAFTime);
-        }); // If we just missed the last vsync, the next rAF might not happen for
-        // another frame. To claim as much idle time as possible, post a
-        // callback with `requestIdleCallback`, which should fire if there's
-        // idle time left in the frame.
-        //
-        // This should only be an issue for the first rAF in the loop;
-        // subsequent rAFs are scheduled at the beginning of the
-        // preceding frame.
-
-        var idleCallbackID;
-
-        if (requestIdleCallbackBeforeFirstFrame$1) {
-          idleCallbackID = requestIdleCallback(
-            function onIdleCallbackBeforeFirstFrame() {
-              if (requestTimerEventBeforeFirstFrame) {
-                _clearTimeout(idleTimeoutID);
-              }
-
-              frameDeadline = exports.unstable_now() + frameLength;
-              performWorkUntilDeadline();
-            }
-          );
-        } // Alternate strategy to address the same problem. Scheduler a timer
-        // with no delay. If this fires before the rAF, that likely indicates
-        // that there's idle time before the next vsync. This isn't always the
-        // case, but we'll be aggressive and assume it is, as a trade off to
-        // prevent idle periods.
-
-        var idleTimeoutID;
-
-        if (requestTimerEventBeforeFirstFrame) {
-          idleTimeoutID = _setTimeout(function onTimerEventBeforeFirstFrame() {
-            if (requestIdleCallbackBeforeFirstFrame$1) {
-              cancelIdleCallback(idleCallbackID);
-            }
-
-            frameDeadline = exports.unstable_now() + frameLength;
-            performWorkUntilDeadline();
-          }, 0);
-        }
-      }
+    if (!isMessageLoopRunning) {
+      isMessageLoopRunning = true;
+      port.postMessage(null);
     }
   };
 
@@ -482,7 +301,7 @@ function siftUp(heap, node, i) {
   var index = i;
 
   while (true) {
-    var parentIndex = Math.floor((index - 1) / 2);
+    var parentIndex = (index - 1) >>> 1;
     var parent = heap[parentIndex];
 
     if (parent !== undefined && compare(parent, node) > 0) {
@@ -545,29 +364,34 @@ var IdlePriority = 5;
 var runIdCounter = 0;
 var mainThreadIdCounter = 0;
 var profilingStateSize = 4;
-var sharedProfilingBuffer = // $FlowFixMe Flow doesn't know about SharedArrayBuffer
-  typeof SharedArrayBuffer === "function"
+var sharedProfilingBuffer = enableProfiling // $FlowFixMe Flow doesn't know about SharedArrayBuffer
+  ? typeof SharedArrayBuffer === "function"
     ? new SharedArrayBuffer(profilingStateSize * Int32Array.BYTES_PER_ELEMENT) // $FlowFixMe Flow doesn't know about ArrayBuffer
     : typeof ArrayBuffer === "function"
-      ? new ArrayBuffer(profilingStateSize * Int32Array.BYTES_PER_ELEMENT)
-      : null; // Don't crash the init path on IE9
+    ? new ArrayBuffer(profilingStateSize * Int32Array.BYTES_PER_ELEMENT)
+    : null // Don't crash the init path on IE9
+  : null;
 var profilingState =
-  sharedProfilingBuffer !== null ? new Int32Array(sharedProfilingBuffer) : []; // We can't read this but it helps save bytes for null checks
+  enableProfiling && sharedProfilingBuffer !== null
+    ? new Int32Array(sharedProfilingBuffer)
+    : []; // We can't read this but it helps save bytes for null checks
 
 var PRIORITY = 0;
 var CURRENT_TASK_ID = 1;
 var CURRENT_RUN_ID = 2;
 var QUEUE_SIZE = 3;
 
-{
+if (enableProfiling) {
   profilingState[PRIORITY] = NoPriority; // This is maintained with a counter, because the size of the priority queue
   // array might include canceled tasks.
 
   profilingState[QUEUE_SIZE] = 0;
   profilingState[CURRENT_TASK_ID] = 0;
-}
+} // Bytes per element is 4
 
-var INITIAL_EVENT_LOG_SIZE = 1000;
+var INITIAL_EVENT_LOG_SIZE = 131072;
+var MAX_EVENT_LOG_SIZE = 524288; // Equivalent to 2 megabytes
+
 var eventLogSize = 0;
 var eventLogBuffer = null;
 var eventLog = null;
@@ -587,10 +411,19 @@ function logEvent(entries) {
     eventLogIndex += entries.length;
 
     if (eventLogIndex + 1 > eventLogSize) {
-      eventLogSize = eventLogIndex + 1;
-      var newEventLog = new Int32Array(
-        eventLogSize * Int32Array.BYTES_PER_ELEMENT
-      );
+      eventLogSize *= 2;
+
+      if (eventLogSize > MAX_EVENT_LOG_SIZE) {
+        // Using console['error'] to evade Babel and ESLint
+        console["error"](
+          "Scheduler Profiling: Event log exceeded maximum size. Don't " +
+            "forget to call `stopLoggingProfilingEvents()`."
+        );
+        stopLoggingProfilingEvents();
+        return;
+      }
+
+      var newEventLog = new Int32Array(eventLogSize * 4);
       newEventLog.set(eventLog);
       eventLogBuffer = newEventLog.buffer;
       eventLog = newEventLog;
@@ -602,91 +435,97 @@ function logEvent(entries) {
 
 function startLoggingProfilingEvents() {
   eventLogSize = INITIAL_EVENT_LOG_SIZE;
-  eventLogBuffer = new ArrayBuffer(eventLogSize * Int32Array.BYTES_PER_ELEMENT);
+  eventLogBuffer = new ArrayBuffer(eventLogSize * 4);
   eventLog = new Int32Array(eventLogBuffer);
   eventLogIndex = 0;
 }
 function stopLoggingProfilingEvents() {
   var buffer = eventLogBuffer;
-  eventLogBuffer = eventLog = null;
+  eventLogSize = 0;
+  eventLogBuffer = null;
+  eventLog = null;
+  eventLogIndex = 0;
   return buffer;
 }
-function markTaskStart(task, time) {
-  {
+function markTaskStart(task, ms) {
+  if (enableProfiling) {
     profilingState[QUEUE_SIZE]++;
 
     if (eventLog !== null) {
-      logEvent([TaskStartEvent, time, task.id, task.priorityLevel]);
+      // performance.now returns a float, representing milliseconds. When the
+      // event is logged, it's coerced to an int. Convert to microseconds to
+      // maintain extra degrees of precision.
+      logEvent([TaskStartEvent, ms * 1000, task.id, task.priorityLevel]);
     }
   }
 }
-function markTaskCompleted(task, time) {
-  {
+function markTaskCompleted(task, ms) {
+  if (enableProfiling) {
     profilingState[PRIORITY] = NoPriority;
     profilingState[CURRENT_TASK_ID] = 0;
     profilingState[QUEUE_SIZE]--;
 
     if (eventLog !== null) {
-      logEvent([TaskCompleteEvent, time, task.id]);
+      logEvent([TaskCompleteEvent, ms * 1000, task.id]);
     }
   }
 }
-function markTaskCanceled(task, time) {
-  {
+function markTaskCanceled(task, ms) {
+  if (enableProfiling) {
     profilingState[QUEUE_SIZE]--;
 
     if (eventLog !== null) {
-      logEvent([TaskCancelEvent, time, task.id]);
+      logEvent([TaskCancelEvent, ms * 1000, task.id]);
     }
   }
 }
-function markTaskErrored(task, time) {
-  {
+function markTaskErrored(task, ms) {
+  if (enableProfiling) {
     profilingState[PRIORITY] = NoPriority;
     profilingState[CURRENT_TASK_ID] = 0;
     profilingState[QUEUE_SIZE]--;
 
     if (eventLog !== null) {
-      logEvent([TaskErrorEvent, time, task.id]);
+      logEvent([TaskErrorEvent, ms * 1000, task.id]);
     }
   }
 }
-function markTaskRun(task, time) {
-  {
+function markTaskRun(task, ms) {
+  if (enableProfiling) {
     runIdCounter++;
     profilingState[PRIORITY] = task.priorityLevel;
     profilingState[CURRENT_TASK_ID] = task.id;
     profilingState[CURRENT_RUN_ID] = runIdCounter;
 
     if (eventLog !== null) {
-      logEvent([TaskRunEvent, time, task.id, runIdCounter]);
+      logEvent([TaskRunEvent, ms * 1000, task.id, runIdCounter]);
     }
   }
 }
-function markTaskYield(task, time) {
-  {
+function markTaskYield(task, ms) {
+  if (enableProfiling) {
     profilingState[PRIORITY] = NoPriority;
     profilingState[CURRENT_TASK_ID] = 0;
     profilingState[CURRENT_RUN_ID] = 0;
 
     if (eventLog !== null) {
-      logEvent([TaskYieldEvent, time, task.id, runIdCounter]);
+      logEvent([TaskYieldEvent, ms * 1000, task.id, runIdCounter]);
     }
   }
 }
-function markSchedulerSuspended(time) {
-  {
+function markSchedulerSuspended(ms) {
+  if (enableProfiling) {
     mainThreadIdCounter++;
 
     if (eventLog !== null) {
-      logEvent([SchedulerSuspendEvent, time, mainThreadIdCounter]);
+      logEvent([SchedulerSuspendEvent, ms * 1000, mainThreadIdCounter]);
     }
   }
 }
-function markSchedulerUnsuspended(time) {
-  {
+function markSchedulerUnsuspended(ms) {
+  if (enableProfiling) {
     if (eventLog !== null) {
-      logEvent([SchedulerResumeEvent, time, mainThreadIdCounter]);
+      logEvent([SchedulerResumeEvent, ms * 1000, mainThreadIdCounter]);
     }
   }
 }
@@ -732,8 +571,8 @@ function advanceTimers(currentTime) {
       timer.sortIndex = timer.expirationTime;
       push(taskQueue, timer);
 
-      {
-        markTaskStart(timer);
+      if (enableProfiling) {
+        markTaskStart(timer, currentTime);
         timer.isQueued = true;
       }
     } else {
@@ -764,7 +603,7 @@ function handleTimeout(currentTime) {
 }
 
 function flushWork(hasTimeRemaining, initialTime) {
-  {
+  if (enableProfiling) {
     markSchedulerUnsuspended(initialTime);
   } // We'll need a host callback the next time work is scheduled.
 
@@ -801,7 +640,7 @@ function flushWork(hasTimeRemaining, initialTime) {
     currentPriorityLevel = previousPriorityLevel;
     isPerformingWork = false;
 
-    {
+    if (enableProfiling) {
       var _currentTime = exports.unstable_now();
 
       markSchedulerSuspended(_currentTime);
@@ -840,7 +679,7 @@ function workLoop(hasTimeRemaining, initialTime) {
         currentTask.callback = continuationCallback;
         markTaskYield(currentTask, currentTime);
       } else {
-        {
+        if (enableProfiling) {
           markTaskCompleted(currentTask, currentTime);
           currentTask.isQueued = false;
         }
@@ -989,7 +828,7 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
     sortIndex: -1
   };
 
-  {
+  if (enableProfiling) {
     newTask.isQueued = false;
   }
 
@@ -1013,7 +852,7 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
     newTask.sortIndex = expirationTime;
     push(taskQueue, newTask);
 
-    {
+    if (enableProfiling) {
       markTaskStart(newTask, currentTime);
       newTask.isQueued = true;
     } // Schedule a host callback, if needed. If we're already performing work,
@@ -1046,7 +885,7 @@ function unstable_getFirstCallbackNode() {
 }
 
 function unstable_cancelCallback(task) {
-  {
+  if (enableProfiling) {
     if (task.isQueued) {
       var currentTime = exports.unstable_now();
       markTaskCanceled(task, currentTime);
@@ -1079,11 +918,13 @@ function unstable_shouldYield() {
 }
 
 var unstable_requestPaint = requestPaint;
-var unstable_Profiling = {
-  startLoggingProfilingEvents: startLoggingProfilingEvents,
-  stopLoggingProfilingEvents: stopLoggingProfilingEvents,
-  sharedProfilingBuffer: sharedProfilingBuffer
-};
+var unstable_Profiling = enableProfiling
+  ? {
+      startLoggingProfilingEvents: startLoggingProfilingEvents,
+      stopLoggingProfilingEvents: stopLoggingProfilingEvents,
+      sharedProfilingBuffer: sharedProfilingBuffer
+    }
+  : null;
 
 exports.unstable_IdlePriority = IdlePriority;
 exports.unstable_ImmediatePriority = ImmediatePriority;

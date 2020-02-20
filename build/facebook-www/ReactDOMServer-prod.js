@@ -11,24 +11,22 @@
 
 "use strict";
 var React = require("react");
-function ReactErrorProd(error) {
+function formatProdErrorMessage(code) {
   for (
-    var code = error.message,
-      url = "https://reactjs.org/docs/error-decoder.html?invariant=" + code,
+    var url = "https://reactjs.org/docs/error-decoder.html?invariant=" + code,
       i = 1;
     i < arguments.length;
     i++
   )
     url += "&args[]=" + encodeURIComponent(arguments[i]);
-  error.message =
+  return (
     "Minified React error #" +
     code +
     "; visit " +
     url +
-    " for the full message or use the non-minified dev environment for full errors and additional helpful warnings. ";
-  return error;
+    " for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+  );
 }
-require("warning");
 var hasSymbol = "function" === typeof Symbol && Symbol.for,
   REACT_PORTAL_TYPE = hasSymbol ? Symbol.for("react.portal") : 60106,
   REACT_FRAGMENT_TYPE = hasSymbol ? Symbol.for("react.fragment") : 60107,
@@ -46,13 +44,9 @@ var hasSymbol = "function" === typeof Symbol && Symbol.for,
     : 60120,
   REACT_MEMO_TYPE = hasSymbol ? Symbol.for("react.memo") : 60115,
   REACT_LAZY_TYPE = hasSymbol ? Symbol.for("react.lazy") : 60116,
+  REACT_CHUNK_TYPE = hasSymbol ? Symbol.for("react.chunk") : 60121,
   REACT_FUNDAMENTAL_TYPE = hasSymbol ? Symbol.for("react.fundamental") : 60117,
-  ReactSharedInternals =
-    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-ReactSharedInternals.hasOwnProperty("ReactCurrentDispatcher") ||
-  (ReactSharedInternals.ReactCurrentDispatcher = { current: null });
-ReactSharedInternals.hasOwnProperty("ReactCurrentBatchConfig") ||
-  (ReactSharedInternals.ReactCurrentBatchConfig = { suspense: null });
+  REACT_SCOPE_TYPE = hasSymbol ? Symbol.for("react.scope") : 60119;
 function initializeLazyComponentType(lazyComponent) {
   if (-1 === lazyComponent._status) {
     lazyComponent._status = 0;
@@ -106,23 +100,22 @@ function getComponentName(type) {
         );
       case REACT_MEMO_TYPE:
         return getComponentName(type.type);
+      case REACT_CHUNK_TYPE:
+        return getComponentName(type.render);
       case REACT_LAZY_TYPE:
         if ((type = 1 === type._status ? type._result : null))
           return getComponentName(type);
     }
   return null;
 }
-require("lowPriorityWarning");
-var disableLegacyContext = require("ReactFeatureFlags").disableLegacyContext,
-  emptyObject = {};
-function maskContext(type, context) {
-  type = type.contextTypes;
-  if (!type) return emptyObject;
-  var maskedContext = {},
-    contextName;
-  for (contextName in type) maskedContext[contextName] = context[contextName];
-  return maskedContext;
-}
+var ReactSharedInternals =
+  React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+ReactSharedInternals.hasOwnProperty("ReactCurrentDispatcher") ||
+  (ReactSharedInternals.ReactCurrentDispatcher = { current: null });
+ReactSharedInternals.hasOwnProperty("ReactCurrentBatchConfig") ||
+  (ReactSharedInternals.ReactCurrentBatchConfig = { suspense: null });
+require("ReactFeatureFlags");
+var emptyObject = {};
 function validateContextBounds(context, threadID) {
   for (var i = context._threadCount | 0; i <= threadID; i++)
     (context[i] = context._currentValue2), (context._threadCount = i + 1);
@@ -130,14 +123,11 @@ function validateContextBounds(context, threadID) {
 function processContext(type, context, threadID, isClass) {
   if (isClass)
     return (
-      (isClass = type.contextType),
-      "object" === typeof isClass && null !== isClass
-        ? (validateContextBounds(isClass, threadID), isClass[threadID])
-        : disableLegacyContext
-          ? emptyObject
-          : maskContext(type, context)
+      (type = type.contextType),
+      "object" === typeof type && null !== type
+        ? (validateContextBounds(type, threadID), type[threadID])
+        : emptyObject
     );
-  if (!disableLegacyContext) return maskContext(type, context);
 }
 for (var nextAvailableThreadIDs = new Uint16Array(16), i = 0; 15 > i; i++)
   nextAvailableThreadIDs[i] = i + 1;
@@ -222,12 +212,14 @@ function PropertyInfoRecord(
   this.type = type;
   this.sanitizeURL = sanitizeURL;
 }
-var properties = {};
-"children dangerouslySetInnerHTML defaultValue defaultChecked innerHTML suppressContentEditableWarning suppressHydrationWarning style"
-  .split(" ")
-  .forEach(function(name) {
-    properties[name] = new PropertyInfoRecord(name, 0, !1, name, null, !1);
-  });
+var properties = {},
+  reservedProps = "children dangerouslySetInnerHTML defaultValue defaultChecked innerHTML suppressContentEditableWarning suppressHydrationWarning style".split(
+    " "
+  );
+reservedProps.push("DEPRECATED_flareListeners");
+reservedProps.forEach(function(name) {
+  properties[name] = new PropertyInfoRecord(name, 0, !1, name, null, !1);
+});
 [
   ["acceptCharset", "accept-charset"],
   ["className", "class"],
@@ -403,8 +395,8 @@ function createMarkupForProperty(name, value) {
         : !(2 < name.length) ||
           ("o" !== name[0] && "O" !== name[0]) ||
           ("n" !== name[1] && "N" !== name[1])
-          ? !1
-          : !0;
+        ? !1
+        : !0;
   if (JSCompiler_temp || shouldRemoveAttribute(name, value, propertyInfo, !1))
     return "";
   if (null !== propertyInfo) {
@@ -416,14 +408,18 @@ function createMarkupForProperty(name, value) {
       propertyInfo.sanitizeURL &&
       ((value = "" + value), isJavaScriptProtocol.test(value))
     )
-      throw ReactErrorProd(Error(323), "");
-    return name + "=" + ('"' + escapeTextForBrowser(value) + '"');
+      throw Error(formatProdErrorMessage(323, ""));
+    return name + '="' + (escapeTextForBrowser(value) + '"');
   }
   return isAttributeNameSafe(name)
-    ? name + "=" + ('"' + escapeTextForBrowser(value) + '"')
+    ? name + '="' + (escapeTextForBrowser(value) + '"')
     : "";
 }
-var currentlyRenderingComponent = null,
+function is(x, y) {
+  return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
+}
+var objectIs = "function" === typeof Object.is ? Object.is : is,
+  currentlyRenderingComponent = null,
   firstWorkInProgressHook = null,
   workInProgressHook = null,
   isReRender = !1,
@@ -431,11 +427,12 @@ var currentlyRenderingComponent = null,
   renderPhaseUpdates = null,
   numberOfReRenders = 0;
 function resolveCurrentlyRenderingComponent() {
-  if (null === currentlyRenderingComponent) throw ReactErrorProd(Error(321));
+  if (null === currentlyRenderingComponent)
+    throw Error(formatProdErrorMessage(321));
   return currentlyRenderingComponent;
 }
 function createHook() {
-  if (0 < numberOfReRenders) throw ReactErrorProd(Error(312));
+  if (0 < numberOfReRenders) throw Error(formatProdErrorMessage(312));
   return { memoizedState: null, queue: null, next: null };
 }
 function createWorkInProgressHook() {
@@ -445,9 +442,9 @@ function createWorkInProgressHook() {
         (firstWorkInProgressHook = workInProgressHook = createHook()))
       : ((isReRender = !0), (workInProgressHook = firstWorkInProgressHook))
     : null === workInProgressHook.next
-      ? ((isReRender = !1),
-        (workInProgressHook = workInProgressHook.next = createHook()))
-      : ((isReRender = !0), (workInProgressHook = workInProgressHook.next));
+    ? ((isReRender = !1),
+      (workInProgressHook = workInProgressHook.next = createHook()))
+    : ((isReRender = !0), (workInProgressHook = workInProgressHook.next));
   return workInProgressHook;
 }
 function finishHooks(Component, props, children, refOrContext) {
@@ -489,8 +486,8 @@ function useReducer(reducer, initialArg, init) {
         ? initialArg()
         : initialArg
       : void 0 !== init
-        ? init(initialArg)
-        : initialArg;
+      ? init(initialArg)
+      : initialArg;
   workInProgressHook.memoizedState = reducer;
   reducer = workInProgressHook.queue = { last: null, dispatch: null };
   reducer = reducer.dispatch = dispatchAction.bind(
@@ -501,7 +498,7 @@ function useReducer(reducer, initialArg, init) {
   return [workInProgressHook.memoizedState, reducer];
 }
 function dispatchAction(componentIdentity, queue, action) {
-  if (!(25 > numberOfReRenders)) throw ReactErrorProd(Error(301));
+  if (!(25 > numberOfReRenders)) throw Error(formatProdErrorMessage(301));
   if (componentIdentity === currentlyRenderingComponent)
     if (
       ((didScheduleRenderPhaseUpdate = !0),
@@ -546,17 +543,11 @@ var currentThreadID = 0,
                 var i = 0;
                 i < JSCompiler_inline_result.length && i < deps.length;
                 i++
-              ) {
-                var x = deps[i],
-                  y = JSCompiler_inline_result[i];
-                if (
-                  (x !== y || (0 === x && 1 / x !== 1 / y)) &&
-                  (x === x || y === y)
-                ) {
+              )
+                if (!objectIs(deps[i], JSCompiler_inline_result[i])) {
                   JSCompiler_inline_result = !1;
                   break a;
                 }
-              }
               JSCompiler_inline_result = !0;
             }
           }
@@ -589,6 +580,19 @@ var currentThreadID = 0,
     useDebugValue: noop,
     useResponder: function(responder, props) {
       return { props: props, responder: responder };
+    },
+    useDeferredValue: function(value) {
+      resolveCurrentlyRenderingComponent();
+      return value;
+    },
+    useTransition: function() {
+      resolveCurrentlyRenderingComponent();
+      return [
+        function(callback) {
+          callback();
+        },
+        !1
+      ];
     }
   },
   Namespaces = {
@@ -700,7 +704,9 @@ var hasOwnProperty$1 = Object.prototype.hasOwnProperty,
   };
 function validateRenderResult(child, type) {
   if (void 0 === child)
-    throw ReactErrorProd(Error(152), getComponentName(type) || "Component");
+    throw Error(
+      formatProdErrorMessage(152, getComponentName(type) || "Component")
+    );
 }
 function resolve(child, context, threadID) {
   function processChild(element, Component) {
@@ -799,22 +805,6 @@ function resolve(child, context, threadID) {
       } else queue = null;
     child = isClass.render();
     validateRenderResult(child, Component);
-    if (!disableLegacyContext) {
-      if (
-        "function" === typeof isClass.getChildContext &&
-        ((element = Component.childContextTypes), "object" === typeof element)
-      ) {
-        var childContext = isClass.getChildContext();
-        for (var contextKey in childContext)
-          if (!(contextKey in element))
-            throw ReactErrorProd(
-              Error(108),
-              getComponentName(Component) || "Unknown",
-              contextKey
-            );
-      }
-      childContext && (context = Object.assign({}, context, childContext));
-    }
   }
   for (; React.isValidElement(child); ) {
     var element$jscomp$0 = child,
@@ -847,7 +837,7 @@ var ReactDOMServerRenderer = (function() {
         var oldArray = nextAvailableThreadIDs;
         JSCompiler_inline_result = oldArray.length;
         var newSize = 2 * JSCompiler_inline_result;
-        if (!(65536 >= newSize)) throw ReactErrorProd(Error(304));
+        if (!(65536 >= newSize)) throw Error(formatProdErrorMessage(304));
         var newArray = new Uint16Array(newSize);
         newArray.set(oldArray);
         nextAvailableThreadIDs = newArray;
@@ -939,7 +929,7 @@ var ReactDOMServerRenderer = (function() {
               if (suspended) {
                 suspended = !1;
                 var fallbackFrame = frame.fallbackFrame;
-                if (!fallbackFrame) throw ReactErrorProd(Error(303));
+                if (!fallbackFrame) throw Error(formatProdErrorMessage(303));
                 this.stack.push(fallbackFrame);
                 out[this.suspenseDepth] += "\x3c!--$!--\x3e";
                 continue;
@@ -957,7 +947,8 @@ var ReactDOMServerRenderer = (function() {
               );
             } catch (err) {
               if (null != err && "function" === typeof err.then) {
-                if (!(0 < this.suspenseDepth)) throw ReactErrorProd(Error(342));
+                if (!(0 < this.suspenseDepth))
+                  throw Error(formatProdErrorMessage(342));
                 suspended = !0;
               } else throw err;
             } finally {
@@ -990,8 +981,8 @@ var ReactDOMServerRenderer = (function() {
         if (null != child && null != child.$$typeof) {
           parentNamespace = child.$$typeof;
           if (parentNamespace === REACT_PORTAL_TYPE)
-            throw ReactErrorProd(Error(257));
-          throw ReactErrorProd(Error(258), parentNamespace.toString());
+            throw Error(formatProdErrorMessage(257));
+          throw Error(formatProdErrorMessage(258, parentNamespace.toString()));
         }
         child = toArray(child);
         this.stack.push({
@@ -1133,7 +1124,7 @@ var ReactDOMServerRenderer = (function() {
             });
             return "";
           case REACT_FUNDAMENTAL_TYPE:
-            throw ReactErrorProd(Error(338));
+            throw Error(formatProdErrorMessage(338));
           case REACT_LAZY_TYPE:
             switch (
               ((elementType = child.type),
@@ -1161,20 +1152,36 @@ var ReactDOMServerRenderer = (function() {
               case 2:
                 throw elementType._result;
               default:
-                throw ReactErrorProd(Error(295));
+                throw Error(formatProdErrorMessage(295));
             }
+          case REACT_SCOPE_TYPE:
+            return (
+              (child = toArray(child.props.children)),
+              this.stack.push({
+                type: null,
+                domNamespace: parentNamespace,
+                children: child,
+                childIndex: 0,
+                context: context,
+                footer: ""
+              }),
+              ""
+            );
         }
-      throw ReactErrorProd(
-        Error(130),
-        null == elementType ? elementType : typeof elementType,
-        ""
+      throw Error(
+        formatProdErrorMessage(
+          130,
+          null == elementType ? elementType : typeof elementType,
+          ""
+        )
       );
     };
     _proto.renderDOM = function(element, context, parentNamespace) {
       var tag = element.type.toLowerCase();
       parentNamespace === Namespaces.html && getIntrinsicNamespace(tag);
       if (!validatedTagCache.hasOwnProperty(tag)) {
-        if (!VALID_TAG_REGEX.test(tag)) throw ReactErrorProd(Error(65), tag);
+        if (!VALID_TAG_REGEX.test(tag))
+          throw Error(formatProdErrorMessage(65, tag));
         validatedTagCache[tag] = !0;
       }
       var props = element.props;
@@ -1191,10 +1198,10 @@ var ReactDOMServerRenderer = (function() {
           initialValue = props.defaultValue;
           var textareaChildren = props.children;
           if (null != textareaChildren) {
-            if (null != initialValue) throw ReactErrorProd(Error(92));
+            if (null != initialValue) throw Error(formatProdErrorMessage(92));
             if (Array.isArray(textareaChildren)) {
               if (!(1 >= textareaChildren.length))
-                throw ReactErrorProd(Error(93));
+                throw Error(formatProdErrorMessage(93));
               textareaChildren = textareaChildren[0];
             }
             initialValue = "" + textareaChildren;
@@ -1235,29 +1242,33 @@ var ReactDOMServerRenderer = (function() {
           (null != initialValue.children ||
             null != initialValue.dangerouslySetInnerHTML)
         )
-          throw ReactErrorProd(Error(137), tag, "");
+          throw Error(formatProdErrorMessage(137, tag, ""));
         if (null != initialValue.dangerouslySetInnerHTML) {
-          if (null != initialValue.children) throw ReactErrorProd(Error(60));
+          if (null != initialValue.children)
+            throw Error(formatProdErrorMessage(60));
           if (
             !(
               "object" === typeof initialValue.dangerouslySetInnerHTML &&
               "__html" in initialValue.dangerouslySetInnerHTML
             )
           )
-            throw ReactErrorProd(Error(61));
+            throw Error(formatProdErrorMessage(61));
         }
         if (
           null != initialValue.style &&
           "object" !== typeof initialValue.style
         )
-          throw ReactErrorProd(Error(62), "");
+          throw Error(formatProdErrorMessage(62, ""));
       }
       initialValue = props;
       textareaChildren = this.makeStaticMarkup;
       optionChildren = 1 === this.stack.length;
       value = "<" + element.type;
       for (out in initialValue)
-        if (hasOwnProperty$1.call(initialValue, out) && "listeners" !== out) {
+        if (
+          hasOwnProperty$1.call(initialValue, out) &&
+          "DEPRECATED_flareListeners" !== out
+        ) {
           var propValue = initialValue[out];
           if (null != propValue) {
             if ("style" === out) {
@@ -1298,8 +1309,8 @@ var ReactDOMServerRenderer = (function() {
                           0 === styleValue ||
                           (isUnitlessNumber.hasOwnProperty(delimiter) &&
                             isUnitlessNumber[delimiter])
-                          ? ("" + styleValue).trim()
-                          : styleValue + "px";
+                        ? ("" + styleValue).trim()
+                        : styleValue + "px";
                     serialized += isCustomProperty;
                     delimiter = ";";
                   }
@@ -1333,7 +1344,7 @@ var ReactDOMServerRenderer = (function() {
                 ((j = out),
                 (j =
                   isAttributeNameSafe(j) && null != propValue
-                    ? j + "=" + ('"' + escapeTextForBrowser(propValue) + '"')
+                    ? j + '="' + (escapeTextForBrowser(propValue) + '"')
                     : ""))
               : (j = createMarkupForProperty(out, propValue));
             j && (value += " " + j);
@@ -1364,7 +1375,7 @@ var ReactDOMServerRenderer = (function() {
       }
       null != textareaChildren
         ? ((props = []),
-          newlineEatingTags[tag] &&
+          newlineEatingTags.hasOwnProperty(tag) &&
             "\n" === textareaChildren.charAt(0) &&
             (out += "\n"),
           (out += textareaChildren))
@@ -1376,8 +1387,8 @@ var ReactDOMServerRenderer = (function() {
           ? getIntrinsicNamespace(element)
           : "http://www.w3.org/2000/svg" === parentNamespace &&
             "foreignObject" === element
-            ? "http://www.w3.org/1999/xhtml"
-            : parentNamespace;
+          ? "http://www.w3.org/1999/xhtml"
+          : parentNamespace;
       this.stack.push({
         domNamespace: parentNamespace,
         type: tag,
@@ -1392,6 +1403,7 @@ var ReactDOMServerRenderer = (function() {
     return ReactDOMServerRenderer;
   })(),
   ReactDOMServerBrowser$1 = {
+    __proto__: null,
     default: {
       renderToString: function(element) {
         element = new ReactDOMServerRenderer(element, !1);
@@ -1410,12 +1422,12 @@ var ReactDOMServerRenderer = (function() {
         }
       },
       renderToNodeStream: function() {
-        throw ReactErrorProd(Error(207));
+        throw Error(formatProdErrorMessage(207));
       },
       renderToStaticNodeStream: function() {
-        throw ReactErrorProd(Error(208));
+        throw Error(formatProdErrorMessage(208));
       },
-      version: "16.8.6"
+      version: "16.12.0"
     }
   },
   ReactDOMServer =

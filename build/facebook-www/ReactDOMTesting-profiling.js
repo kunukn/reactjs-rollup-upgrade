@@ -14,16 +14,7 @@
 */
 "use strict";
 var React = require("react"),
-  Scheduler = require("scheduler"),
-  _require = require("ReactFeatureFlags"),
-  deferPassiveEffectCleanupDuringUnmount =
-    _require.deferPassiveEffectCleanupDuringUnmount,
-  disableInputAttributeSyncing = _require.disableInputAttributeSyncing,
-  enableTrustedTypesIntegration = _require.enableTrustedTypesIntegration,
-  runAllPassiveEffectDestroysBeforeCreates =
-    _require.runAllPassiveEffectDestroysBeforeCreates,
-  disableSchedulerTimeoutBasedOnReactExpirationTime =
-    _require.disableSchedulerTimeoutBasedOnReactExpirationTime;
+  Scheduler = require("scheduler");
 function formatProdErrorMessage(code) {
   for (
     var url = "https://reactjs.org/docs/error-decoder.html?invariant=" + code,
@@ -958,10 +949,7 @@ function setValueForProperty(node, name, value, isCustomComponentTag) {
       isAttributeNameSafe(name) &&
         (null === value
           ? node.removeAttribute(name)
-          : node.setAttribute(
-              name,
-              enableTrustedTypesIntegration ? value : "" + value
-            ));
+          : node.setAttribute(name, "" + value));
     else if (propertyInfo.mustUseProperty)
       node[propertyInfo.propertyName] =
         null === value ? (3 === propertyInfo.type ? !1 : "") : value;
@@ -979,7 +967,7 @@ function setValueForProperty(node, name, value, isCustomComponentTag) {
       )
         value = "";
       else if (
-        ((value = enableTrustedTypesIntegration ? value : "" + value),
+        ((value = "" + value),
         propertyInfo.sanitizeURL && isJavaScriptProtocol.test(value.toString()))
       )
         throw Error(formatProdErrorMessage(323, ""));
@@ -1110,10 +1098,7 @@ function updateWrapper(element, props) {
     element.removeAttribute("value");
     return;
   }
-  disableInputAttributeSyncing
-    ? props.hasOwnProperty("defaultValue") &&
-      setDefaultValue(element, props.type, getToStringValue(props.defaultValue))
-    : props.hasOwnProperty("value")
+  props.hasOwnProperty("value")
     ? setDefaultValue(element, props.type, value)
     : props.hasOwnProperty("defaultValue") &&
       setDefaultValue(
@@ -1121,44 +1106,28 @@ function updateWrapper(element, props) {
         props.type,
         getToStringValue(props.defaultValue)
       );
-  disableInputAttributeSyncing
-    ? null == props.defaultChecked
-      ? element.removeAttribute("checked")
-      : (element.defaultChecked = !!props.defaultChecked)
-    : null == props.checked &&
-      null != props.defaultChecked &&
-      (element.defaultChecked = !!props.defaultChecked);
+  null == props.checked &&
+    null != props.defaultChecked &&
+    (element.defaultChecked = !!props.defaultChecked);
 }
 function postMountWrapper(element, props, isHydrating) {
   if (props.hasOwnProperty("value") || props.hasOwnProperty("defaultValue")) {
     var type = props.type;
     if (
-      (type = "submit" === type || "reset" === type) &&
-      (void 0 === props.value || null === props.value)
+      !(
+        ("submit" !== type && "reset" !== type) ||
+        (void 0 !== props.value && null !== props.value)
+      )
     )
       return;
-    var initialValue = "" + element._wrapperState.initialValue;
-    if (!isHydrating)
-      if (disableInputAttributeSyncing) {
-        var value = getToStringValue(props.value);
-        null == value ||
-          (!type && value === element.value) ||
-          (element.value = "" + value);
-      } else initialValue !== element.value && (element.value = initialValue);
-    disableInputAttributeSyncing
-      ? ((type = getToStringValue(props.defaultValue)),
-        null != type && (element.defaultValue = "" + type))
-      : (element.defaultValue = initialValue);
+    props = "" + element._wrapperState.initialValue;
+    isHydrating || props === element.value || (element.value = props);
+    element.defaultValue = props;
   }
-  type = element.name;
-  "" !== type && (element.name = "");
-  disableInputAttributeSyncing
-    ? (isHydrating || updateChecked(element, props),
-      props.hasOwnProperty("defaultChecked") &&
-        ((element.defaultChecked = !element.defaultChecked),
-        (element.defaultChecked = !!props.defaultChecked)))
-    : (element.defaultChecked = !!element._wrapperState.initialChecked);
-  "" !== type && (element.name = type);
+  isHydrating = element.name;
+  "" !== isHydrating && (element.name = "");
+  element.defaultChecked = !!element._wrapperState.initialChecked;
+  "" !== isHydrating && (element.name = isHydrating);
 }
 function setDefaultValue(node, type, value) {
   if ("number" !== type || node.ownerDocument.activeElement !== node)
@@ -3245,8 +3214,7 @@ var ChangeEventPlugin = {
         (topLevelType = targetNode._wrapperState) &&
         topLevelType.controlled &&
         "number" === targetNode.type &&
-        (disableInputAttributeSyncing ||
-          setDefaultValue(targetNode, "number", targetNode.value));
+        setDefaultValue(targetNode, "number", targetNode.value);
     }
   },
   SyntheticUIEvent = SyntheticEvent.extend({ view: null, detail: null }),
@@ -7930,13 +7898,6 @@ function safelyDetachRef(current) {
       }
     else ref.current = null;
 }
-function safelyCallDestroy(current, destroy) {
-  try {
-    destroy();
-  } catch (error) {
-    captureCommitPhaseError(current, error);
-  }
-}
 function commitBeforeMutationLifeCycles(current, finishedWork) {
   switch (finishedWork.tag) {
     case 0:
@@ -8003,43 +7964,22 @@ function commitLifeCycles(finishedRoot, current, finishedWork) {
     case 15:
     case 22:
       commitHookEffectListMount(3, finishedWork);
-      if (
-        runAllPassiveEffectDestroysBeforeCreates &&
-        runAllPassiveEffectDestroysBeforeCreates &&
-        ((finishedRoot = finishedWork.updateQueue),
-        (finishedRoot = null !== finishedRoot ? finishedRoot.lastEffect : null),
-        null !== finishedRoot)
-      ) {
-        current = finishedRoot = finishedRoot.next;
-        do {
-          var _effect = current,
-            next = _effect.next;
-          _effect = _effect.tag;
-          0 !== (_effect & 4) &&
-            0 !== (_effect & 1) &&
-            (enqueuePendingPassiveHookEffectUnmount(finishedWork, current),
-            enqueuePendingPassiveHookEffectMount(finishedWork, current));
-          current = next;
-        } while (current !== finishedRoot);
-      }
       return;
     case 1:
       finishedRoot = finishedWork.stateNode;
-      finishedWork.effectTag & 4 &&
-        (null === current
-          ? finishedRoot.componentDidMount()
-          : ((next =
-              finishedWork.elementType === finishedWork.type
-                ? current.memoizedProps
-                : resolveDefaultProps(
-                    finishedWork.type,
-                    current.memoizedProps
-                  )),
-            finishedRoot.componentDidUpdate(
-              next,
-              current.memoizedState,
-              finishedRoot.__reactInternalSnapshotBeforeUpdate
-            )));
+      if (finishedWork.effectTag & 4)
+        if (null === current) finishedRoot.componentDidMount();
+        else {
+          var prevProps =
+            finishedWork.elementType === finishedWork.type
+              ? current.memoizedProps
+              : resolveDefaultProps(finishedWork.type, current.memoizedProps);
+          finishedRoot.componentDidUpdate(
+            prevProps,
+            current.memoizedState,
+            finishedRoot.__reactInternalSnapshotBeforeUpdate
+          );
+        }
       current = finishedWork.updateQueue;
       null !== current &&
         commitUpdateQueue(finishedWork, current, finishedRoot);
@@ -8097,74 +8037,68 @@ function commitLifeCycles(finishedRoot, current, finishedWork) {
   }
   throw Error(formatProdErrorMessage(163));
 }
-function commitUnmount(finishedRoot, current, renderPriorityLevel) {
-  "function" === typeof onCommitFiberUnmount && onCommitFiberUnmount(current);
-  switch (current.tag) {
+function commitUnmount(finishedRoot, current$jscomp$0, renderPriorityLevel) {
+  "function" === typeof onCommitFiberUnmount &&
+    onCommitFiberUnmount(current$jscomp$0);
+  switch (current$jscomp$0.tag) {
     case 0:
     case 11:
     case 14:
     case 15:
     case 22:
-      finishedRoot = current.updateQueue;
+      finishedRoot = current$jscomp$0.updateQueue;
       if (
         null !== finishedRoot &&
         ((finishedRoot = finishedRoot.lastEffect), null !== finishedRoot)
       ) {
         var firstEffect = finishedRoot.next;
-        if (
-          deferPassiveEffectCleanupDuringUnmount &&
-          runAllPassiveEffectDestroysBeforeCreates
-        ) {
-          renderPriorityLevel = firstEffect;
-          do {
-            var _effect2 = renderPriorityLevel;
-            finishedRoot = _effect2.destroy;
-            _effect2 = _effect2.tag;
-            void 0 !== finishedRoot &&
-              (0 !== (_effect2 & 4)
-                ? enqueuePendingPassiveHookEffectUnmount(
-                    current,
-                    renderPriorityLevel
-                  )
-                : safelyCallDestroy(current, finishedRoot));
-            renderPriorityLevel = renderPriorityLevel.next;
-          } while (renderPriorityLevel !== firstEffect);
-        } else
-          runWithPriority$2(
-            97 < renderPriorityLevel ? 97 : renderPriorityLevel,
-            function() {
-              var effect = firstEffect;
-              do {
-                var _destroy = effect.destroy;
-                void 0 !== _destroy && safelyCallDestroy(current, _destroy);
-                effect = effect.next;
-              } while (effect !== firstEffect);
-            }
-          );
+        runWithPriority$2(
+          97 < renderPriorityLevel ? 97 : renderPriorityLevel,
+          function() {
+            var effect = firstEffect;
+            do {
+              var _destroy = effect.destroy;
+              if (void 0 !== _destroy) {
+                var current = current$jscomp$0;
+                try {
+                  _destroy();
+                } catch (error) {
+                  captureCommitPhaseError(current, error);
+                }
+              }
+              effect = effect.next;
+            } while (effect !== firstEffect);
+          }
+        );
       }
       break;
     case 1:
-      safelyDetachRef(current);
-      renderPriorityLevel = current.stateNode;
+      safelyDetachRef(current$jscomp$0);
+      renderPriorityLevel = current$jscomp$0.stateNode;
       "function" === typeof renderPriorityLevel.componentWillUnmount &&
-        safelyCallComponentWillUnmount(current, renderPriorityLevel);
+        safelyCallComponentWillUnmount(current$jscomp$0, renderPriorityLevel);
       break;
     case 5:
-      unmountDeprecatedResponderListeners(current);
-      beforeRemoveInstance(current.stateNode);
-      safelyDetachRef(current);
+      unmountDeprecatedResponderListeners(current$jscomp$0);
+      beforeRemoveInstance(current$jscomp$0.stateNode);
+      safelyDetachRef(current$jscomp$0);
       break;
     case 4:
-      unmountHostComponents(finishedRoot, current, renderPriorityLevel);
+      unmountHostComponents(
+        finishedRoot,
+        current$jscomp$0,
+        renderPriorityLevel
+      );
       break;
     case 18:
       renderPriorityLevel = finishedRoot.hydrationCallbacks;
       null !== renderPriorityLevel &&
         (renderPriorityLevel = renderPriorityLevel.onDeleted) &&
-        renderPriorityLevel(current.stateNode);
+        renderPriorityLevel(current$jscomp$0.stateNode);
       break;
     case 21:
-      unmountDeprecatedResponderListeners(current), safelyDetachRef(current);
+      unmountDeprecatedResponderListeners(current$jscomp$0),
+        safelyDetachRef(current$jscomp$0);
   }
 }
 function detachFiber(current) {
@@ -8676,8 +8610,6 @@ var ceil = Math.ceil,
   rootDoesHavePassiveEffects = !1,
   rootWithPendingPassiveEffects = null,
   pendingPassiveEffectsRenderPriority = 90,
-  pendingPassiveHookEffectsMount = [],
-  pendingPassiveHookEffectsUnmount = [],
   rootsWithPendingDiscreteUpdates = null,
   nestedUpdateCount = 0,
   rootWithNestedUpdates = null,
@@ -8838,11 +8770,6 @@ function ensureRootIsScheduled(root) {
       expirationTime =
         1073741823 === expirationTime
           ? scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root))
-          : disableSchedulerTimeoutBasedOnReactExpirationTime
-          ? scheduleCallback(
-              priorityLevel,
-              performConcurrentWorkOnRoot.bind(null, root)
-            )
           : scheduleCallback(
               priorityLevel,
               performConcurrentWorkOnRoot.bind(null, root),
@@ -9833,26 +9760,6 @@ function flushPassiveEffects() {
     return runWithPriority$2(priorityLevel, flushPassiveEffectsImpl);
   }
 }
-function enqueuePendingPassiveHookEffectMount(fiber, effect) {
-  runAllPassiveEffectDestroysBeforeCreates &&
-    (pendingPassiveHookEffectsMount.push(effect, fiber),
-    rootDoesHavePassiveEffects ||
-      ((rootDoesHavePassiveEffects = !0),
-      scheduleCallback(97, function() {
-        flushPassiveEffects();
-        return null;
-      })));
-}
-function enqueuePendingPassiveHookEffectUnmount(fiber, effect) {
-  runAllPassiveEffectDestroysBeforeCreates &&
-    (pendingPassiveHookEffectsUnmount.push(effect, fiber),
-    rootDoesHavePassiveEffects ||
-      ((rootDoesHavePassiveEffects = !0),
-      scheduleCallback(97, function() {
-        flushPassiveEffects();
-        return null;
-      })));
-}
 function flushPassiveEffectsImpl() {
   if (null === rootWithPendingPassiveEffects) return !1;
   var root = rootWithPendingPassiveEffects;
@@ -9861,55 +9768,26 @@ function flushPassiveEffectsImpl() {
     throw Error(formatProdErrorMessage(331));
   var prevExecutionContext = executionContext;
   executionContext |= CommitContext;
-  if (runAllPassiveEffectDestroysBeforeCreates) {
-    root = pendingPassiveHookEffectsUnmount;
-    pendingPassiveHookEffectsUnmount = [];
-    for (var i = 0; i < root.length; i += 2) {
-      var effect = root[i],
-        fiber = root[i + 1],
-        destroy = effect.destroy;
-      effect.destroy = void 0;
-      if ("function" === typeof destroy)
-        try {
-          destroy();
-        } catch (error) {
-          if (null === fiber) throw Error(formatProdErrorMessage(330));
-          captureCommitPhaseError(fiber, error);
+  for (root = root.current.firstEffect; null !== root; ) {
+    try {
+      var finishedWork = root;
+      if (0 !== (finishedWork.effectTag & 512))
+        switch (finishedWork.tag) {
+          case 0:
+          case 11:
+          case 15:
+          case 22:
+            commitHookEffectListUnmount(5, finishedWork),
+              commitHookEffectListMount(5, finishedWork);
         }
+    } catch (error) {
+      if (null === root) throw Error(formatProdErrorMessage(330));
+      captureCommitPhaseError(root, error);
     }
-    root = pendingPassiveHookEffectsMount;
-    pendingPassiveHookEffectsMount = [];
-    for (i = 0; i < root.length; i += 2) {
-      effect = root[i];
-      fiber = root[i + 1];
-      try {
-        var create = effect.create;
-        effect.destroy = create();
-      } catch (error) {
-        if (null === fiber) throw Error(formatProdErrorMessage(330));
-        captureCommitPhaseError(fiber, error);
-      }
-    }
-  } else
-    for (create = root.current.firstEffect; null !== create; ) {
-      try {
-        if (((root = create), 0 !== (root.effectTag & 512)))
-          switch (root.tag) {
-            case 0:
-            case 11:
-            case 15:
-            case 22:
-              commitHookEffectListUnmount(5, root),
-                commitHookEffectListMount(5, root);
-          }
-      } catch (error) {
-        if (null === create) throw Error(formatProdErrorMessage(330));
-        captureCommitPhaseError(create, error);
-      }
-      root = create.nextEffect;
-      create.nextEffect = null;
-      create = root;
-    }
+    finishedWork = root.nextEffect;
+    root.nextEffect = null;
+    root = finishedWork;
+  }
   executionContext = prevExecutionContext;
   flushSyncCallbackQueue();
   return !0;
@@ -10645,7 +10523,8 @@ beginWork$1 = function(current, workInProgress, renderExpirationTime) {
   }
   throw Error(formatProdErrorMessage(156, workInProgress.tag));
 };
-var onCommitFiberRoot = null,
+var IsThisRendererActing = { current: !1 },
+  onCommitFiberRoot = null,
   onCommitFiberUnmount = null;
 function injectInternals(internals) {
   if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) return !1;
@@ -10911,6 +10790,22 @@ function markRootExpiredAtTime(root, expirationTime) {
   if (0 === lastExpiredTime || lastExpiredTime > expirationTime)
     root.lastExpiredTime = expirationTime;
 }
+var enqueueTaskImpl = null;
+function enqueueTask(task) {
+  if (null === enqueueTaskImpl)
+    try {
+      var requireString = ("require" + Math.random()).slice(0, 7);
+      enqueueTaskImpl = (module && module[requireString])("timers")
+        .setImmediate;
+    } catch (_err) {
+      enqueueTaskImpl = function(callback) {
+        var channel = new MessageChannel();
+        channel.port1.onmessage = callback;
+        channel.port2.postMessage(void 0);
+      };
+    }
+  return enqueueTaskImpl(task);
+}
 function updateContainer(element, container, parentComponent, callback) {
   parentComponent = container.current;
   var currentTime = requestCurrentTimeForUpdate(),
@@ -10942,6 +10837,27 @@ function markRetryTimeIfNotHydrated(fiber, retryTime) {
   markRetryTimeImpl(fiber, retryTime);
   (fiber = fiber.alternate) && markRetryTimeImpl(fiber, retryTime);
 }
+var IsSomeRendererActing$1 = ReactSharedInternals.IsSomeRendererActing,
+  isSchedulerMocked =
+    "function" === typeof Scheduler.unstable_flushAllWithoutAsserting,
+  flushWork =
+    Scheduler.unstable_flushAllWithoutAsserting ||
+    function() {
+      for (var didFlushWork = !1; flushPassiveEffects(); ) didFlushWork = !0;
+      return didFlushWork;
+    };
+function flushWorkAndMicroTasks(onDone) {
+  try {
+    flushWork(),
+      enqueueTask(function() {
+        flushWork() ? flushWorkAndMicroTasks(onDone) : onDone();
+      });
+  } catch (err) {
+    onDone(err);
+  }
+}
+var actingUpdatesScopeDepth = 0,
+  didWarnAboutUsingActInProd = !1;
 function ReactDOMRoot(container, options) {
   this._internalRoot = createRootImpl(container, 2, options);
 }
@@ -11112,7 +11028,7 @@ var ReactDOM = {
       dispatchEvent,
       runEventsInBatch,
       flushPassiveEffects,
-      { current: !1 }
+      IsThisRendererActing
     ]
   },
   version: "16.12.0",
@@ -11182,6 +11098,65 @@ ReactDOM.unstable_scheduleHydration = function(target) {
   version: "16.12.0",
   rendererPackageName: "react-dom"
 });
-var ReactDOMFB = { __proto__: null, default: ReactDOM },
-  ReactDOMFB$1 = (ReactDOMFB && ReactDOMFB["default"]) || ReactDOMFB;
-module.exports = ReactDOMFB$1.default || ReactDOMFB$1;
+ReactDOM.act = function(callback) {
+  function onDone() {
+    actingUpdatesScopeDepth--;
+    IsSomeRendererActing$1.current = previousIsSomeRendererActing;
+    IsThisRendererActing.current = previousIsThisRendererActing;
+  }
+  !1 === didWarnAboutUsingActInProd &&
+    ((didWarnAboutUsingActInProd = !0),
+    console.error(
+      "act(...) is not supported in production builds of React, and might not behave as expected."
+    ));
+  actingUpdatesScopeDepth++;
+  var previousIsSomeRendererActing = IsSomeRendererActing$1.current;
+  var previousIsThisRendererActing = IsThisRendererActing.current;
+  IsSomeRendererActing$1.current = !0;
+  IsThisRendererActing.current = !0;
+  try {
+    var result = batchedUpdates$1(callback);
+  } catch (error) {
+    throw (onDone(), error);
+  }
+  if (
+    null !== result &&
+    "object" === typeof result &&
+    "function" === typeof result.then
+  )
+    return {
+      then: function(resolve, reject) {
+        result.then(
+          function() {
+            1 < actingUpdatesScopeDepth ||
+            (!0 === isSchedulerMocked && !0 === previousIsSomeRendererActing)
+              ? (onDone(), resolve())
+              : flushWorkAndMicroTasks(function(err) {
+                  onDone();
+                  err ? reject(err) : resolve();
+                });
+          },
+          function(err) {
+            onDone();
+            reject(err);
+          }
+        );
+      }
+    };
+  try {
+    1 !== actingUpdatesScopeDepth ||
+      (!1 !== isSchedulerMocked && !1 !== previousIsSomeRendererActing) ||
+      flushWork(),
+      onDone();
+  } catch (err) {
+    throw (onDone(), err);
+  }
+  return {
+    then: function(resolve) {
+      resolve();
+    }
+  };
+};
+var ReactDOM$1 = { __proto__: null, default: ReactDOM },
+  ReactDOM$2 = (ReactDOM$1 && ReactDOM$1["default"]) || ReactDOM$1;
+module.exports = ReactDOM$2.default || ReactDOM$2;

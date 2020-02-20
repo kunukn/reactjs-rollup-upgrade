@@ -81,26 +81,21 @@ var contextMenuImpl = {
     }
   }
 };
-var ContextMenuResponder = React.unstable_createResponder(
+var ContextMenuResponder = React.DEPRECATED_createResponder(
   "ContextMenu",
   contextMenuImpl
 );
 function useContextMenu(props) {
-  return React.unstable_useResponder(ContextMenuResponder, props);
+  return React.DEPRECATED_useResponder(ContextMenuResponder, props);
 }
 
 var ContextMenu = /*#__PURE__*/ Object.freeze({
+  __proto__: null,
   ContextMenuResponder: ContextMenuResponder,
   useContextMenu: useContextMenu
 });
 
-function getCjsExportFromNamespace(n) {
-  return (n && n["default"]) || n;
-}
-
-var require$$0 = getCjsExportFromNamespace(ContextMenu);
-
-var contextMenu = require$$0;
+var contextMenu = ContextMenu;
 
 module.exports = contextMenu;
 
