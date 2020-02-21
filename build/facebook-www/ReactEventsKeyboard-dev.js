@@ -19,14 +19,10 @@ var React = require("react");
 
 var DiscreteEvent = 0;
 
-var hasPointerEvents =
-  typeof window !== "undefined" && window.PointerEvent !== undefined;
 var isMac =
   typeof window !== "undefined" && window.navigator != null
     ? /^Mac/.test(window.navigator.platform)
     : false;
-
-// Keyboards, Assitive Technologies, and element.click() all produce a "virtual"
 // click event. This is a method of inferring such clicks. Every browser except
 // IE 11 only sets a zero value of "detail" for click events that are "virtual".
 // However, IE 11 uses a zero value for all click events. For IE 11 we rely on
@@ -222,7 +218,8 @@ function useKeyboard(props) {
   return React.DEPRECATED_useResponder(KeyboardResponder, props);
 }
 
-var Keyboard = Object.freeze({
+var Keyboard = /*#__PURE__*/ Object.freeze({
+  __proto__: null,
   KeyboardResponder: KeyboardResponder,
   useKeyboard: useKeyboard
 });

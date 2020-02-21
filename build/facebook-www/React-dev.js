@@ -18,8 +18,6 @@ if (__DEV__) {
 var checkPropTypes = require("prop-types/checkPropTypes");
 var assign = require("object-assign");
 
-// TODO: this is special because it gets imported during build.
-
 var ReactVersion = "16.12.0";
 
 // The Symbol used to tag the ReactElement-like types. If there is no native Symbol
@@ -34,8 +32,6 @@ var REACT_STRICT_MODE_TYPE = hasSymbol
 var REACT_PROFILER_TYPE = hasSymbol ? Symbol.for("react.profiler") : 0xead2;
 var REACT_PROVIDER_TYPE = hasSymbol ? Symbol.for("react.provider") : 0xeacd;
 var REACT_CONTEXT_TYPE = hasSymbol ? Symbol.for("react.context") : 0xeace; // TODO: We don't use AsyncMode or ConcurrentMode anymore. They were temporary
-// (unstable) APIs that have been removed. Can we remove the symbols?
-
 var REACT_CONCURRENT_MODE_TYPE = hasSymbol
   ? Symbol.for("react.concurrent_mode")
   : 0xeacf;
@@ -48,7 +44,7 @@ var REACT_SUSPENSE_LIST_TYPE = hasSymbol
   : 0xead8;
 var REACT_MEMO_TYPE = hasSymbol ? Symbol.for("react.memo") : 0xead3;
 var REACT_LAZY_TYPE = hasSymbol ? Symbol.for("react.lazy") : 0xead4;
-var REACT_CHUNK_TYPE = hasSymbol ? Symbol.for("react.chunk") : 0xead9;
+var REACT_BLOCK_TYPE = hasSymbol ? Symbol.for("react.block") : 0xead9;
 var REACT_FUNDAMENTAL_TYPE = hasSymbol
   ? Symbol.for("react.fundamental")
   : 0xead5;
@@ -136,21 +132,6 @@ function printWarning(level, format, args) {
     warningWWW.apply(null, args);
   }
 }
-
-// Do not require this module directly! Use normal `invariant` calls with
-// template literal strings. The messages will be replaced with error codes
-// during build.
-
-/**
- * Use invariant() to assert state which your program assumes to be true.
- *
- * Provide sprintf-style format (only %s is supported) and arguments
- * to provide information about what broke and what you were
- * expecting.
- *
- * The invariant message will be stripped in production, but the invariant
- * will remain to ensure logic does not differ in production.
- */
 
 var didWarnStateUpdateForUnmountedComponent = {};
 
@@ -414,39 +395,22 @@ function createRef() {
 }
 
 // Re-export dynamic flags from the www version.
-var _require = require("ReactFeatureFlags");
-var debugRenderPhaseSideEffectsForStrictMode =
-  _require.debugRenderPhaseSideEffectsForStrictMode;
-var deferPassiveEffectCleanupDuringUnmount =
-  _require.deferPassiveEffectCleanupDuringUnmount;
-var disableInputAttributeSyncing = _require.disableInputAttributeSyncing;
-var enableTrustedTypesIntegration = _require.enableTrustedTypesIntegration;
-var runAllPassiveEffectDestroysBeforeCreates =
-  _require.runAllPassiveEffectDestroysBeforeCreates;
-var warnAboutShorthandPropertyCollision =
-  _require.warnAboutShorthandPropertyCollision;
-var disableSchedulerTimeoutBasedOnReactExpirationTime =
-  _require.disableSchedulerTimeoutBasedOnReactExpirationTime;
-var warnAboutSpreadingKeyToJSX = _require.warnAboutSpreadingKeyToJSX; // On WWW, true is used for a new modern build.
-
-var exposeConcurrentModeAPIs = true;
-
-var enableChunksAPI = true;
-
-// The flag is intentionally updated in a timeout.
-var enableDeprecatedFlareAPI = true;
-var enableFundamentalAPI = false;
-var enableScopeAPI = true;
-var enableJSXTransformAPI = true;
-
-var disableCreateFactory = true;
-
-var disableMapsAsChildren = true;
-
-// Flow magic to verify the exports of this file match the original version.
+var _require = require("ReactFeatureFlags"),
+  debugRenderPhaseSideEffectsForStrictMode =
+    _require.debugRenderPhaseSideEffectsForStrictMode,
+  deferPassiveEffectCleanupDuringUnmount =
+    _require.deferPassiveEffectCleanupDuringUnmount,
+  disableInputAttributeSyncing = _require.disableInputAttributeSyncing,
+  enableTrustedTypesIntegration = _require.enableTrustedTypesIntegration,
+  runAllPassiveEffectDestroysBeforeCreates =
+    _require.runAllPassiveEffectDestroysBeforeCreates,
+  warnAboutShorthandPropertyCollision =
+    _require.warnAboutShorthandPropertyCollision,
+  disableSchedulerTimeoutBasedOnReactExpirationTime =
+    _require.disableSchedulerTimeoutBasedOnReactExpirationTime,
+  warnAboutSpreadingKeyToJSX = _require.warnAboutSpreadingKeyToJSX; // On WWW, true is used for a new modern build.
 
 var Resolved = 1;
-
 function refineResolvedLazyComponent(lazyComponent) {
   return lazyComponent._status === Resolved ? lazyComponent._result : null;
 }
@@ -516,7 +480,7 @@ function getComponentName(type) {
       case REACT_MEMO_TYPE:
         return getComponentName(type.type);
 
-      case REACT_CHUNK_TYPE:
+      case REACT_BLOCK_TYPE:
         return getComponentName(type.render);
 
       case REACT_LAZY_TYPE: {
@@ -544,9 +508,9 @@ var RESERVED_PROPS = {
   __self: true,
   __source: true
 };
-var specialPropKeyWarningShown;
-var specialPropRefWarningShown;
-var didWarnAboutStringRefs;
+var specialPropKeyWarningShown,
+  specialPropRefWarningShown,
+  didWarnAboutStringRefs;
 
 {
   didWarnAboutStringRefs = {};
@@ -736,13 +700,6 @@ var ReactElement = function(type, key, ref, self, source, owner, props) {
  * @param {string} key
  */
 
-/**
- * https://github.com/reactjs/rfcs/pull/107
- * @param {*} type
- * @param {object} props
- * @param {string} key
- */
-
 function jsxDEV(type, config, maybeKey, source, self) {
   var propName; // Reserved names are extracted
 
@@ -910,11 +867,6 @@ function createElement(type, config, children) {
     props
   );
 }
-/**
- * Return a function that produces ReactElements of a given type.
- * See https://reactjs.org/docs/react-api.html#createfactory
- */
-
 function cloneAndReplaceKey(oldElement, newKey) {
   var newElement = ReactElement(
     oldElement.type,
@@ -1024,7 +976,7 @@ function isValidElement(object) {
 }
 
 var BEFORE_SLASH_RE = /^(.*)[\\\/]/;
-var describeComponentFrame = function(name, source, ownerName) {
+function describeComponentFrame(name, source, ownerName) {
   var sourceInfo = "";
 
   if (source) {
@@ -1054,7 +1006,7 @@ var describeComponentFrame = function(name, source, ownerName) {
   }
 
   return "\n    in " + (name || "Unknown") + sourceInfo;
-};
+}
 
 var ReactDebugCurrentFrame = {};
 var currentlyValidatingElement = null;
@@ -1235,7 +1187,7 @@ function traverseAllChildrenImpl(
     var iteratorFn = getIteratorFn(children);
 
     if (typeof iteratorFn === "function") {
-      if (disableMapsAsChildren) {
+      {
         if (!(iteratorFn !== children.entries)) {
           {
             throw Error(
@@ -1751,7 +1703,7 @@ function isValidElementType(type) {
         type.$$typeof === REACT_FUNDAMENTAL_TYPE ||
         type.$$typeof === REACT_RESPONDER_TYPE ||
         type.$$typeof === REACT_SCOPE_TYPE ||
-        type.$$typeof === REACT_CHUNK_TYPE))
+        type.$$typeof === REACT_BLOCK_TYPE))
   );
 }
 
@@ -1773,35 +1725,35 @@ function memo(type, compare) {
   };
 }
 
-function chunk(query, render) {
+function block(query, render) {
   {
     if (typeof query !== "function") {
       error(
-        "Chunks require a query function but was given %s.",
+        "Blocks require a query function but was given %s.",
         query === null ? "null" : typeof query
       );
     }
 
     if (render != null && render.$$typeof === REACT_MEMO_TYPE) {
       error(
-        "Chunks require a render function but received a `memo` " +
+        "Blocks require a render function but received a `memo` " +
           "component. Use `memo` on an inner component instead."
       );
     } else if (render != null && render.$$typeof === REACT_FORWARD_REF_TYPE) {
       error(
-        "Chunks require a render function but received a `forwardRef` " +
+        "Blocks require a render function but received a `forwardRef` " +
           "component. Use `forwardRef` on an inner component instead."
       );
     } else if (typeof render !== "function") {
       error(
-        "Chunks require a render function but was given %s.",
+        "Blocks require a render function but was given %s.",
         render === null ? "null" : typeof render
       );
     } else if (render.length !== 0 && render.length !== 2) {
       // Warn if it's not accepting two args.
       // Do not warn for 0 arguments because it could be due to usage of the 'arguments' object
       error(
-        "Chunk render functions accept exactly two parameters: props and data. %s",
+        "Block render functions accept exactly two parameters: props and data. %s",
         render.length === 1
           ? "Did you forget to use the data parameter?"
           : "Any additional parameter will be undefined."
@@ -1813,7 +1765,7 @@ function chunk(query, render) {
       (render.defaultProps != null || render.propTypes != null)
     ) {
       error(
-        "Chunk render functions do not support propTypes or defaultProps. " +
+        "Block render functions do not support propTypes or defaultProps. " +
           "Did you accidentally pass a React component?"
       );
     }
@@ -1822,7 +1774,7 @@ function chunk(query, render) {
   return function() {
     var args = arguments;
     return {
-      $$typeof: REACT_CHUNK_TYPE,
+      $$typeof: REACT_BLOCK_TYPE,
       query: function() {
         return query.apply(null, args);
       },
@@ -1968,12 +1920,6 @@ function withSuspenseConfig(scope, config) {
   }
 }
 
-/**
- * ReactElementValidator provides a wrapper around a element factory
- * which validates the props passed to the element. This is intended to be
- * used only in DEV and could be replaced by a static type checker for languages
- * that support it.
- */
 var propTypesMisspellWarningShown;
 
 {
@@ -2427,40 +2373,6 @@ function createElementWithValidation(type, props, children) {
 
   return element;
 }
-var didWarnAboutDeprecatedCreateFactory = false;
-function createFactoryWithValidation(type) {
-  var validatedFactory = createElementWithValidation.bind(null, type);
-  validatedFactory.type = type;
-
-  {
-    if (!didWarnAboutDeprecatedCreateFactory) {
-      didWarnAboutDeprecatedCreateFactory = true;
-
-      warn(
-        "React.createFactory() is deprecated and will be removed in " +
-          "a future major release. Consider using JSX " +
-          "or use React.createElement() directly instead."
-      );
-    } // Legacy hook: remove it
-
-    Object.defineProperty(validatedFactory, "type", {
-      enumerable: false,
-      get: function() {
-        warn(
-          "Factory.type is deprecated. Access the class directly " +
-            "before passing it to createFactory."
-        );
-
-        Object.defineProperty(this, "type", {
-          value: type
-        });
-        return type;
-      }
-    });
-  }
-
-  return validatedFactory;
-}
 function cloneElementWithValidation(element, props, children) {
   var newElement = cloneElement.apply(this, arguments);
 
@@ -2518,26 +2430,6 @@ var hasBadMapPolyfill;
   }
 }
 
-function createFundamentalComponent(impl) {
-  // We use responder as a Map key later on. When we have a bad
-  // polyfill, then we can't use it as a key as the polyfill tries
-  // to add a property to the object.
-  if (true && !hasBadMapPolyfill) {
-    Object.freeze(impl);
-  }
-
-  var fundamantalComponent = {
-    $$typeof: REACT_FUNDAMENTAL_TYPE,
-    impl: impl
-  };
-
-  {
-    Object.freeze(fundamantalComponent);
-  }
-
-  return fundamantalComponent;
-}
-
 function createEventResponder(displayName, responderConfig) {
   var getInitialState = responderConfig.getInitialState,
     onEvent = responderConfig.onEvent,
@@ -2562,7 +2454,7 @@ function createEventResponder(displayName, responderConfig) {
   // polyfill, then we can't use it as a key as the polyfill tries
   // to add a property to the object.
 
-  if (true && !hasBadMapPolyfill) {
+  if (!hasBadMapPolyfill) {
     Object.freeze(eventResponder);
   }
 
@@ -2617,38 +2509,30 @@ var React = {
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactSharedInternals
 };
 
-if (!disableCreateFactory) {
-  React.createFactory = createFactoryWithValidation;
-}
-
-if (exposeConcurrentModeAPIs) {
+{
   React.useTransition = useTransition;
   React.useDeferredValue = useDeferredValue;
   React.SuspenseList = REACT_SUSPENSE_LIST_TYPE;
   React.unstable_withSuspenseConfig = withSuspenseConfig;
 }
 
-if (enableChunksAPI) {
-  React.chunk = chunk;
+{
+  React.block = block;
 }
 
-if (enableDeprecatedFlareAPI) {
+{
   React.DEPRECATED_useResponder = useResponder;
   React.DEPRECATED_createResponder = createEventResponder;
 }
 
-if (enableFundamentalAPI) {
-  React.unstable_createFundamental = createFundamentalComponent;
-}
-
-if (enableScopeAPI) {
+{
   React.unstable_createScope = createScope;
 } // Note: some APIs are added with feature flags.
 // Make sure that stable builds for open source
 // don't modify the React object to avoid deopts.
 // Also let's not expose their names in stable builds.
 
-if (enableJSXTransformAPI) {
+{
   {
     React.jsxDEV = jsxWithValidation;
     React.jsx = jsxWithValidationDynamic;
@@ -2656,16 +2540,10 @@ if (enableJSXTransformAPI) {
   }
 }
 
-var React$2 = Object.freeze({
-  default: React
-});
-
-var React$3 = (React$2 && React) || React$2;
-
 // TODO: decide on the top-level export form.
 // This is hacky but makes it work with both Rollup and Jest.
 
-var react = React$3.default || React$3;
+var react = React.default || React;
 
 module.exports = react;
 

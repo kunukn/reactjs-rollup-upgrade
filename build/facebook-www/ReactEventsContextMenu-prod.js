@@ -55,10 +55,12 @@ var React = require("react"),
             (state.pointerType = ""))
           : (state.pointerType = pointerType));
     }
-  });
-module.exports = {
-  ContextMenuResponder: ContextMenuResponder,
-  useContextMenu: function(props) {
-    return React.DEPRECATED_useResponder(ContextMenuResponder, props);
-  }
-};
+  }),
+  ContextMenu = {
+    __proto__: null,
+    ContextMenuResponder: ContextMenuResponder,
+    useContextMenu: function(props) {
+      return React.DEPRECATED_useResponder(ContextMenuResponder, props);
+    }
+  };
+module.exports = (ContextMenu && ContextMenu["default"]) || ContextMenu;

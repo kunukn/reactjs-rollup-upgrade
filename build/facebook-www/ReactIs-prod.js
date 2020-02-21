@@ -30,7 +30,7 @@ var hasSymbol = "function" === typeof Symbol && Symbol.for,
     : 60120,
   REACT_MEMO_TYPE = hasSymbol ? Symbol.for("react.memo") : 60115,
   REACT_LAZY_TYPE = hasSymbol ? Symbol.for("react.lazy") : 60116,
-  REACT_CHUNK_TYPE = hasSymbol ? Symbol.for("react.chunk") : 60121,
+  REACT_BLOCK_TYPE = hasSymbol ? Symbol.for("react.block") : 60121,
   REACT_FUNDAMENTAL_TYPE = hasSymbol ? Symbol.for("react.fundamental") : 60117,
   REACT_RESPONDER_TYPE = hasSymbol ? Symbol.for("react.responder") : 60118,
   REACT_SCOPE_TYPE = hasSymbol ? Symbol.for("react.scope") : 60119;
@@ -67,7 +67,6 @@ function typeOf(object) {
 function isConcurrentMode(object) {
   return typeOf(object) === REACT_CONCURRENT_MODE_TYPE;
 }
-exports.typeOf = typeOf;
 exports.AsyncMode = REACT_ASYNC_MODE_TYPE;
 exports.ConcurrentMode = REACT_CONCURRENT_MODE_TYPE;
 exports.ContextConsumer = REACT_CONTEXT_TYPE;
@@ -81,29 +80,6 @@ exports.Portal = REACT_PORTAL_TYPE;
 exports.Profiler = REACT_PROFILER_TYPE;
 exports.StrictMode = REACT_STRICT_MODE_TYPE;
 exports.Suspense = REACT_SUSPENSE_TYPE;
-exports.isValidElementType = function(type) {
-  return (
-    "string" === typeof type ||
-    "function" === typeof type ||
-    type === REACT_FRAGMENT_TYPE ||
-    type === REACT_CONCURRENT_MODE_TYPE ||
-    type === REACT_PROFILER_TYPE ||
-    type === REACT_STRICT_MODE_TYPE ||
-    type === REACT_SUSPENSE_TYPE ||
-    type === REACT_SUSPENSE_LIST_TYPE ||
-    ("object" === typeof type &&
-      null !== type &&
-      (type.$$typeof === REACT_LAZY_TYPE ||
-        type.$$typeof === REACT_MEMO_TYPE ||
-        type.$$typeof === REACT_PROVIDER_TYPE ||
-        type.$$typeof === REACT_CONTEXT_TYPE ||
-        type.$$typeof === REACT_FORWARD_REF_TYPE ||
-        type.$$typeof === REACT_FUNDAMENTAL_TYPE ||
-        type.$$typeof === REACT_RESPONDER_TYPE ||
-        type.$$typeof === REACT_SCOPE_TYPE ||
-        type.$$typeof === REACT_CHUNK_TYPE))
-  );
-};
 exports.isAsyncMode = function(object) {
   return isConcurrentMode(object) || typeOf(object) === REACT_ASYNC_MODE_TYPE;
 };
@@ -145,3 +121,27 @@ exports.isStrictMode = function(object) {
 exports.isSuspense = function(object) {
   return typeOf(object) === REACT_SUSPENSE_TYPE;
 };
+exports.isValidElementType = function(type) {
+  return (
+    "string" === typeof type ||
+    "function" === typeof type ||
+    type === REACT_FRAGMENT_TYPE ||
+    type === REACT_CONCURRENT_MODE_TYPE ||
+    type === REACT_PROFILER_TYPE ||
+    type === REACT_STRICT_MODE_TYPE ||
+    type === REACT_SUSPENSE_TYPE ||
+    type === REACT_SUSPENSE_LIST_TYPE ||
+    ("object" === typeof type &&
+      null !== type &&
+      (type.$$typeof === REACT_LAZY_TYPE ||
+        type.$$typeof === REACT_MEMO_TYPE ||
+        type.$$typeof === REACT_PROVIDER_TYPE ||
+        type.$$typeof === REACT_CONTEXT_TYPE ||
+        type.$$typeof === REACT_FORWARD_REF_TYPE ||
+        type.$$typeof === REACT_FUNDAMENTAL_TYPE ||
+        type.$$typeof === REACT_RESPONDER_TYPE ||
+        type.$$typeof === REACT_SCOPE_TYPE ||
+        type.$$typeof === REACT_BLOCK_TYPE))
+  );
+};
+exports.typeOf = typeOf;

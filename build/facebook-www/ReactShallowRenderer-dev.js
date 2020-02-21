@@ -22,10 +22,26 @@ var checkPropTypes = require("prop-types/checkPropTypes");
 // Do not require this module directly! Use normal `invariant` calls with
 // template literal strings. The messages will be replaced with error codes
 // during build.
+function formatProdErrorMessage(code) {
+  var url = "https://reactjs.org/docs/error-decoder.html?invariant=" + code;
+
+  for (var i = 1; i < arguments.length; i++) {
+    url += "&args[]=" + encodeURIComponent(arguments[i]);
+  }
+
+  return (
+    "Minified React error #" +
+    code +
+    "; visit " +
+    url +
+    " for the full message or " +
+    "use the non-minified dev environment for full errors and additional " +
+    "helpful warnings."
+  );
+}
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
-
 function error(format) {
   {
     for (
@@ -50,10 +66,10 @@ function printWarning(level, format, args) {
       args[args.length - 1].indexOf("\n    in") === 0;
 
     if (!hasExistingStack) {
-      var React$$1 = require("react");
+      var React = require("react");
 
       var ReactSharedInternals =
-        React$$1.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // Defensive in case this is fired before React is initialized.
+        React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // Defensive in case this is fired before React is initialized.
 
       if (ReactSharedInternals != null) {
         var ReactDebugCurrentFrame =
@@ -74,7 +90,7 @@ function printWarning(level, format, args) {
 }
 
 var BEFORE_SLASH_RE = /^(.*)[\\\/]/;
-var describeComponentFrame = function(name, source, ownerName) {
+function describeComponentFrame(name, source, ownerName) {
   var sourceInfo = "";
 
   if (source) {
@@ -104,12 +120,11 @@ var describeComponentFrame = function(name, source, ownerName) {
   }
 
   return "\n    in " + (name || "Unknown") + sourceInfo;
-};
+}
 
 // The Symbol used to tag the ReactElement-like types. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
 var hasSymbol = typeof Symbol === "function" && Symbol.for;
-
 var REACT_PORTAL_TYPE = hasSymbol ? Symbol.for("react.portal") : 0xeaca;
 var REACT_FRAGMENT_TYPE = hasSymbol ? Symbol.for("react.fragment") : 0xeacb;
 var REACT_STRICT_MODE_TYPE = hasSymbol
@@ -118,8 +133,6 @@ var REACT_STRICT_MODE_TYPE = hasSymbol
 var REACT_PROFILER_TYPE = hasSymbol ? Symbol.for("react.profiler") : 0xead2;
 var REACT_PROVIDER_TYPE = hasSymbol ? Symbol.for("react.provider") : 0xeacd;
 var REACT_CONTEXT_TYPE = hasSymbol ? Symbol.for("react.context") : 0xeace; // TODO: We don't use AsyncMode or ConcurrentMode anymore. They were temporary
-// (unstable) APIs that have been removed. Can we remove the symbols?
-
 var REACT_FORWARD_REF_TYPE = hasSymbol
   ? Symbol.for("react.forward_ref")
   : 0xead0;
@@ -129,10 +142,9 @@ var REACT_SUSPENSE_LIST_TYPE = hasSymbol
   : 0xead8;
 var REACT_MEMO_TYPE = hasSymbol ? Symbol.for("react.memo") : 0xead3;
 var REACT_LAZY_TYPE = hasSymbol ? Symbol.for("react.lazy") : 0xead4;
-var REACT_CHUNK_TYPE = hasSymbol ? Symbol.for("react.chunk") : 0xead9;
+var REACT_BLOCK_TYPE = hasSymbol ? Symbol.for("react.block") : 0xead9;
 
 var Resolved = 1;
-
 function refineResolvedLazyComponent(lazyComponent) {
   return lazyComponent._status === Resolved ? lazyComponent._result : null;
 }
@@ -202,7 +214,7 @@ function getComponentName(type) {
       case REACT_MEMO_TYPE:
         return getComponentName(type.type);
 
-      case REACT_CHUNK_TYPE:
+      case REACT_BLOCK_TYPE:
         return getComponentName(type.render);
 
       case REACT_LAZY_TYPE: {
@@ -272,17 +284,6 @@ function shallowEqual(objA, objB) {
 
   return true;
 }
-
-/**
- * Use invariant() to assert state which your program assumes to be true.
- *
- * Provide sprintf-style format (only %s is supported) and arguments
- * to provide information about what broke and what you were
- * expecting.
- *
- * The invariant message will be stripped in production, but the invariant
- * will remain to ensure logic does not differ in production.
- */
 
 var ReactSharedInternals =
   React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // Prevent newer renderers from RTE when used with older react package versions.
@@ -946,9 +947,11 @@ var ReactShallowRenderer =
                 if (!(typeof elementType.render === "function")) {
                   {
                     throw Error(
-                      "forwardRef requires a render function but was given " +
-                        typeof elementType.render +
-                        "."
+                      true
+                        ? "forwardRef requires a render function but was given " +
+                            typeof elementType.render +
+                            "."
+                        : formatProdErrorMessage(322, typeof elementType.render)
                     );
                   }
                 }
@@ -1185,17 +1188,10 @@ function getMaskedContext(contextTypes, unmaskedContext) {
   return context;
 }
 
-var ReactShallowRenderer$2 = Object.freeze({
-  default: ReactShallowRenderer
-});
-
-var ReactShallowRenderer$3 =
-  (ReactShallowRenderer$2 && ReactShallowRenderer) || ReactShallowRenderer$2;
-
 // TODO: decide on the top-level export form.
 // This is hacky but makes it work with both Rollup and Jest.
 
-var shallow = ReactShallowRenderer$3.default || ReactShallowRenderer$3;
+var shallow = ReactShallowRenderer.default || ReactShallowRenderer;
 
 module.exports = shallow;
 

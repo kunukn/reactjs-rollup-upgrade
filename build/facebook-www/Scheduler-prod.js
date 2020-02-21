@@ -287,29 +287,26 @@ function timeoutForPriorityLevel(priorityLevel) {
   }
 }
 var unstable_requestPaint = requestPaint;
-exports.unstable_ImmediatePriority = 1;
-exports.unstable_UserBlockingPriority = 2;
-exports.unstable_NormalPriority = 3;
 exports.unstable_IdlePriority = 5;
+exports.unstable_ImmediatePriority = 1;
 exports.unstable_LowPriority = 4;
-exports.unstable_runWithPriority = function(priorityLevel, eventHandler) {
-  switch (priorityLevel) {
-    case 1:
-    case 2:
-    case 3:
-    case 4:
-    case 5:
-      break;
-    default:
-      priorityLevel = 3;
-  }
-  var previousPriorityLevel = currentPriorityLevel;
-  currentPriorityLevel = priorityLevel;
-  try {
-    return eventHandler();
-  } finally {
-    currentPriorityLevel = previousPriorityLevel;
-  }
+exports.unstable_NormalPriority = 3;
+exports.unstable_Profiling = null;
+exports.unstable_UserBlockingPriority = 2;
+exports.unstable_cancelCallback = function(task) {
+  task.callback = null;
+};
+exports.unstable_continueExecution = function() {
+  isSchedulerPaused = !1;
+  isHostCallbackScheduled ||
+    isPerformingWork ||
+    ((isHostCallbackScheduled = !0), requestHostCallback(flushWork));
+};
+exports.unstable_getCurrentPriorityLevel = function() {
+  return currentPriorityLevel;
+};
+exports.unstable_getFirstCallbackNode = function() {
+  return peek(taskQueue);
 };
 exports.unstable_next = function(eventHandler) {
   switch (currentPriorityLevel) {
@@ -320,6 +317,29 @@ exports.unstable_next = function(eventHandler) {
       break;
     default:
       priorityLevel = currentPriorityLevel;
+  }
+  var previousPriorityLevel = currentPriorityLevel;
+  currentPriorityLevel = priorityLevel;
+  try {
+    return eventHandler();
+  } finally {
+    currentPriorityLevel = previousPriorityLevel;
+  }
+};
+exports.unstable_pauseExecution = function() {
+  isSchedulerPaused = !0;
+};
+exports.unstable_requestPaint = unstable_requestPaint;
+exports.unstable_runWithPriority = function(priorityLevel, eventHandler) {
+  switch (priorityLevel) {
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+      break;
+    default:
+      priorityLevel = 3;
   }
   var previousPriorityLevel = currentPriorityLevel;
   currentPriorityLevel = priorityLevel;
@@ -369,24 +389,6 @@ exports.unstable_scheduleCallback = function(priorityLevel, callback, options) {
         ((isHostCallbackScheduled = !0), requestHostCallback(flushWork)));
   return priorityLevel;
 };
-exports.unstable_cancelCallback = function(task) {
-  task.callback = null;
-};
-exports.unstable_wrapCallback = function(callback) {
-  var parentPriorityLevel = currentPriorityLevel;
-  return function() {
-    var previousPriorityLevel = currentPriorityLevel;
-    currentPriorityLevel = parentPriorityLevel;
-    try {
-      return callback.apply(this, arguments);
-    } finally {
-      currentPriorityLevel = previousPriorityLevel;
-    }
-  };
-};
-exports.unstable_getCurrentPriorityLevel = function() {
-  return currentPriorityLevel;
-};
 exports.unstable_shouldYield = function() {
   var currentTime = exports.unstable_now();
   advanceTimers(currentTime);
@@ -401,17 +403,15 @@ exports.unstable_shouldYield = function() {
     shouldYieldToHost()
   );
 };
-exports.unstable_requestPaint = unstable_requestPaint;
-exports.unstable_continueExecution = function() {
-  isSchedulerPaused = !1;
-  isHostCallbackScheduled ||
-    isPerformingWork ||
-    ((isHostCallbackScheduled = !0), requestHostCallback(flushWork));
+exports.unstable_wrapCallback = function(callback) {
+  var parentPriorityLevel = currentPriorityLevel;
+  return function() {
+    var previousPriorityLevel = currentPriorityLevel;
+    currentPriorityLevel = parentPriorityLevel;
+    try {
+      return callback.apply(this, arguments);
+    } finally {
+      currentPriorityLevel = previousPriorityLevel;
+    }
+  };
 };
-exports.unstable_pauseExecution = function() {
-  isSchedulerPaused = !0;
-};
-exports.unstable_getFirstCallbackNode = function() {
-  return peek(taskQueue);
-};
-exports.unstable_Profiling = null;

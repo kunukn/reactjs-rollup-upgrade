@@ -24,11 +24,11 @@ exports.unstable_getCurrent = function() {
 exports.unstable_getThreadID = function() {
   return ++threadIDCounter;
 };
+exports.unstable_subscribe = function() {};
 exports.unstable_trace = function(name, timestamp, callback) {
   return callback();
 };
+exports.unstable_unsubscribe = function() {};
 exports.unstable_wrap = function(callback) {
   return callback;
 };
-exports.unstable_subscribe = function() {};
-exports.unstable_unsubscribe = function() {};

@@ -594,7 +594,8 @@ function useFocusWithin(props) {
   return React.DEPRECATED_useResponder(FocusWithinResponder, props);
 }
 
-var Focus = Object.freeze({
+var Focus = /*#__PURE__*/ Object.freeze({
+  __proto__: null,
   FocusResponder: FocusResponder,
   useFocus: useFocus,
   FocusWithinResponder: FocusWithinResponder,

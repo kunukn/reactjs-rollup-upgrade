@@ -17,15 +17,13 @@ if (__DEV__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
 
-var _require = require("SchedulerFeatureFlags");
-var enableIsInputPending = _require.enableIsInputPending;
-var enableSchedulerDebugging = _require.enableSchedulerDebugging;
-var enableProfilingFeatureFlag = _require.enableProfiling;
-
-var enableProfiling = true && enableProfilingFeatureFlag;
+var _require = require("SchedulerFeatureFlags"),
+  enableIsInputPending = _require.enableIsInputPending,
+  enableSchedulerDebugging = _require.enableSchedulerDebugging,
+  enableProfilingFeatureFlag = _require.enableProfiling;
+var enableProfiling = enableProfilingFeatureFlag;
 
 var requestHostCallback;
-
 var requestHostTimeout;
 var cancelHostTimeout;
 var shouldYieldToHost;
@@ -928,23 +926,23 @@ var unstable_Profiling = enableProfiling
     }
   : null;
 
-exports.unstable_ImmediatePriority = ImmediatePriority;
-exports.unstable_UserBlockingPriority = UserBlockingPriority;
-exports.unstable_NormalPriority = NormalPriority;
 exports.unstable_IdlePriority = IdlePriority;
+exports.unstable_ImmediatePriority = ImmediatePriority;
 exports.unstable_LowPriority = LowPriority;
-exports.unstable_runWithPriority = unstable_runWithPriority;
-exports.unstable_next = unstable_next;
-exports.unstable_scheduleCallback = unstable_scheduleCallback;
-exports.unstable_cancelCallback = unstable_cancelCallback;
-exports.unstable_wrapCallback = unstable_wrapCallback;
-exports.unstable_getCurrentPriorityLevel = unstable_getCurrentPriorityLevel;
-exports.unstable_shouldYield = unstable_shouldYield;
-exports.unstable_requestPaint = unstable_requestPaint;
-exports.unstable_continueExecution = unstable_continueExecution;
-exports.unstable_pauseExecution = unstable_pauseExecution;
-exports.unstable_getFirstCallbackNode = unstable_getFirstCallbackNode;
+exports.unstable_NormalPriority = NormalPriority;
 exports.unstable_Profiling = unstable_Profiling;
+exports.unstable_UserBlockingPriority = UserBlockingPriority;
+exports.unstable_cancelCallback = unstable_cancelCallback;
+exports.unstable_continueExecution = unstable_continueExecution;
+exports.unstable_getCurrentPriorityLevel = unstable_getCurrentPriorityLevel;
+exports.unstable_getFirstCallbackNode = unstable_getFirstCallbackNode;
+exports.unstable_next = unstable_next;
+exports.unstable_pauseExecution = unstable_pauseExecution;
+exports.unstable_requestPaint = unstable_requestPaint;
+exports.unstable_runWithPriority = unstable_runWithPriority;
+exports.unstable_scheduleCallback = unstable_scheduleCallback;
+exports.unstable_shouldYield = unstable_shouldYield;
+exports.unstable_wrapCallback = unstable_wrapCallback;
 
   })();
 }

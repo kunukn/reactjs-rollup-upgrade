@@ -22,7 +22,6 @@ var Scheduler = require("scheduler");
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
-
 function error(format) {
   {
     for (
@@ -47,10 +46,10 @@ function printWarning(level, format, args) {
       args[args.length - 1].indexOf("\n    in") === 0;
 
     if (!hasExistingStack) {
-      var React$$1 = require("react");
+      var React = require("react");
 
       var ReactSharedInternals =
-        React$$1.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // Defensive in case this is fired before React is initialized.
+        React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // Defensive in case this is fired before React is initialized.
 
       if (ReactSharedInternals != null) {
         var ReactDebugCurrentFrame =
@@ -72,8 +71,8 @@ function printWarning(level, format, args) {
 
 // use dynamic dispatch for CommonJS interop named imports.
 
-var scheduleCallback = Scheduler.unstable_scheduleCallback;
-var IdlePriority = Scheduler.unstable_IdlePriority;
+var scheduleCallback = Scheduler.unstable_scheduleCallback,
+  IdlePriority = Scheduler.unstable_IdlePriority;
 function createLRU(limit) {
   var LIMIT = limit; // Circular, doubly-linked list
 
@@ -175,9 +174,6 @@ function createLRU(limit) {
         entry.next = resolvedFirst;
         first = entry;
       }
-    } else {
-      // Cannot access a deleted entry
-      // TODO: Error? Warning?
     }
 
     scheduleCleanUp();
@@ -265,11 +261,11 @@ function accessResult(resource, fetch, input, key) {
           resolvedResult.value = value;
         }
       },
-      function(error$$1) {
+      function(error) {
         if (newResult.status === Pending) {
           var rejectedResult = newResult;
           rejectedResult.status = Rejected;
-          rejectedResult.value = error$$1;
+          rejectedResult.value = error;
         }
       }
     );
@@ -320,8 +316,8 @@ function unstable_createResource(fetch, maybeHashInput) {
         }
 
         case Rejected: {
-          var error$$1 = result.value;
-          throw error$$1;
+          var error = result.value;
+          throw error;
         }
 
         default:

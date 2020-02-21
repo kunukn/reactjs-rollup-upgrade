@@ -17,12 +17,11 @@ if (__DEV__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
 
-var _require = require("SchedulerFeatureFlags");
-var enableIsInputPending = _require.enableIsInputPending;
-var enableSchedulerDebugging = _require.enableSchedulerDebugging;
-var enableProfilingFeatureFlag = _require.enableProfiling;
-
-var enableProfiling = true && enableProfilingFeatureFlag;
+var _require = require("SchedulerFeatureFlags"),
+  enableIsInputPending = _require.enableIsInputPending,
+  enableSchedulerDebugging = _require.enableSchedulerDebugging,
+  enableProfilingFeatureFlag = _require.enableProfiling;
+var enableProfiling = enableProfilingFeatureFlag;
 
 var currentTime = 0;
 var scheduledCallback = null;
@@ -37,7 +36,6 @@ var shouldYieldForPaint = false;
 function requestHostCallback(callback) {
   scheduledCallback = callback;
 }
-
 function requestHostTimeout(callback, ms) {
   scheduledTimeout = callback;
   timeoutTime = currentTime + ms;
@@ -66,7 +64,6 @@ function getCurrentTime() {
 function forceFrameRate() {
   // No-op
 }
-// Should only be used via an assertion helper that inspects the yielded values.
 
 function unstable_flushNumberOfYields(count) {
   if (isFlushing) {
@@ -873,33 +870,33 @@ var unstable_Profiling = enableProfiling
     }
   : null;
 
-exports.unstable_flushAllWithoutAsserting = unstable_flushAllWithoutAsserting;
-exports.unstable_flushNumberOfYields = unstable_flushNumberOfYields;
-exports.unstable_flushExpired = unstable_flushExpired;
-exports.unstable_clearYields = unstable_clearYields;
-exports.unstable_flushUntilNextPaint = unstable_flushUntilNextPaint;
-exports.unstable_flushAll = unstable_flushAll;
-exports.unstable_yieldValue = unstable_yieldValue;
-exports.unstable_advanceTime = unstable_advanceTime;
-exports.unstable_ImmediatePriority = ImmediatePriority;
-exports.unstable_UserBlockingPriority = UserBlockingPriority;
-exports.unstable_NormalPriority = NormalPriority;
 exports.unstable_IdlePriority = IdlePriority;
+exports.unstable_ImmediatePriority = ImmediatePriority;
 exports.unstable_LowPriority = LowPriority;
-exports.unstable_runWithPriority = unstable_runWithPriority;
-exports.unstable_next = unstable_next;
-exports.unstable_scheduleCallback = unstable_scheduleCallback;
-exports.unstable_cancelCallback = unstable_cancelCallback;
-exports.unstable_wrapCallback = unstable_wrapCallback;
-exports.unstable_getCurrentPriorityLevel = unstable_getCurrentPriorityLevel;
-exports.unstable_shouldYield = unstable_shouldYield;
-exports.unstable_requestPaint = unstable_requestPaint;
-exports.unstable_continueExecution = unstable_continueExecution;
-exports.unstable_pauseExecution = unstable_pauseExecution;
-exports.unstable_getFirstCallbackNode = unstable_getFirstCallbackNode;
-exports.unstable_now = getCurrentTime;
-exports.unstable_forceFrameRate = forceFrameRate;
+exports.unstable_NormalPriority = NormalPriority;
 exports.unstable_Profiling = unstable_Profiling;
+exports.unstable_UserBlockingPriority = UserBlockingPriority;
+exports.unstable_advanceTime = unstable_advanceTime;
+exports.unstable_cancelCallback = unstable_cancelCallback;
+exports.unstable_clearYields = unstable_clearYields;
+exports.unstable_continueExecution = unstable_continueExecution;
+exports.unstable_flushAll = unstable_flushAll;
+exports.unstable_flushAllWithoutAsserting = unstable_flushAllWithoutAsserting;
+exports.unstable_flushExpired = unstable_flushExpired;
+exports.unstable_flushNumberOfYields = unstable_flushNumberOfYields;
+exports.unstable_flushUntilNextPaint = unstable_flushUntilNextPaint;
+exports.unstable_forceFrameRate = forceFrameRate;
+exports.unstable_getCurrentPriorityLevel = unstable_getCurrentPriorityLevel;
+exports.unstable_getFirstCallbackNode = unstable_getFirstCallbackNode;
+exports.unstable_next = unstable_next;
+exports.unstable_now = getCurrentTime;
+exports.unstable_pauseExecution = unstable_pauseExecution;
+exports.unstable_requestPaint = unstable_requestPaint;
+exports.unstable_runWithPriority = unstable_runWithPriority;
+exports.unstable_scheduleCallback = unstable_scheduleCallback;
+exports.unstable_shouldYield = unstable_shouldYield;
+exports.unstable_wrapCallback = unstable_wrapCallback;
+exports.unstable_yieldValue = unstable_yieldValue;
 
   })();
 }

@@ -44,7 +44,7 @@ var hasSymbol = "function" === typeof Symbol && Symbol.for,
     : 60120,
   REACT_MEMO_TYPE = hasSymbol ? Symbol.for("react.memo") : 60115,
   REACT_LAZY_TYPE = hasSymbol ? Symbol.for("react.lazy") : 60116,
-  REACT_CHUNK_TYPE = hasSymbol ? Symbol.for("react.chunk") : 60121,
+  REACT_BLOCK_TYPE = hasSymbol ? Symbol.for("react.block") : 60121,
   REACT_FUNDAMENTAL_TYPE = hasSymbol ? Symbol.for("react.fundamental") : 60117,
   REACT_SCOPE_TYPE = hasSymbol ? Symbol.for("react.scope") : 60119;
 function initializeLazyComponentType(lazyComponent) {
@@ -100,7 +100,7 @@ function getComponentName(type) {
         );
       case REACT_MEMO_TYPE:
         return getComponentName(type.type);
-      case REACT_CHUNK_TYPE:
+      case REACT_BLOCK_TYPE:
         return getComponentName(type.render);
       case REACT_LAZY_TYPE:
         if ((type = 1 === type._status ? type._result : null))
@@ -133,14 +133,13 @@ for (var nextAvailableThreadIDs = new Uint16Array(16), i = 0; 15 > i; i++)
   nextAvailableThreadIDs[i] = i + 1;
 nextAvailableThreadIDs[15] = 0;
 var VALID_ATTRIBUTE_NAME_REGEX = /^[:A-Z_a-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD][:A-Z_a-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\-.0-9\u00B7\u0300-\u036F\u203F-\u2040]*$/,
-  hasOwnProperty$1 = Object.prototype.hasOwnProperty,
+  hasOwnProperty = Object.prototype.hasOwnProperty,
   illegalAttributeNameCache = {},
   validatedAttributeNameCache = {};
 function isAttributeNameSafe(attributeName) {
-  if (hasOwnProperty$1.call(validatedAttributeNameCache, attributeName))
+  if (hasOwnProperty.call(validatedAttributeNameCache, attributeName))
     return !0;
-  if (hasOwnProperty$1.call(illegalAttributeNameCache, attributeName))
-    return !1;
+  if (hasOwnProperty.call(illegalAttributeNameCache, attributeName)) return !1;
   if (VALID_ATTRIBUTE_NAME_REGEX.test(attributeName))
     return (validatedAttributeNameCache[attributeName] = !0);
   illegalAttributeNameCache[attributeName] = !0;
@@ -696,7 +695,7 @@ function flattenOptionChildren(children) {
   });
   return content;
 }
-var hasOwnProperty = Object.prototype.hasOwnProperty,
+var hasOwnProperty$1 = Object.prototype.hasOwnProperty,
   RESERVED_PROPS = {
     children: null,
     dangerouslySetInnerHTML: null,
@@ -1156,17 +1155,18 @@ var ReactDOMServerRenderer = (function() {
                 throw Error(formatProdErrorMessage(295));
             }
           case REACT_SCOPE_TYPE:
-            child = toArray(child.props.children);
-            this.stack.push({
-              type: null,
-              domNamespace: parentNamespace,
-              children: child,
-              childIndex: 0,
-              context: context,
-              footer: ""
-            });
-            return "";
-            throw Error(formatProdErrorMessage(343));
+            return (
+              (child = toArray(child.props.children)),
+              this.stack.push({
+                type: null,
+                domNamespace: parentNamespace,
+                children: child,
+                childIndex: 0,
+                context: context,
+                footer: ""
+              }),
+              ""
+            );
         }
       throw Error(
         formatProdErrorMessage(
@@ -1266,7 +1266,7 @@ var ReactDOMServerRenderer = (function() {
       value = "<" + element.type;
       for (out in initialValue)
         if (
-          hasOwnProperty.call(initialValue, out) &&
+          hasOwnProperty$1.call(initialValue, out) &&
           "DEPRECATED_flareListeners" !== out
         ) {
           var propValue = initialValue[out];
@@ -1402,33 +1402,35 @@ var ReactDOMServerRenderer = (function() {
     };
     return ReactDOMServerRenderer;
   })(),
-  ReactDOMServerBrowser = {
-    renderToString: function(element) {
-      element = new ReactDOMServerRenderer(element, !1);
-      try {
-        return element.read(Infinity);
-      } finally {
-        element.destroy();
-      }
-    },
-    renderToStaticMarkup: function(element) {
-      element = new ReactDOMServerRenderer(element, !0);
-      try {
-        return element.read(Infinity);
-      } finally {
-        element.destroy();
-      }
-    },
-    renderToNodeStream: function() {
-      throw Error(formatProdErrorMessage(207));
-    },
-    renderToStaticNodeStream: function() {
-      throw Error(formatProdErrorMessage(208));
-    },
-    version: "16.12.0"
+  ReactDOMServerBrowser$1 = {
+    __proto__: null,
+    default: {
+      renderToString: function(element) {
+        element = new ReactDOMServerRenderer(element, !1);
+        try {
+          return element.read(Infinity);
+        } finally {
+          element.destroy();
+        }
+      },
+      renderToStaticMarkup: function(element) {
+        element = new ReactDOMServerRenderer(element, !0);
+        try {
+          return element.read(Infinity);
+        } finally {
+          element.destroy();
+        }
+      },
+      renderToNodeStream: function() {
+        throw Error(formatProdErrorMessage(207));
+      },
+      renderToStaticNodeStream: function() {
+        throw Error(formatProdErrorMessage(208));
+      },
+      version: "16.12.0"
+    }
   },
-  ReactDOMServerBrowser$1 = { default: ReactDOMServerBrowser },
   ReactDOMServer =
-    (ReactDOMServerBrowser$1 && ReactDOMServerBrowser) ||
+    (ReactDOMServerBrowser$1 && ReactDOMServerBrowser$1["default"]) ||
     ReactDOMServerBrowser$1;
 module.exports = ReactDOMServer.default || ReactDOMServer;

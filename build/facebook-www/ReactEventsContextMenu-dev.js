@@ -89,7 +89,8 @@ function useContextMenu(props) {
   return React.DEPRECATED_useResponder(ContextMenuResponder, props);
 }
 
-var ContextMenu = Object.freeze({
+var ContextMenu = /*#__PURE__*/ Object.freeze({
+  __proto__: null,
   ContextMenuResponder: ContextMenuResponder,
   useContextMenu: useContextMenu
 });

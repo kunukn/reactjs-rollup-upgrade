@@ -19,7 +19,6 @@ var React = require("react");
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
-
 function error(format) {
   {
     for (
@@ -44,10 +43,10 @@ function printWarning(level, format, args) {
       args[args.length - 1].indexOf("\n    in") === 0;
 
     if (!hasExistingStack) {
-      var React$$1 = require("react");
+      var React = require("react");
 
       var ReactSharedInternals =
-        React$$1.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // Defensive in case this is fired before React is initialized.
+        React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // Defensive in case this is fired before React is initialized.
 
       if (ReactSharedInternals != null) {
         var ReactDebugCurrentFrame =
@@ -877,7 +876,8 @@ function usePress(props) {
   return React.DEPRECATED_useResponder(PressResponder, props);
 }
 
-var PressLegacy = Object.freeze({
+var PressLegacy = /*#__PURE__*/ Object.freeze({
+  __proto__: null,
   PressResponder: PressResponder,
   usePress: usePress
 });

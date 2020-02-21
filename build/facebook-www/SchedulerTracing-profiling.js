@@ -107,6 +107,18 @@ exports.unstable_getCurrent = function() {
 exports.unstable_getThreadID = function() {
   return ++threadIDCounter;
 };
+exports.unstable_subscribe = function(subscriber) {
+  subscribers.add(subscriber);
+  1 === subscribers.size &&
+    (exports.__subscriberRef.current = {
+      onInteractionScheduledWorkCompleted: onInteractionScheduledWorkCompleted,
+      onInteractionTraced: onInteractionTraced,
+      onWorkCanceled: onWorkCanceled,
+      onWorkScheduled: onWorkScheduled,
+      onWorkStarted: onWorkStarted,
+      onWorkStopped: onWorkStopped
+    });
+};
 exports.unstable_trace = function(name, timestamp, callback) {
   var threadID =
       3 < arguments.length && void 0 !== arguments[3] ? arguments[3] : 0,
@@ -145,6 +157,10 @@ exports.unstable_trace = function(name, timestamp, callback) {
     }
   }
   return returnValue;
+};
+exports.unstable_unsubscribe = function(subscriber) {
+  subscribers.delete(subscriber);
+  0 === subscribers.size && (exports.__subscriberRef.current = null);
 };
 exports.unstable_wrap = function(callback) {
   function wrapped() {
@@ -201,20 +217,4 @@ exports.unstable_wrap = function(callback) {
     }
   };
   return wrapped;
-};
-exports.unstable_subscribe = function(subscriber) {
-  subscribers.add(subscriber);
-  1 === subscribers.size &&
-    (exports.__subscriberRef.current = {
-      onInteractionScheduledWorkCompleted: onInteractionScheduledWorkCompleted,
-      onInteractionTraced: onInteractionTraced,
-      onWorkCanceled: onWorkCanceled,
-      onWorkScheduled: onWorkScheduled,
-      onWorkStarted: onWorkStarted,
-      onWorkStopped: onWorkStopped
-    });
-};
-exports.unstable_unsubscribe = function(subscriber) {
-  subscribers.delete(subscriber);
-  0 === subscribers.size && (exports.__subscriberRef.current = null);
 };

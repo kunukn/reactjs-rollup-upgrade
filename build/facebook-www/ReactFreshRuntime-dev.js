@@ -18,14 +18,9 @@ if (__DEV__) {
 // The Symbol used to tag the ReactElement-like types. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
 var hasSymbol = typeof Symbol === "function" && Symbol.for;
-
-// TODO: We don't use AsyncMode or ConcurrentMode anymore. They were temporary
-// (unstable) APIs that have been removed. Can we remove the symbols?
-
 var REACT_FORWARD_REF_TYPE = hasSymbol
   ? Symbol.for("react.forward_ref")
   : 0xead0;
-
 var REACT_MEMO_TYPE = hasSymbol ? Symbol.for("react.memo") : 0xead3;
 
 var PossiblyWeakMap = typeof WeakMap === "function" ? WeakMap : Map; // We never remove these associations.
@@ -483,10 +478,8 @@ function injectIntoGlobalHook(globalObject) {
           // Mount a new root.
           mountedRoots.add(root);
           failedRoots.delete(root);
-        } else if (wasMounted && isMounted) {
-          // Update an existing root.
-          // This doesn't affect our mounted root Set.
-        } else if (wasMounted && !isMounted) {
+        } else if (wasMounted && isMounted);
+        else if (wasMounted && !isMounted) {
           // Unmount an existing root.
           mountedRoots.delete(root);
 
@@ -573,10 +566,6 @@ function createSignatureFunctionForTransform() {
 
           status = "resolved";
           break;
-
-        case "resolved":
-          // Do nothing. Fast path for all future renders.
-          break;
       }
 
       return type;
@@ -635,7 +624,8 @@ function isLikelyComponentType(type) {
   }
 }
 
-var ReactFreshRuntime = Object.freeze({
+var ReactFreshRuntime = /*#__PURE__*/ Object.freeze({
+  __proto__: null,
   performReactRefresh: performReactRefresh,
   register: register,
   setSignature: setSignature,

@@ -200,10 +200,12 @@ var rootPointerEventTypes = ["pointerout", "pointermove", "pointercancel"],
     "undefined" !== typeof window && null != window.PointerEvent
       ? hoverResponderImpl
       : hoverResponderFallbackImpl
-  );
-module.exports = {
-  HoverResponder: HoverResponder,
-  useHover: function(props) {
-    return React.DEPRECATED_useResponder(HoverResponder, props);
-  }
-};
+  ),
+  Hover = {
+    __proto__: null,
+    HoverResponder: HoverResponder,
+    useHover: function(props) {
+      return React.DEPRECATED_useResponder(HoverResponder, props);
+    }
+  };
+module.exports = (Hover && Hover["default"]) || Hover;

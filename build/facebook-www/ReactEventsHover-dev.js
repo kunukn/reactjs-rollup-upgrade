@@ -320,7 +320,8 @@ function useHover(props) {
   return React.DEPRECATED_useResponder(HoverResponder, props);
 }
 
-var Hover = Object.freeze({
+var Hover = /*#__PURE__*/ Object.freeze({
+  __proto__: null,
   HoverResponder: HoverResponder,
   useHover: useHover
 });

@@ -26,9 +26,8 @@ var assign = require("object-assign"),
     : 60120,
   REACT_MEMO_TYPE = hasSymbol ? Symbol.for("react.memo") : 60115,
   REACT_LAZY_TYPE = hasSymbol ? Symbol.for("react.lazy") : 60116,
-  REACT_CHUNK_TYPE = hasSymbol ? Symbol.for("react.chunk") : 60121;
-hasSymbol && Symbol.for("react.fundamental");
-var REACT_RESPONDER_TYPE = hasSymbol ? Symbol.for("react.responder") : 60118,
+  REACT_BLOCK_TYPE = hasSymbol ? Symbol.for("react.block") : 60121,
+  REACT_RESPONDER_TYPE = hasSymbol ? Symbol.for("react.responder") : 60118,
   REACT_SCOPE_TYPE = hasSymbol ? Symbol.for("react.scope") : 60119,
   MAYBE_ITERATOR_SYMBOL = "function" === typeof Symbol && Symbol.iterator;
 function formatProdErrorMessage(code) {
@@ -535,11 +534,11 @@ React.unstable_withSuspenseConfig = function(scope, config) {
     ReactCurrentBatchConfig.suspense = previousConfig;
   }
 };
-React.chunk = function(query, render) {
+React.block = function(query, render) {
   return function() {
     var args = arguments;
     return {
-      $$typeof: REACT_CHUNK_TYPE,
+      $$typeof: REACT_BLOCK_TYPE,
       query: function() {
         return query.apply(null, args);
       },
@@ -572,6 +571,6 @@ React.unstable_createScope = function() {
 };
 React.jsx = jsx;
 React.jsxs = jsx;
-var React$2 = { default: React },
-  React$3 = (React$2 && React) || React$2;
-module.exports = React$3.default || React$3;
+var React$1 = { __proto__: null, default: React },
+  React$2 = (React$1 && React$1["default"]) || React$1;
+module.exports = React$2.default || React$2;
